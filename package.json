@@ -1,0 +1,22 @@
+{
+  "name": "ziashift-cloud",
+  "version": "1.0.0",
+  "description": "ZIASHIFT shift roster — cloud build (MongoDB Atlas storage, deploys on Render)",
+  "main": "server.js",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "start": "node server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "cors": "^2.8.6",
+    "express": "^5.2.1",
+    "mongodb": "^6.9.0",
+    "multer": "^2.2.0",
+    "xlsx": "^0.18.5"
+  }
+}

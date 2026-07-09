@@ -1,0 +1,1471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shift Roster — EC Support</title>
+<style>
+  :root{
+    --ink:#0A2A4D; --ink-soft:#123F6E;
+    --sun:#E8A33D; --teal:#1671C9; --teal-dark:#0F5296;
+    --brand:#1671C9; --brand-dark:#0F5296; --brand-light:#EAF3FC;
+    --purple:#7C4DBE; --green:#1E9E6D;
+    --bg:#EEF3F9; --card:#FFFFFF;
+    --text:#1A2233; --muted:#64748B; --border:#D9E4F0;
+    --danger:#C0392B;
+    --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:var(--sans);background:var(--bg);color:var(--text)}
+  a{color:inherit}
+
+  /* ── Header ───────────────────────────────────────────── */
+  header{background:linear-gradient(135deg,var(--ink),var(--ink-soft));color:#fff;padding:18px 28px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px}
+  .brand{display:flex;align-items:center;gap:12px}
+  .brand-mark{width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,var(--sun),#F2994A);display:flex;align-items:center;justify-content:center;font-size:18px}
+  .brand h1{font-size:17px;margin:0;font-weight:700;letter-spacing:.2px}
+  .brand p{margin:1px 0 0;font-size:12px;color:#B8C6DE}
+
+  .datenav{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,0.08);padding:6px;border-radius:10px}
+  .datenav button{background:transparent;border:none;color:#fff;cursor:pointer;width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;transition:background .15s}
+  .datenav button:hover{background:rgba(255,255,255,0.15)}
+  .datenav button:focus-visible{outline:2px solid var(--sun);outline-offset:1px}
+  .date-display{font-weight:700;font-size:14px;min-width:150px;text-align:center;font-family:var(--mono)}
+  .date-sub{font-size:11px;color:#B8C6DE;font-weight:400;display:block;margin-top:1px;font-family:var(--sans)}
+  #datePicker{background:transparent;border:none;color:transparent;position:absolute;width:1px;height:1px;opacity:0}
+  .btn-today{background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);color:#fff;padding:7px 12px;border-radius:8px;font-size:12px;cursor:pointer;font-weight:600}
+  .btn-today:hover{background:rgba(255,255,255,0.2)}
+
+  main{max-width:1180px;margin:0 auto;padding:22px 20px 60px}
+
+  /* ── Page nav (Shift Roster ⟷ SMB Chat Assignment Live Tracker) ── */
+  .page-nav{max-width:1180px;margin:0 auto;padding:14px 20px 0;display:flex;gap:8px;flex-wrap:wrap}
+  .page-nav-btn{background:var(--card);border:1px solid var(--border);color:var(--muted);padding:9px 16px;border-radius:10px 10px 0 0;font-size:12.5px;font-weight:700;cursor:pointer;border-bottom:none;transition:color .12s,background .12s}
+  .page-nav-btn:hover{color:var(--ink)}
+  .page-nav-btn.active{color:var(--brand-dark);background:var(--card);box-shadow:0 -2px 8px rgba(16,35,63,0.04);border-top:3px solid var(--brand);padding-top:7px}
+
+  /* ── SMB Chat Assignment Live Tracker ────────────────────── */
+  .tr-toolbar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;background:var(--card);border:1px solid var(--border);border-top:4px solid var(--purple);border-radius:14px;padding:14px 16px;margin-bottom:16px;box-shadow:0 2px 10px rgba(16,35,63,0.06)}
+  .tr-toolbar-left{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+  .tr-whoami-label{font-size:12px;font-weight:700;color:var(--muted);display:flex;align-items:center;gap:8px}
+  .tr-select{font-size:13px;font-weight:700;color:var(--ink);padding:7px 10px;border-radius:8px;border:1px solid var(--border);background:#FAFBFD}
+  .tr-datebadge{font-family:var(--mono);font-size:12px;color:var(--muted);background:var(--brand-light);padding:5px 10px;border-radius:20px}
+
+  .tr-summary-row{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px}
+  .tr-stat{flex:1;min-width:150px;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 16px;box-shadow:0 2px 10px rgba(16,35,63,0.06)}
+  .tr-stat .tr-stat-num{font-family:var(--mono);font-size:24px;font-weight:800;color:var(--brand-dark)}
+  .tr-stat .tr-stat-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;font-weight:700;margin-top:2px}
+  .tr-stat.tr-stat-high .tr-stat-num{color:var(--danger)}
+  .tr-stat.tr-stat-low .tr-stat-num{color:var(--green)}
+
+  .tr-section-head{display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:6px;margin:4px 0 10px}
+  .tr-section-head h2{font-size:13px;margin:0;color:var(--brand-dark);font-weight:800;text-transform:uppercase;letter-spacing:.6px}
+
+  .tr-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+  .tr-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px 14px 12px;box-shadow:0 2px 10px rgba(16,35,63,0.06);border-top:4px solid var(--brand);position:relative;transition:transform .1s,box-shadow .12s}
+  .tr-card.tr-recommend{border-top-color:var(--green);box-shadow:0 2px 14px rgba(30,158,109,0.18)}
+  .tr-card-head{display:flex;align-items:center;justify-content:space-between;gap:6px}
+  .tr-card-name{font-weight:700;color:var(--ink);font-size:13.5px}
+  .tr-card-region{font-size:11px;color:var(--muted);margin-top:1px}
+  .tr-recommend-badge{background:#EAF8F1;color:var(--green);font-size:9.5px;font-weight:800;letter-spacing:.4px;padding:2px 8px;border-radius:20px;white-space:nowrap}
+  .tr-card-body{display:flex;align-items:center;justify-content:space-between;margin-top:12px;gap:8px}
+  .tr-count{font-family:var(--mono);font-size:30px;font-weight:800;color:var(--ink);line-height:1}
+  .tr-count-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;font-weight:700}
+  .tr-plus-btn{width:46px;height:46px;border-radius:12px;border:none;background:var(--brand);color:#fff;font-size:22px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .12s,transform .08s;flex-shrink:0}
+  .tr-plus-btn:hover{background:var(--brand-dark)}
+  .tr-plus-btn:active{transform:scale(0.92)}
+  .tr-plus-btn:disabled{opacity:.4;cursor:not-allowed}
+  .tr-card-breakdown{margin-top:10px;padding-top:9px;border-top:1px dashed var(--border);font-size:10.5px;color:var(--muted);display:flex;flex-wrap:wrap;gap:5px}
+  .tr-mini-chip{background:#F1F4F9;border-radius:20px;padding:2px 8px;font-weight:600}
+
+  .tr-ebs-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px}
+  .tr-ebs-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:11px 13px;box-shadow:0 2px 10px rgba(16,35,63,0.06);display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .tr-ebs-card.tr-ebs-active{border-color:var(--purple);box-shadow:0 0 0 2px rgba(124,77,190,0.15)}
+  .tr-ebs-name{font-weight:700;color:var(--ink);font-size:12.5px}
+  .tr-ebs-name .tr-active-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--purple);margin-right:6px}
+  .tr-ebs-count{font-family:var(--mono);font-weight:800;color:var(--purple);font-size:16px}
+  .tr-ebs-reset{background:transparent;border:none;color:var(--muted);font-size:13px;cursor:pointer;padding:3px;border-radius:6px;line-height:1}
+  .tr-ebs-reset:hover{color:var(--purple);background:#F3EEFB}
+  .guest-mode .tr-ebs-reset,
+  .ebs-mode .tr-ebs-reset{display:none}
+
+  .tr-feed-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px 16px;margin-top:20px;box-shadow:0 2px 10px rgba(16,35,63,0.06)}
+  .tr-feed{max-height:220px;overflow-y:auto;display:flex;flex-direction:column-reverse;gap:0}
+  .tr-feed-row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:7px 2px;font-size:12.5px;border-bottom:1px solid #F0F2F6}
+  .tr-feed-row:first-child{border-bottom:none}
+  .tr-feed-empty{padding:20px 4px;text-align:center;color:var(--muted);font-size:12.5px}
+  .tr-feed-time{font-family:var(--mono);color:var(--muted);font-size:11px}
+
+  /* ── Timeline ─────────────────────────────────────────── */
+  .timeline-card{background:var(--card);border-radius:14px;padding:18px 20px 14px;box-shadow:0 2px 10px rgba(16,35,63,0.06);margin-bottom:20px;border:1px solid var(--border);border-top:4px solid var(--brand)}
+  .timeline-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px;flex-wrap:wrap;gap:6px}
+  .timeline-head h2{font-size:13px;margin:0;color:var(--brand-dark);font-weight:800;text-transform:uppercase;letter-spacing:.6px}
+  .timeline-head .tz-note{font-size:11.5px;color:var(--muted)}
+  .timeline-track{position:relative;height:46px;border-radius:8px;overflow:hidden;background:#EEF1F6;display:flex}
+  .tl-seg{height:100%;position:relative;cursor:default;transition:filter .15s}
+  .tl-seg:hover{filter:brightness(1.08)}
+  .tl-seg.tl-leave{background:repeating-linear-gradient(45deg,#D7DCE5,#D7DCE5 6px,#CBD2DE 6px,#CBD2DE 12px) !important}
+  .tl-seg .tl-tip{position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;font-size:11px;padding:6px 9px;border-radius:6px;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .12s;z-index:5;font-family:var(--sans)}
+  .tl-seg .tl-tip::after{content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);border:5px solid transparent;border-top-color:var(--ink)}
+  .tl-seg:hover .tl-tip{opacity:1}
+  .tl-hours{display:flex;justify-content:space-between;margin-top:5px;font-size:10px;color:var(--muted);font-family:var(--mono)}
+  .now-marker{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--sun);z-index:4;box-shadow:0 0 0 3px rgba(232,163,61,0.25)}
+  .now-marker::before{content:'NOW';position:absolute;top:-18px;left:50%;transform:translateX(-50%);font-size:9px;font-weight:800;color:var(--sun);letter-spacing:.5px}
+  .timeline-empty{padding:14px 4px;color:var(--muted);font-size:13px;text-align:center}
+  .legend{display:flex;flex-wrap:wrap;gap:12px;margin-top:12px}
+  .legend-item{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--muted)}
+  .legend-dot{width:9px;height:9px;border-radius:3px;flex-shrink:0}
+
+  .warn-banner{margin-top:12px;padding:9px 12px;border-radius:8px;font-size:12px;display:flex;flex-direction:column;gap:4px}
+  .warn-banner.w-gap{background:#FFF4E0;color:#8A5A0A;border:1px solid #F4D9A0}
+  .warn-banner.w-overlap{background:#FCEBEB;color:#9A2E2E;border:1px solid #F0C4C4}
+  .warn-row{display:flex;align-items:center;gap:6px}
+
+  /* ── Leave summary dashboard ─────────────────────────────── */
+  .leave-card{background:var(--card);border-radius:14px;padding:16px 20px;box-shadow:0 2px 10px rgba(16,35,63,0.06);margin-bottom:20px;border:1px solid var(--border);border-top:4px solid var(--green)}
+  .leave-card.has-leave{border-color:#F0C4C4;border-top-color:var(--danger)}
+  .leave-card-head{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:2px}
+  .leave-card-title{display:flex;align-items:center;gap:10px}
+  .leave-card-title h2{font-size:13px;margin:0;color:var(--brand-dark);font-weight:800;text-transform:uppercase;letter-spacing:.6px}
+  .leave-count-badge{font-family:var(--mono);font-weight:800;font-size:12px;padding:2px 10px;border-radius:20px;background:#EAF8F1;color:var(--green)}
+  .leave-count-badge.non-zero{background:#FCEBEB;color:var(--danger)}
+  .leave-card .tz-note{font-size:11.5px;color:var(--muted)}
+  .leave-chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+  .leave-chip{display:flex;align-items:center;gap:7px;background:#FAFBFD;border:1px solid var(--border);border-radius:20px;padding:5px 12px 5px 6px;font-size:12.5px}
+  .leave-chip-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+  .leave-chip-name{font-weight:600;color:var(--ink)}
+  .leave-chip-region{color:var(--muted);font-size:11px}
+  .leave-empty{margin-top:10px;font-size:12.5px;color:var(--muted);display:flex;align-items:center;gap:7px}
+
+  /* ── Toolbar ──────────────────────────────────────────── */
+  .toolbar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:12px}
+  .toolbar-left{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .row-count{font-size:12.5px;color:var(--muted)}
+  .row-count b{color:var(--brand);font-weight:800}
+  .btn{border:none;border-radius:8px;padding:8px 14px;font-size:12.5px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:transform .08s, box-shadow .12s}
+  .btn:active{transform:translateY(1px)}
+  .btn-teal{background:var(--teal);color:#fff}
+  .btn-teal:hover{background:var(--teal-dark)}
+  .btn-ghost{background:var(--brand-light);color:var(--brand-dark);border:1px solid #BFDCF5}
+  .btn-ghost:hover{background:var(--brand);color:#fff;border-color:var(--brand)}
+  .btn-amber{background:#FFF3E0;color:#9A5B0A;border:1px solid #F4D9A0}
+  .btn-amber:hover{background:var(--sun);color:#3D2600;border-color:var(--sun)}
+  .btn-green{background:#EAF8F1;color:#146C48;border:1px solid #BFE8D3}
+  .btn-green:hover{background:var(--green);color:#fff;border-color:var(--green)}
+  .btn-purple{background:#F3EEFB;color:#5B3894;border:1px solid #D9C7F0}
+  .btn-purple:hover{background:var(--purple);color:#fff;border-color:var(--purple)}
+  .btn-save{background:var(--sun);color:#3D2600}
+  .btn-save:hover{filter:brightness(0.96)}
+  .btn:disabled{opacity:.5;cursor:not-allowed}
+
+  /* ── Table ────────────────────────────────────────────── */
+  .table-card{background:var(--card);border-radius:14px;box-shadow:0 2px 10px rgba(16,35,63,0.06);border:1px solid var(--border);border-top:4px solid var(--brand);overflow:hidden}
+  .table-scroll{overflow-x:auto}
+  table{width:100%;border-collapse:collapse;min-width:760px}
+  thead th{background:var(--brand-light);color:var(--ink);font-size:11.5px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;text-align:left;padding:11px 12px;border-bottom:2px solid var(--brand);white-space:nowrap}
+  tbody td{padding:10px 12px;border-bottom:1px solid #F0F2F6;vertical-align:middle;font-size:13.5px}
+  tbody tr:hover{background:#FAFBFD}
+  tbody tr:last-child td{border-bottom:none}
+  tbody tr.row-leave{background:#FAFAFA}
+  tbody tr.row-leave td{color:var(--muted)}
+  .duration-cell{font-family:var(--mono);color:var(--muted);white-space:nowrap}
+  tbody tr.row-current{background:#FFF4E0;position:relative}
+  tbody tr.row-current td{color:var(--ink)}
+  tbody tr.row-current td:first-child{box-shadow:inset 3px 0 0 var(--sun)}
+  tbody tr.row-current:hover{background:#FCEACB}
+  .now-badge{display:inline-flex;align-items:center;gap:4px;background:var(--sun);color:#3D2600;font-size:9.5px;font-weight:800;letter-spacing:.4px;padding:2px 7px;border-radius:20px;margin-left:8px;vertical-align:middle}
+  .sno-cell{font-family:var(--mono);font-weight:800;color:var(--brand);text-align:center;width:44px}
+  .mono-cell{font-family:var(--mono)}
+  .leave-badge{background:#FCEBEB;color:var(--danger);font-size:10.5px;font-weight:800;letter-spacing:.4px;padding:3px 8px;border-radius:20px}
+  .name-cell{font-weight:700;color:var(--ink)}
+  .row-leave .name-cell{text-decoration:line-through;font-weight:500;color:var(--muted)}
+
+  .row-actions{display:flex;gap:2px;justify-content:center}
+  .icon-btn{background:transparent;border:none;cursor:pointer;width:26px;height:26px;border-radius:6px;display:flex;align-items:center;justify-content:center;color:var(--muted);transition:background .12s,color .12s}
+  .icon-btn:hover{background:#F1F4F9;color:var(--ink)}
+  .icon-btn.danger:hover{background:#FCEBEB;color:var(--danger)}
+  .icon-btn:disabled{opacity:.3;cursor:not-allowed}
+  .icon-btn:disabled:hover{background:transparent;color:var(--muted)}
+
+  .switch{position:relative;display:inline-block;width:38px;height:22px;vertical-align:middle}
+  .switch input{opacity:0;width:0;height:0}
+  .slider{position:absolute;cursor:pointer;inset:0;background:#D7DCE5;border-radius:22px;transition:.15s}
+  .slider::before{content:'';position:absolute;height:16px;width:16px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.15s;box-shadow:0 1px 3px rgba(0,0,0,0.25)}
+  .switch input:checked + .slider{background:#C0392B}
+  .switch input:checked + .slider::before{transform:translateX(16px)}
+  .switch input:focus-visible + .slider{outline:2px solid var(--teal);outline-offset:2px}
+
+  .empty-state{padding:50px 20px;text-align:center}
+  .empty-state .em-icon{font-size:34px;margin-bottom:10px}
+  .empty-state h3{margin:0 0 6px;font-size:15px;color:var(--ink)}
+  .empty-state p{margin:0 0 18px;font-size:13px;color:var(--muted)}
+
+  .add-row-bar{padding:10px 12px;border-top:1px solid var(--border)}
+  .add-row-bar button{width:100%;padding:10px;border:1.5px dashed var(--border);background:transparent;border-radius:8px;color:var(--muted);font-size:12.5px;font-weight:600;cursor:pointer;transition:border-color .12s,color .12s,background .12s}
+  .add-row-bar button:hover{border-color:var(--teal);color:var(--teal-dark);background:#F4FAF9}
+
+  /* ── Toast ────────────────────────────────────────────── */
+  .toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;padding:11px 18px;border-radius:9px;font-size:13px;opacity:0;pointer-events:none;transition:opacity .2s, transform .2s;z-index:50;box-shadow:0 6px 20px rgba(0,0,0,0.25);max-width:520px;text-align:center}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .toast.t-error{background:#7A2222}
+  .toast.t-success{background:var(--teal-dark)}
+
+  /* ── Modal (master roster) ───────────────────────────────── */
+  .modal-overlay{position:fixed;inset:0;background:rgba(16,35,63,0.45);display:none;align-items:center;justify-content:center;z-index:40;padding:20px}
+  .modal-overlay.open{display:flex}
+  .modal{background:#fff;border-radius:14px;width:100%;max-width:820px;max-height:88vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,0.3)}
+  .modal-head{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+  .modal-head h2{margin:0;font-size:15px;color:var(--brand-dark);font-weight:800}
+  .modal-head p{margin:2px 0 0;font-size:12px;color:var(--muted)}
+  .modal-close{background:transparent;border:none;cursor:pointer;color:var(--muted);width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .modal-close:hover{background:#F1F4F9;color:var(--ink)}
+  .modal-toolbar{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 20px 0;flex-wrap:wrap}
+  .cycle-field{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--muted)}
+  .cycle-field input{font-family:var(--mono);border:1px solid var(--border);border-radius:6px;padding:5px 8px;font-size:13px}
+  .modal-body{padding:14px 20px;overflow-y:auto;flex:1}
+  .modal-foot{padding:14px 20px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;align-items:center;gap:10px}
+  td input[type=text]{width:100%;border:1px solid transparent;background:transparent;padding:7px 8px;border-radius:6px;font-size:13px;color:var(--text);font-family:var(--sans)}
+  td input[type=text]:hover{border-color:var(--border)}
+  td input[type=text]:focus{outline:none;border-color:var(--teal);background:#fff;box-shadow:0 0 0 3px rgba(22,132,122,0.12)}
+
+  @media (max-width:640px){
+    header{padding:14px 16px}
+    main{padding:16px 12px 50px}
+    .brand p{display:none}
+  }
+
+  /* ── Login screen ─────────────────────────────────────────── */
+  .login-overlay{position:fixed;inset:0;background:linear-gradient(135deg,var(--ink),var(--ink-soft));display:flex;align-items:center;justify-content:center;z-index:100;padding:20px}
+  .login-box{background:#fff;border-radius:16px;padding:34px 30px;width:100%;max-width:340px;box-shadow:0 20px 60px rgba(0,0,0,0.35)}
+  .login-brand{text-align:center;margin-bottom:24px}
+  .login-brand .brand-mark{margin:0 auto 12px}
+  .login-brand h1{margin:0;font-size:18px;color:var(--ink)}
+  .login-brand p{margin:4px 0 0;font-size:12px;color:var(--muted)}
+  #loginForm label, #ebsLoginForm label{display:block;font-size:12px;color:var(--muted);font-weight:600;margin-bottom:14px}
+  #loginForm input, #ebsLoginForm input, #ebsLoginForm select{width:100%;margin-top:6px;padding:9px 11px;border:1px solid var(--border);border-radius:8px;font-size:13.5px;box-sizing:border-box;font-family:var(--sans);background:#fff}
+  #loginForm input:focus, #ebsLoginForm input:focus, #ebsLoginForm select:focus{outline:none;border-color:var(--teal);box-shadow:0 0 0 3px rgba(22,132,122,0.12)}
+  .role-select{display:flex;gap:8px;flex-wrap:wrap}
+  .role-card{flex:1 1 28%;min-width:88px;display:flex;flex-direction:column;align-items:center;gap:6px;padding:16px 8px;border:1.5px solid var(--border);border-radius:12px;background:#fff;cursor:pointer;transition:border-color .12s,background .12s,transform .08s}
+  .role-card:hover{border-color:var(--teal);background:#F4FAF9}
+  #pickGuestBtn:hover{border-color:var(--green);background:#F4FBF7}
+  #pickEbsBtn:hover{border-color:var(--purple);background:#FAF7FD}
+  .role-card:active{transform:translateY(1px)}
+  .role-card-icon{font-size:22px;width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--brand-light)}
+  #pickGuestBtn .role-card-icon{background:#EAF8F1}
+  #pickEbsBtn .role-card-icon{background:#F3EEFB}
+  .role-card-title{font-weight:800;font-size:12.5px;color:var(--ink);text-align:center}
+  .role-card-sub{font-size:10.5px;color:var(--muted);text-align:center}
+  .back-link{background:transparent;border:none;color:var(--muted);font-size:12px;font-weight:600;cursor:pointer;padding:0;margin-bottom:16px;display:inline-flex;align-items:center;gap:4px}
+  .back-link:hover{color:var(--ink)}
+  .form-error{color:var(--danger);font-size:12px;margin:-6px 0 14px;min-height:14px}
+
+  /* ── User chip / role pill ────────────────────────────────── */
+  .user-chip{display:flex;align-items:center;gap:8px;font-size:12px;color:#fff}
+  .role-pill{background:rgba(255,255,255,0.15);padding:3px 9px;border-radius:20px;font-size:10px;font-weight:800;letter-spacing:.4px;text-transform:uppercase}
+  .role-pill.role-admin{background:rgba(232,163,61,0.28);color:#FFE3B0}
+  .role-pill.role-ebs{background:rgba(124,77,190,0.32);color:#E4D6FA}
+  .user-chip button{background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:#fff;padding:6px 10px;border-radius:8px;font-size:11.5px;cursor:pointer;font-weight:600}
+  .user-chip button:hover{background:rgba(255,255,255,0.2)}
+
+  /* guest-mode: strictly view-only. ebs-mode: can log chat assignments
+     but still can't touch the master roster / shift schedule editing. */
+  .guest-mode #rosterBtn,
+  .guest-mode #regenerateBtn,
+  .guest-mode #changePwBtn,
+  .ebs-mode #rosterBtn,
+  .ebs-mode #regenerateBtn{display:none}
+  .guest-mode .icon-btn,
+  .guest-mode .switch,
+  .ebs-mode .icon-btn,
+  .ebs-mode .switch{opacity:.45;pointer-events:none}
+  .guest-mode .tr-plus-btn{display:none}
+  .guest-mode #trUndoBtn,
+  .guest-mode #trResetBtn,
+  .ebs-mode #trUndoBtn,
+  .ebs-mode #trResetBtn{display:none}
+</style>
+</head>
+<body>
+
+<div class="login-overlay" id="loginOverlay">
+  <div class="login-box">
+    <div class="login-brand">
+      <div class="brand-mark">🌐</div>
+      <h1>Shift Roster</h1>
+      <p>EC Support — choose how you're signing in</p>
+    </div>
+
+    <div class="role-select" id="roleSelect">
+      <button type="button" class="role-card" id="pickAdminBtn">
+        <div class="role-card-icon">🛠️</div>
+        <div class="role-card-title">Admin</div>
+        <div class="role-card-sub">Full control</div>
+      </button>
+      <button type="button" class="role-card" id="pickEbsBtn">
+        <div class="role-card-icon">🎧</div>
+        <div class="role-card-title">EBS Tech</div>
+        <div class="role-card-sub">Log assignments</div>
+      </button>
+      <button type="button" class="role-card" id="pickGuestBtn">
+        <div class="role-card-icon">👀</div>
+        <div class="role-card-title">Guest</div>
+        <div class="role-card-sub">View only</div>
+      </button>
+    </div>
+
+    <form id="loginForm" style="display:none">
+      <button type="button" class="back-link" id="backToRoleBtn">← Back</button>
+      <label>Admin password
+        <input type="password" id="loginPassword" autocomplete="current-password">
+      </label>
+      <div class="form-error" id="loginError"></div>
+      <button type="submit" class="btn btn-teal" style="width:100%;justify-content:center">Sign in</button>
+    </form>
+
+    <form id="ebsLoginForm" style="display:none">
+      <button type="button" class="back-link" id="backToRoleBtnEbs">← Back</button>
+      <label>Who are you?
+        <select id="ebsLoginUsername"></select>
+      </label>
+      <label>Password
+        <input type="password" id="ebsLoginPassword" autocomplete="current-password">
+      </label>
+      <div class="form-error" id="ebsLoginError"></div>
+      <button type="submit" class="btn btn-purple" style="width:100%;justify-content:center">Sign in</button>
+    </form>
+  </div>
+</div>
+
+<div id="appShell" style="display:none">
+<header>
+  <div class="brand">
+    <div class="brand-mark">🌐</div>
+    <div>
+      <h1>Shift Roster</h1>
+      <p>EC Support — auto-scheduled global handoff</p>
+    </div>
+  </div>
+
+  <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+    <div class="datenav">
+      <button id="prevBtn" title="Previous day" aria-label="Previous day">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <div style="position:relative">
+        <div class="date-display" id="dateDisplay" role="button" tabindex="0" title="Click to pick a date">
+          07 Jul 2026
+          <span class="date-sub" id="dateSub">Today</span>
+        </div>
+        <input type="date" id="datePicker">
+      </div>
+      <button id="nextBtn" title="Next day" aria-label="Next day">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+    </div>
+    <button class="btn-today" id="todayBtn">Today</button>
+    <div class="user-chip">
+      <span id="userChipText"></span>
+      <button id="changePwBtn" title="Change password">🔑 Password</button>
+      <button id="logoutBtn">Logout</button>
+    </div>
+  </div>
+</header>
+
+<nav class="page-nav" id="pageNav">
+  <button class="page-nav-btn active" id="navRosterBtn" data-page="roster">📅 Shift Roster</button>
+  <button class="page-nav-btn" id="navTrackerBtn" data-page="tracker">📊 SMB Chat Assignment Live Tracker</button>
+</nav>
+
+<main id="rosterMain">
+
+  <div class="timeline-card">
+    <div class="timeline-head">
+      <h2>Follow-the-sun coverage</h2>
+      <span class="tz-note">All times in IST (Asia/Kolkata) · auto-balanced across 24h</span>
+    </div>
+    <div class="timeline-track" id="timelineTrack">
+      <div class="timeline-empty">Nobody in the master roster yet — add your team below.</div>
+    </div>
+    <div class="tl-hours" id="tlHours"></div>
+    <div id="warnBanners"></div>
+    <div class="legend" id="legend"></div>
+  </div>
+
+  <div class="leave-card" id="leaveCard">
+    <div class="leave-card-head">
+      <div class="leave-card-title">
+        <h2>On leave</h2>
+        <span class="leave-count-badge" id="leaveCountBadge">0</span>
+      </div>
+      <span class="tz-note" id="leaveCardDate"></span>
+    </div>
+    <div id="leaveCardBody"></div>
+  </div>
+
+  <div class="toolbar">
+    <div class="toolbar-left">
+      <span class="row-count" id="rowCount">—</span>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn btn-ghost" id="rosterBtn">👥 Master roster</button>
+      <button class="btn btn-amber" id="regenerateBtn">🔁 Regenerate this day</button>
+      <button class="btn btn-green" id="exportDayBtn">⬇ Export leave (day)</button>
+      <button class="btn btn-purple" id="exportMonthBtn">⬇ Export leave (month)</button>
+    </div>
+  </div>
+
+  <div class="table-card">
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th style="text-align:center">S.No</th>
+            <th>Name</th>
+            <th>Region</th>
+            <th style="width:110px">Shift Slot</th>
+            <th style="width:220px">Ticket Time Window</th>
+            <th style="width:100px">Duration</th>
+            <th style="text-align:center">On leave</th>
+            <th style="text-align:center">Reorder</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+</main>
+
+<main id="trackerMain" style="display:none">
+
+  <div class="tr-toolbar">
+    <div class="tr-toolbar-left">
+      <div id="trWhoamiWrap"></div>
+      <span class="tr-datebadge" id="trDateBadge"></span>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn btn-ghost" id="trTodayBtn">Today</button>
+      <button class="btn btn-purple" id="trMatrixBtn">🔢 View EBS × SMB matrix</button>
+      <button class="btn btn-amber" id="trUndoBtn">↩ Undo last</button>
+      <button class="btn" id="trResetBtn" style="background:#FCEBEB;color:var(--danger);border:1px solid #F0C4C4">🗑 Reset day</button>
+    </div>
+  </div>
+
+  <div class="tr-summary-row" id="trSummaryRow"></div>
+
+  <div class="tr-section-head">
+    <h2>SMB techs — tap + when you assign a chat</h2>
+    <span class="tz-note">Sorted lowest load first, so the next chat goes to whoever's freest</span>
+  </div>
+  <div class="tr-grid" id="trGrid"></div>
+
+  <div class="tr-section-head" style="margin-top:22px">
+    <h2>EBS techs — chats assigned today</h2>
+  </div>
+  <div class="tr-ebs-row" id="trEbsRow"></div>
+
+  <div class="tr-feed-card">
+    <div class="tr-section-head" style="margin:0 0 8px">
+      <h2>Live activity</h2>
+    </div>
+    <div id="trFeed" class="tr-feed"></div>
+  </div>
+
+</main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- EBS x SMB matrix modal -->
+<div class="modal-overlay" id="trMatrixModal">
+  <div class="modal" style="max-width:820px">
+    <div class="modal-head">
+      <div>
+        <h2>EBS × SMB assignment matrix</h2>
+        <p>How many chats each EBS tech has routed to each SMB tech today.</p>
+      </div>
+      <button class="modal-close" id="trMatrixModalClose" aria-label="Close">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="table-card" style="box-shadow:none">
+        <div class="table-scroll">
+          <table id="trMatrixTable"><thead></thead><tbody></tbody></table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Admin: reset an EBS tech's password -->
+<div class="modal-overlay" id="resetPwModal">
+  <div class="modal" style="max-width:340px">
+    <div class="modal-head">
+      <div>
+        <h2>Reset password</h2>
+        <p id="resetPwWho">Set a new password for this EBS account.</p>
+      </div>
+      <button class="modal-close" id="resetPwModalClose" aria-label="Close">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <form id="resetPwForm">
+        <label style="display:block;font-size:12px;color:var(--muted);font-weight:600;margin-bottom:14px">New password
+          <input type="password" id="resetPwNew" autocomplete="new-password" style="width:100%;margin-top:6px;padding:9px 11px;border:1px solid var(--border);border-radius:8px;font-size:13.5px;box-sizing:border-box">
+        </label>
+        <div class="form-error" id="resetPwError"></div>
+        <button type="submit" class="btn btn-purple" style="width:100%;justify-content:center">Set new password</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Master Roster modal -->
+<div class="modal-overlay" id="rosterModal">
+  <div class="modal">
+    <div class="modal-head">
+      <div>
+        <h2>Master roster</h2>
+        <p>Your team pool — every day auto-generates from this list. Edit names, regions, or the daily cycle start time here; swap the order to change priority.</p>
+      </div>
+      <button class="modal-close" id="rosterModalClose" aria-label="Close">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+    <div class="modal-toolbar">
+      <div class="cycle-field">
+        Cycle start time: <input type="time" id="cycleStartInput">
+      </div>
+      <button class="btn btn-ghost" id="rosterImportBtn">⬆ Import Excel/CSV</button>
+    </div>
+    <div class="modal-body">
+      <div class="table-card" style="box-shadow:none">
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th style="text-align:center">S.No</th>
+                <th>Name</th>
+                <th>Region</th>
+                <th style="text-align:center">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="rosterTbody"></tbody>
+          </table>
+        </div>
+        <div class="add-row-bar">
+          <button id="rosterAddRowBtn">+ Add person</button>
+        </div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <span class="row-count" id="rosterCount"></span>
+      <button class="btn btn-save" id="rosterSaveBtn">Save master roster</button>
+    </div>
+  </div>
+</div>
+
+<input type="file" id="rosterImportFile" accept=".xlsx,.xls,.csv" style="display:none">
+
+<!-- Change password modal -->
+<div class="modal-overlay" id="pwModal">
+  <div class="modal" style="max-width:360px">
+    <div class="modal-head">
+      <div>
+        <h2>Change password</h2>
+        <p>Update your own login password.</p>
+      </div>
+      <button class="modal-close" id="pwModalClose" aria-label="Close">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <label style="display:block;font-size:12px;color:var(--muted);font-weight:600;margin-bottom:14px">Current password
+        <input type="password" id="pwCurrent" autocomplete="current-password" style="width:100%;margin-top:6px;padding:9px 11px;border:1px solid var(--border);border-radius:8px;font-size:13.5px;box-sizing:border-box">
+      </label>
+      <label style="display:block;font-size:12px;color:var(--muted);font-weight:600;margin-bottom:4px">New password
+        <input type="password" id="pwNew" autocomplete="new-password" style="width:100%;margin-top:6px;padding:9px 11px;border:1px solid var(--border);border-radius:8px;font-size:13.5px;box-sizing:border-box">
+      </label>
+      <div class="form-error" id="pwError"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-save" id="pwSaveBtn">Update password</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const REGION_PALETTE = {
+  'ANZ/APAC':   '#F2994A',
+  'APAC/India': '#F2C94C',
+  'India/MEA':  '#6FCF97',
+  'MEA/Europe': '#56CCF2',
+  'UK/Europe':  '#2F80ED',
+  'US/LATAM':   '#9B51E0'
+};
+const FALLBACK_COLORS = ['#94A3B8','#EF9F9F','#7FB88E','#C9A0DC','#E0B84D','#5DA5A3'];
+function colorForRegion(region){
+  if (REGION_PALETTE[region]) return REGION_PALETTE[region];
+  let h = 0;
+  for (let i=0;i<region.length;i++) h = (h*31 + region.charCodeAt(i)) >>> 0;
+  return FALLBACK_COLORS[h % FALLBACK_COLORS.length];
+}
+
+let currentDate = toISODate(new Date());
+let rows = []; // this day's computed rows: {id,name,region,onLeave,shiftSlot,ticketTimeWindow}
+
+function toISODate(d){
+  const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), day=String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${day}`;
+}
+function addDays(dateStr, delta){
+  const d = new Date(dateStr + 'T00:00:00');
+  d.setDate(d.getDate() + delta);
+  return toISODate(d);
+}
+function formatDisplayDate(dateStr){
+  const d = new Date(dateStr + 'T00:00:00');
+  return d.toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' });
+}
+function istNowMinutes(){
+  const parts = new Intl.DateTimeFormat('en-GB', { timeZone:'Asia/Kolkata', hour:'2-digit', minute:'2-digit', hour12:false }).formatToParts(new Date());
+  return Number(parts.find(p=>p.type==='hour').value)*60 + Number(parts.find(p=>p.type==='minute').value);
+}
+function istTodayISO(){
+  const parts = new Intl.DateTimeFormat('en-CA', { timeZone:'Asia/Kolkata', year:'numeric', month:'2-digit', day:'2-digit' }).formatToParts(new Date());
+  return `${parts.find(p=>p.type==='year').value}-${parts.find(p=>p.type==='month').value}-${parts.find(p=>p.type==='day').value}`;
+}
+function timeToMinutes(t){
+  if(!t || !/^\d{2}:\d{2}$/.test(t)) return null;
+  const [h,m] = t.split(':').map(Number);
+  return h*60+m;
+}
+function formatDuration(min){
+  if(min == null || isNaN(min)) return '—';
+  const h = Math.floor(min/60), m = min%60;
+  if(h === 0) return `${m} min`;
+  if(m === 0) return `${h}h`;
+  return `${h}h ${m}m`;
+}
+// Is `nowMin` (0–1439) currently inside this row's slot? Handles slots
+// that wrap past midnight (e.g. cycle start 22:00 running into next day).
+function isCurrentSlot(row, nowMin){
+  if(row.onLeave) return false;
+  const start = timeToMinutes(row.shiftSlot);
+  if(start == null || row.durationMin == null) return false;
+  const startMod = start % 1440;
+  const endMod = (start + row.durationMin) % 1440;
+  if(startMod <= endMod) return nowMin >= startMod && nowMin < endMod;
+  return nowMin >= startMod || nowMin < endMod; // wraps midnight
+}
+function escAttr(v){
+  return String(v==null?'':v).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+function showToast(msg, type=''){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (type ? ' '+type : '');
+  clearTimeout(showToast._tm);
+  showToast._tm = setTimeout(()=>{ t.classList.remove('show'); }, 3200);
+}
+
+// ── Header date display ──────────────────────────────────────
+function updateHeaderDate(){
+  document.getElementById('dateDisplay').firstChild.textContent = formatDisplayDate(currentDate) + ' ';
+  const today = istTodayISO();
+  const sub = document.getElementById('dateSub');
+  if(currentDate === today) sub.textContent = "Today";
+  else if(currentDate === addDays(today,-1)) sub.textContent = "Yesterday";
+  else if(currentDate === addDays(today,1)) sub.textContent = "Tomorrow";
+  else sub.textContent = new Date(currentDate+'T00:00:00').toLocaleDateString('en-GB',{weekday:'long'});
+  document.getElementById('datePicker').value = currentDate;
+}
+
+// ── Data loading ─────────────────────────────────────────────
+async function loadDate(dateStr){
+  currentDate = dateStr;
+  updateHeaderDate();
+  try{
+    const res = await fetch(`/api/schedule/${dateStr}`);
+    if(res.status === 401){ showLogin(); return; }
+    const data = await res.json();
+    rows = data.success ? data.rows : [];
+  }catch(e){
+    rows = [];
+    showToast('Could not reach the server. Is it running?', 't-error');
+  }
+  renderAll();
+}
+
+// ── Table ────────────────────────────────────────────────────
+function renderTable(){
+  const tbody = document.getElementById('tbody');
+  const onLeaveCount = rows.filter(r=>r.onLeave).length;
+  document.getElementById('rowCount').innerHTML = rows.length
+    ? `<b>${rows.length - onLeaveCount}</b> scheduled &nbsp;·&nbsp; <b>${onLeaveCount}</b> on leave &nbsp;·&nbsp; ${rows.length} total`
+    : '—';
+
+  if(rows.length === 0){
+    tbody.innerHTML = `<tr><td colspan="8">
+      <div class="empty-state">
+        <div class="em-icon">👥</div>
+        <h3>No master roster set up yet</h3>
+        <p>Add your team once — every day will auto-generate from it after that.</p>
+        <button class="btn btn-teal" onclick="openRosterModal()">👥 Set up master roster</button>
+      </div>
+    </td></tr>`;
+    return;
+  }
+
+  const showCurrent = currentDate === istTodayISO();
+  const nowMin = showCurrent ? istNowMinutes() : null;
+
+  tbody.innerHTML = rows.map((r,i)=>{
+    const isNow = showCurrent && isCurrentSlot(r, nowMin);
+    const rowClass = [r.onLeave?'row-leave':'', isNow?'row-current':''].filter(Boolean).join(' ');
+    return `
+    <tr class="${rowClass}">
+      <td class="sno-cell">${i+1}</td>
+      <td class="name-cell">${escAttr(r.name)}</td>
+      <td>${escAttr(r.region)}</td>
+      <td class="mono-cell">${r.onLeave ? '<span class="leave-badge">ON LEAVE</span>' : escAttr(r.shiftSlot)}</td>
+      <td class="mono-cell">${r.onLeave ? '—' : escAttr(r.ticketTimeWindow)}${isNow ? '<span class="now-badge">NOW</span>' : ''}</td>
+      <td class="duration-cell">${formatDuration(r.durationMin)}</td>
+      <td style="text-align:center">
+        <label class="switch" title="${r.onLeave?'Mark available':'Mark on leave'}">
+          <input type="checkbox" ${r.onLeave?'checked':''} onchange="toggleLeave('${r.id}', this.checked)">
+          <span class="slider"></span>
+        </label>
+      </td>
+      <td>
+        <div class="row-actions">
+          <button class="icon-btn" onclick="moveRow(${i},-1)" ${i===0?'disabled':''} title="Move up" aria-label="Move up">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 19V5M5 12l7-7 7 7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <button class="icon-btn" onclick="moveRow(${i},1)" ${i===rows.length-1?'disabled':''} title="Move down" aria-label="Move down">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12l7 7 7-7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+        </div>
+      </td>
+    </tr>
+  `;
+  }).join('');
+}
+
+// ── Timeline ──────────────────────────────────────────────────
+function renderTimeline(){
+  const track = document.getElementById('timelineTrack');
+  const hoursEl = document.getElementById('tlHours');
+  const legendEl = document.getElementById('legend');
+
+  const valid = rows
+    .map((r,i)=>({ ...r, _min: timeToMinutes(r.shiftSlot), _idx:i }))
+    .filter(r => r.onLeave || r._min !== null)
+    .sort((a,b)=> (a._min ?? 999999) - (b._min ?? 999999));
+
+  const working = valid.filter(r => !r.onLeave);
+  if(working.length === 0){
+    track.innerHTML = `<div class="timeline-empty">${rows.length ? 'Everyone is on leave today.' : 'Nobody in the master roster yet — add your team below.'}</div>`;
+    hoursEl.innerHTML = '';
+    legendEl.innerHTML = '';
+    return;
+  }
+
+  let segHtml = '';
+  for(let i=0;i<working.length;i++){
+    const cur = working[i];
+    const nextMin = (i < working.length-1) ? working[i+1]._min : cur._min + 1440/working.length; // fallback, shouldn't normally trigger
+    const widthPct = Math.max(0, ((nextMin - cur._min + 1440) % 1440 || 1440) / (24*60) * 100);
+    const color = colorForRegion(cur.region || 'Unassigned');
+    segHtml += `<div class="tl-seg" style="width:${widthPct}%;background:${color}">
+      <div class="tl-tip">${escAttr(cur.name||'—')} · ${escAttr(cur.region||'—')}<br>${escAttr(cur.shiftSlot||'')}${cur.ticketTimeWindow?(' · '+escAttr(cur.ticketTimeWindow)):''}</div>
+    </div>`;
+  }
+
+  if(currentDate === istTodayISO()){
+    const nowMin = istNowMinutes();
+    segHtml += `<div class="now-marker" style="left:${(nowMin/1440)*100}%"></div>`;
+  }
+
+  track.innerHTML = segHtml;
+  hoursEl.innerHTML = ['00:00','06:00','12:00','18:00','24:00'].map(h=>`<span>${h}</span>`).join('');
+
+  const seenRegions = [...new Set(working.map(r=>r.region||'Unassigned'))];
+  legendEl.innerHTML = seenRegions.map(r=>`
+    <div class="legend-item"><span class="legend-dot" style="background:${colorForRegion(r)}"></span>${escAttr(r)}</div>
+  `).join('') + (rows.some(r=>r.onLeave) ? `<div class="legend-item"><span class="legend-dot" style="background:repeating-linear-gradient(45deg,#D7DCE5,#D7DCE5 3px,#CBD2DE 3px,#CBD2DE 6px)"></span>On leave</div>` : '');
+}
+
+// ── Gap/overlap sanity-check (should normally show nothing, since the
+// scheduler guarantees contiguous coverage — kept as a safety net) ──
+function parseWindow(str){
+  const m = String(str||'').match(/^\s*(\d{1,2}):(\d{2})\s*(AM|PM)\s*[-–]\s*(\d{1,2}):(\d{2})\s*(AM|PM)\s*$/i);
+  if(!m) return null;
+  function to24(h,ap){ h=parseInt(h,10); ap=ap.toUpperCase(); if(ap==='PM'&&h!==12)h+=12; if(ap==='AM'&&h===12)h=0; return h; }
+  return { start: to24(m[1],m[3])*60 + parseInt(m[2],10), end: to24(m[4],m[6])*60 + parseInt(m[5],10) };
+}
+function fmtMin(totalMin){
+  let h = Math.floor(totalMin/60) % 24, mi = totalMin % 60;
+  const ap = h < 12 ? 'AM' : 'PM';
+  let h12 = h % 12; if(h12 === 0) h12 = 12;
+  return `${String(h12).padStart(2,'0')}:${String(mi).padStart(2,'0')} ${ap}`;
+}
+function renderWarnBanners(){
+  const parsed = rows.filter(r=>!r.onLeave).map(r => ({ ...r, win: parseWindow(r.ticketTimeWindow) })).filter(r => r.win);
+  parsed.sort((a,b) => a.win.start - b.win.start);
+  const gaps = [], overlaps = [];
+  for(let i=0;i<parsed.length-1;i++){
+    const cur = parsed[i], next = parsed[i+1];
+    if(cur.win.end + 1 < next.win.start){
+      gaps.push(`Between ${cur.name} (ends ${fmtMin(cur.win.end)}) and ${next.name} (starts ${fmtMin(next.win.start)})`);
+    } else if(cur.win.end > next.win.start + 1){
+      overlaps.push(`${cur.name} (ends ${fmtMin(cur.win.end)}) overlaps with ${next.name} (starts ${fmtMin(next.win.start)})`);
+    }
+  }
+  let html = '';
+  if(overlaps.length) html += `<div class="warn-banner w-overlap">${overlaps.map(o=>`<div class="warn-row">⚠️ Overlap — ${o}</div>`).join('')}</div>`;
+  if(gaps.length) html += `<div class="warn-banner w-gap">${gaps.map(g=>`<div class="warn-row">⏳ Gap — ${g}</div>`).join('')}</div>`;
+  document.getElementById('warnBanners').innerHTML = html;
+}
+
+// ── On-leave dashboard summary ─────────────────────────────────
+function renderLeaveSummary(){
+  const card = document.getElementById('leaveCard');
+  const badge = document.getElementById('leaveCountBadge');
+  const body = document.getElementById('leaveCardBody');
+  const dateNote = document.getElementById('leaveCardDate');
+
+  dateNote.textContent = formatDisplayDate(currentDate);
+
+  const onLeave = rows.filter(r => r.onLeave);
+  badge.textContent = onLeave.length;
+  badge.classList.toggle('non-zero', onLeave.length > 0);
+  card.classList.toggle('has-leave', onLeave.length > 0);
+
+  if(onLeave.length === 0){
+    body.innerHTML = `<div class="leave-empty">✅ ${rows.length ? 'Full team available — nobody on leave.' : 'No roster set up yet.'}</div>`;
+    return;
+  }
+
+  body.innerHTML = `<div class="leave-chips">${onLeave.map(r => `
+    <div class="leave-chip">
+      <span class="leave-chip-dot" style="background:${colorForRegion(r.region||'Unassigned')}"></span>
+      <span class="leave-chip-name">${escAttr(r.name)}</span>
+      <span class="leave-chip-region">${escAttr(r.region||'—')}</span>
+    </div>
+  `).join('')}</div>`;
+}
+
+function renderAll(){
+  renderTable();
+  renderTimeline();
+  renderWarnBanners();
+  renderLeaveSummary();
+}
+
+// ── Leave toggle / reorder / regenerate — all auto-save immediately ──
+async function toggleLeave(rosterId, onLeave){
+  try{
+    const res = await fetch(`/api/schedule/${currentDate}/leave`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ rosterId, onLeave })
+    });
+    const data = await res.json();
+    if(data.success){
+      rows = data.rows;
+      renderAll();
+      showToast(onLeave ? 'Marked on leave — everyone else\'s time adjusted automatically.' : 'Marked available — schedule rebalanced.', 't-success');
+    } else {
+      showToast(data.message || 'Could not update.', 't-error');
+    }
+  }catch(e){ showToast('Could not reach the server.', 't-error'); }
+}
+
+async function moveRow(idx, dir){
+  const target = idx + dir;
+  if(target < 0 || target >= rows.length) return;
+  const order = rows.map(r=>r.id);
+  [order[idx], order[target]] = [order[target], order[idx]];
+  try{
+    const res = await fetch(`/api/schedule/${currentDate}/reorder`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ order })
+    });
+    const data = await res.json();
+    if(data.success){ rows = data.rows; renderAll(); }
+    else showToast(data.message || 'Could not reorder.', 't-error');
+  }catch(e){ showToast('Could not reach the server.', 't-error'); }
+}
+
+async function regenerateDay(){
+  const ok = confirm("This resets today's order and clears any leave marks, rebuilding fresh from the master roster. Continue?");
+  if(!ok) return;
+  try{
+    const res = await fetch(`/api/schedule/${currentDate}/regenerate`, { method:'POST' });
+    const data = await res.json();
+    if(data.success){
+      rows = data.rows;
+      renderAll();
+      showToast(`${formatDisplayDate(currentDate)} regenerated from the master roster.`, 't-success');
+    } else {
+      showToast(data.message || 'Could not regenerate.', 't-error');
+    }
+  }catch(e){ showToast('Could not reach the server.', 't-error'); }
+}
+
+// ── Master roster modal ────────────────────────────────────────
+let masterRoster = { cycleStart:'05:00', people:[] };
+
+async function loadMasterRoster(){
+  try{
+    const res = await fetch('/api/master-roster');
+    const data = await res.json();
+    if(data.success) masterRoster = { cycleStart: data.cycleStart, people: data.people };
+  }catch(e){ showToast('Could not load the master roster.', 't-error'); }
+}
+function renderRosterTable(){
+  document.getElementById('cycleStartInput').value = masterRoster.cycleStart || '05:00';
+  document.getElementById('rosterCount').textContent = `${masterRoster.people.length} people`;
+  const tbody = document.getElementById('rosterTbody');
+  if(masterRoster.people.length === 0){
+    tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:24px 12px">No one added yet. Add people below or import from Excel/CSV.</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = masterRoster.people.map((p,i)=>`
+    <tr>
+      <td class="sno-cell">${i+1}</td>
+      <td><input type="text" value="${escAttr(p.name)}" placeholder="Name" oninput="rosterUpdateField(${i},'name',this.value)"></td>
+      <td><input type="text" value="${escAttr(p.region)}" placeholder="Region (e.g. ANZ/APAC)" oninput="rosterUpdateField(${i},'region',this.value)"></td>
+      <td>
+        <div class="row-actions">
+          <button class="icon-btn" onclick="rosterMoveRow(${i},-1)" ${i===0?'disabled':''} title="Move up" aria-label="Move up">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 19V5M5 12l7-7 7 7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <button class="icon-btn" onclick="rosterMoveRow(${i},1)" ${i===masterRoster.people.length-1?'disabled':''} title="Move down" aria-label="Move down">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12l7 7 7-7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <button class="icon-btn danger" onclick="rosterRemoveRow(${i})" title="Remove" aria-label="Remove">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M4 7h16M9 7V5a2 2 0 012-2h2a2 2 0 012 2v2m2 0v13a2 2 0 01-2 2H9a2 2 0 01-2-2V7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+}
+function rosterUpdateField(idx, field, value){ masterRoster.people[idx][field] = value; }
+function rosterAddRow(){ masterRoster.people.push({ id:'', name:'', region:'' }); renderRosterTable(); }
+function rosterRemoveRow(idx){ masterRoster.people.splice(idx,1); renderRosterTable(); }
+function rosterMoveRow(idx, dir){
+  const target = idx + dir;
+  if(target < 0 || target >= masterRoster.people.length) return;
+  [masterRoster.people[idx], masterRoster.people[target]] = [masterRoster.people[target], masterRoster.people[idx]];
+  renderRosterTable();
+}
+async function saveMasterRoster(){
+  const btn = document.getElementById('rosterSaveBtn');
+  btn.disabled = true;
+  try{
+    const res = await fetch('/api/master-roster', {
+      method:'PUT', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ cycleStart: document.getElementById('cycleStartInput').value, people: masterRoster.people })
+    });
+    const data = await res.json();
+    if(data.success){
+      masterRoster = { cycleStart:data.cycleStart, people:data.people };
+      renderRosterTable();
+      showToast('Master roster saved.', 't-success');
+      loadDate(currentDate); // refresh in case the viewed day isn't saved yet
+    } else {
+      showToast(data.message || 'Could not save.', 't-error');
+    }
+  }catch(e){ showToast('Could not reach the server.', 't-error'); }
+  finally{ btn.disabled = false; }
+}
+function openRosterModal(){
+  loadMasterRoster().then(renderRosterTable);
+  document.getElementById('rosterModal').classList.add('open');
+}
+function closeRosterModal(){ document.getElementById('rosterModal').classList.remove('open'); }
+
+async function handleRosterImport(file){
+  if(!file) return;
+  const formData = new FormData();
+  formData.append('file', file);
+  showToast('Importing…');
+  try{
+    const res = await fetch('/api/master-roster/import', { method:'POST', body: formData });
+    const data = await res.json();
+    if(!data.success){ showToast(data.message || 'Import failed.', 't-error'); return; }
+    masterRoster = { cycleStart: data.cycleStart, people: data.people };
+    renderRosterTable();
+    showToast(`Imported ${data.people.length} people.${data.skipped ? ' ('+data.skipped+' row(s) skipped, missing a Name.)' : ''}`, 't-success');
+  }catch(e){ showToast('Could not reach the server.', 't-error'); }
+}
+
+// ── Date navigation ──────────────────────────────────────────
+document.getElementById('prevBtn').addEventListener('click', ()=> loadDate(addDays(currentDate,-1)));
+document.getElementById('nextBtn').addEventListener('click', ()=> loadDate(addDays(currentDate,1)));
+document.getElementById('todayBtn').addEventListener('click', ()=> loadDate(istTodayISO()));
+document.getElementById('regenerateBtn').addEventListener('click', regenerateDay);
+document.getElementById('exportDayBtn').addEventListener('click', ()=>{
+  window.location.href = `/api/export/leave/day/${currentDate}`;
+});
+document.getElementById('exportMonthBtn').addEventListener('click', ()=>{
+  const month = currentDate.slice(0,7); // YYYY-MM
+  window.location.href = `/api/export/leave/month/${month}`;
+});
+
+const dateDisplay = document.getElementById('dateDisplay');
+const datePicker  = document.getElementById('datePicker');
+dateDisplay.addEventListener('click', ()=> datePicker.showPicker ? datePicker.showPicker() : datePicker.click());
+dateDisplay.addEventListener('keydown', (e)=>{ if(e.key==='Enter' || e.key===' ') { e.preventDefault(); datePicker.showPicker ? datePicker.showPicker() : datePicker.click(); } });
+datePicker.addEventListener('change', ()=>{ if(datePicker.value) loadDate(datePicker.value); });
+
+document.getElementById('rosterBtn').addEventListener('click', openRosterModal);
+document.getElementById('rosterModalClose').addEventListener('click', closeRosterModal);
+document.getElementById('rosterModal').addEventListener('click', (e)=>{ if(e.target.id==='rosterModal') closeRosterModal(); });
+document.getElementById('rosterAddRowBtn').addEventListener('click', rosterAddRow);
+document.getElementById('rosterSaveBtn').addEventListener('click', saveMasterRoster);
+document.getElementById('rosterImportBtn').addEventListener('click', ()=> document.getElementById('rosterImportFile').click());
+document.getElementById('rosterImportFile').addEventListener('change', (e)=>{
+  handleRosterImport(e.target.files[0]);
+  e.target.value = '';
+});
+
+// refresh the "now" marker / current-slot highlight every minute
+setInterval(()=>{ if(currentDate === istTodayISO()){ renderTimeline(); renderTable(); } }, 60000);
+
+// ── SMB Chat Assignment Live Tracker ───────────────────────────
+let trackerRoster = { people: [] };
+let trackerState = { events: [], countsBySmb: {}, totalsByEbs: {}, matrix: {}, totalToday: 0 };
+let trackerDate = istTodayISO();
+let selectedEbsId = localStorage.getItem('ziashift_ebs_id') || ''; // only meaningful for Admin's override picker
+let currentPage = 'roster';
+
+function ebsList(){ return trackerRoster.people.filter(p => p.mode === 'EBS'); }
+function smbList(){ return trackerRoster.people.filter(p => p.mode === 'SMB'); }
+
+function switchPage(page){
+  currentPage = page;
+  document.getElementById('rosterMain').style.display = page === 'roster' ? 'block' : 'none';
+  document.getElementById('trackerMain').style.display = page === 'tracker' ? 'block' : 'none';
+  document.getElementById('navRosterBtn').classList.toggle('active', page === 'roster');
+  document.getElementById('navTrackerBtn').classList.toggle('active', page === 'tracker');
+  if(page === 'tracker') loadTracker(trackerDate);
+}
+document.getElementById('navRosterBtn').addEventListener('click', ()=> switchPage('roster'));
+document.getElementById('navTrackerBtn').addEventListener('click', ()=> switchPage('tracker'));
+
+function updateTrDateBadge(){
+  const today = istTodayISO();
+  document.getElementById('trDateBadge').textContent =
+    formatDisplayDate(trackerDate) + (trackerDate === today ? ' · Today' : '');
+}
+
+async function loadTrackerRoster(){
+  try{
+    const res = await fetch('/api/tracker/roster');
+    if(res.status === 401) return;
+    const data = await res.json();
+    if(data.success) trackerRoster = { people: data.people };
+  }catch(e){ /* keep whatever we had */ }
+  renderWhoami();
+}
+
+// Who's assigning is now identity-based, not a free-pick dropdown:
+//  - EBS role: locked to the account they logged in as (server-verified)
+//  - Admin role: a dropdown, for logging on someone's behalf if needed
+//  - Guest role: no assigning at all — the whole control is hidden
+function renderWhoami(){
+  const wrap = document.getElementById('trWhoamiWrap');
+  if(CURRENT_ROLE === 'ebs'){
+    wrap.innerHTML = `<div class="tr-whoami-label">Assigning as <b style="color:var(--ink)">${escAttr(CURRENT_NAME || CURRENT_USERNAME)}</b></div>`;
+  } else if(CURRENT_ROLE === 'admin'){
+    const ebs = ebsList();
+    if(!ebs.some(p => p.id === selectedEbsId)) selectedEbsId = ebs[0] ? ebs[0].id : '';
+    wrap.innerHTML = `<label class="tr-whoami-label">Assign on behalf of
+      <select id="ebsSelect" class="tr-select">${ebs.map(p=>`<option value="${escAttr(p.id)}"${p.id===selectedEbsId?' selected':''}>${escAttr(p.name)}</option>`).join('')}</select>
+    </label>`;
+    document.getElementById('ebsSelect').addEventListener('change', (e)=>{
+      selectedEbsId = e.target.value;
+      localStorage.setItem('ziashift_ebs_id', selectedEbsId);
+      renderTracker();
+    });
+  } else {
+    wrap.innerHTML = `<div class="tr-whoami-label">👀 View only — sign in as an EBS tech to log assignments</div>`;
+  }
+}
+
+async function loadTracker(dateStr){
+  trackerDate = dateStr;
+  updateTrDateBadge();
+  try{
+    const res = await fetch(`/api/tracker/${dateStr}`);
+    if(res.status === 401){ showLogin(); return; }
+    const data = await res.json();
+    if(data.success) trackerState = data;
+  }catch(e){
+    showToast('Could not reach the server. Is it running?', 't-error');
+  }
+  renderTracker();
+}
+
+function timeAgo(iso){
+  const diffSec = Math.max(0, Math.round((Date.now() - new Date(iso).getTime())/1000));
+  if(diffSec < 60) return 'just now';
+  const m = Math.floor(diffSec/60);
+  if(m < 60) return `${m}m ago`;
+  const h = Math.floor(m/60);
+  return `${h}h ${m%60}m ago`;
+}
+
+function renderTracker(){
+  const isAdmin = CURRENT_ROLE === 'admin';
+  const canAssign = CURRENT_ROLE === 'admin' || CURRENT_ROLE === 'ebs';
+  const smb = smbList();
+  const counts = trackerState.countsBySmb || {};
+  const totalToday = trackerState.totalToday || 0;
+
+  const sorted = [...smb].sort((a,b) => (counts[a.id]||0) - (counts[b.id]||0));
+  const lowestCount = sorted.length ? (counts[sorted[0].id]||0) : 0;
+
+  // ── Summary stats ──
+  const busiest = smb.reduce((max,p)=> (counts[p.id]||0) > (counts[max?.id]||-1) ? p : max, null);
+  const avg = smb.length ? (totalToday / smb.length) : 0;
+  document.getElementById('trSummaryRow').innerHTML = `
+    <div class="tr-stat"><div class="tr-stat-num">${totalToday}</div><div class="tr-stat-label">Chats assigned today</div></div>
+    <div class="tr-stat"><div class="tr-stat-num">${avg.toFixed(1)}</div><div class="tr-stat-label">Avg per SMB tech</div></div>
+    <div class="tr-stat tr-stat-high"><div class="tr-stat-num">${busiest && counts[busiest.id] ? counts[busiest.id] : 0}</div><div class="tr-stat-label">${busiest && counts[busiest.id] ? escAttr(busiest.name) : '—'} · highest load</div></div>
+    <div class="tr-stat tr-stat-low"><div class="tr-stat-num">${lowestCount}</div><div class="tr-stat-label">${sorted[0] ? escAttr(sorted[0].name) : '—'} · lowest load</div></div>
+  `;
+
+  // ── SMB grid ──
+  document.getElementById('trGrid').innerHTML = sorted.map(p => {
+    const count = counts[p.id] || 0;
+    const isRecommend = count === lowestCount && smb.length > 1;
+    const ebsBreakdown = ebsList().map(e => {
+      const c = (trackerState.matrix[e.id] || {})[p.id] || 0;
+      return c ? `<span class="tr-mini-chip">${escAttr(e.name)}: ${c}</span>` : '';
+    }).filter(Boolean).join('');
+    return `
+      <div class="tr-card${isRecommend ? ' tr-recommend' : ''}">
+        <div class="tr-card-head">
+          <div>
+            <div class="tr-card-name">${escAttr(p.name)}</div>
+            <div class="tr-card-region">${escAttr(p.region||'—')}</div>
+          </div>
+          ${isRecommend ? '<span class="tr-recommend-badge">Lowest load</span>' : ''}
+        </div>
+        <div class="tr-card-body">
+          <div>
+            <div class="tr-count">${count}</div>
+            <div class="tr-count-label">Assigned</div>
+          </div>
+          ${canAssign ? `<button class="tr-plus-btn" data-smb-id="${escAttr(p.id)}">+</button>` : ''}
+        </div>
+        ${ebsBreakdown ? `<div class="tr-card-breakdown">${ebsBreakdown}</div>` : ''}
+      </div>
+    `;
+  }).join('') || `<div class="empty-state"><div class="em-icon">👥</div><h3>No SMB techs set up</h3><p>Add SMB techs to the tracker roster to get started.</p></div>`;
+
+  document.querySelectorAll('.tr-plus-btn').forEach(btn => {
+    btn.addEventListener('click', () => assignChat(btn.getAttribute('data-smb-id')));
+  });
+
+  // ── EBS row ──
+  document.getElementById('trEbsRow').innerHTML = ebsList().map(p => `
+    <div class="tr-ebs-card${p.id === CURRENT_EBS_ID ? ' tr-ebs-active' : ''}">
+      <div class="tr-ebs-name">${p.id === CURRENT_EBS_ID ? '<span class="tr-active-dot"></span>' : ''}${escAttr(p.name)}</div>
+      <div style="display:flex;align-items:center;gap:6px">
+        <div class="tr-ebs-count">${trackerState.totalsByEbs[p.id] || 0}</div>
+        ${p.username ? `<button class="tr-ebs-reset" data-username="${escAttr(p.username)}" data-name="${escAttr(p.name)}" title="Reset password">🔑</button>` : ''}
+      </div>
+    </div>
+  `).join('') || `<div class="tz-note">No EBS techs set up yet.</div>`;
+  document.querySelectorAll('.tr-ebs-reset').forEach(btn => {
+    btn.addEventListener('click', () => openResetPwModal(btn.getAttribute('data-username'), btn.getAttribute('data-name')));
+  });
+
+  // ── Live feed ──
+  const events = trackerState.events || [];
+  const recent = events.slice(-30);
+  document.getElementById('trFeed').innerHTML = recent.length
+    ? recent.map(ev => `
+        <div class="tr-feed-row">
+          <span>${escAttr(ev.ebsName)} → <b>${escAttr(ev.smbName)}</b></span>
+          <span class="tr-feed-time">${timeAgo(ev.ts)}</span>
+        </div>
+      `).join('')
+    : `<div class="tr-feed-empty">No chats assigned yet today.</div>`;
+
+  // ── Admin-only actions ──
+  document.getElementById('trUndoBtn').style.display = isAdmin ? 'inline-flex' : 'none';
+  document.getElementById('trResetBtn').style.display = isAdmin ? 'inline-flex' : 'none';
+}
+
+async function assignChat(smbId){
+  const body = { smbId };
+  if(CURRENT_ROLE === 'admin') body.ebsId = selectedEbsId; // EBS role: server uses the logged-in identity, client value is ignored
+  try{
+    const res = await fetch(`/api/tracker/${trackerDate}/assign`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify(body)
+    });
+    const data = await res.json();
+    if(data.success){
+      trackerState = data;
+      renderTracker();
+    } else {
+      showToast(data.message || 'Could not log this assignment.', 't-error');
+    }
+  }catch(e){ showToast('Could not reach the server.', 't-error'); }
+}
+
+document.getElementById('trTodayBtn').addEventListener('click', ()=> loadTracker(istTodayISO()));
+
+document.getElementById('trUndoBtn').addEventListener('click', async ()=>{
+  if(!confirm('Undo the most recent chat assignment for this day?')) return;
+  try{
+    const res = await fetch(`/api/tracker/${trackerDate}/undo`, { method:'POST' });
+    const data = await res.json();
+    if(data.success){ trackerState = data; renderTracker(); showToast('Last assignment undone.', 't-success'); }
+    else showToast(data.message || 'Could not undo.', 't-error');
+  }catch(e){ showToast('Could not reach the server.', 't-error'); }
+});
+
+document.getElementById('trResetBtn').addEventListener('click', async ()=>{
+  if(!confirm(`Reset all chat assignment counts for ${formatDisplayDate(trackerDate)}? This can't be undone.`)) return;
+  try{
+    const res = await fetch(`/api/tracker/${trackerDate}/reset`, { method:'POST' });
+    const data = await res.json();
+    if(data.success){ trackerState = data; renderTracker(); showToast('Counts reset for the day.', 't-success'); }
+    else showToast(data.message || 'Could not reset.', 't-error');
+  }catch(e){ showToast('Could not reach the server.', 't-error'); }
+});
+
+// ── EBS x SMB matrix modal ──
+function openTrMatrix(){
+  const ebs = ebsList(), smb = smbList();
+  const thead = document.querySelector('#trMatrixTable thead');
+  const tbody = document.querySelector('#trMatrixTable tbody');
+  thead.innerHTML = `<tr><th>EBS \\ SMB</th>${smb.map(s=>`<th style="text-align:center">${escAttr(s.name)}</th>`).join('')}<th style="text-align:center">Total</th></tr>`;
+  tbody.innerHTML = ebs.map(e => {
+    const rowTotal = trackerState.totalsByEbs[e.id] || 0;
+    return `<tr><td class="name-cell">${escAttr(e.name)}</td>${smb.map(s=>{
+      const c = (trackerState.matrix[e.id]||{})[s.id] || 0;
+      return `<td style="text-align:center" class="mono-cell">${c || '·'}</td>`;
+    }).join('')}<td style="text-align:center" class="mono-cell"><b>${rowTotal}</b></td></tr>`;
+  }).join('') || `<tr><td colspan="99" style="text-align:center;color:var(--muted);padding:20px">No EBS techs set up yet.</td></tr>`;
+  document.getElementById('trMatrixModal').classList.add('open');
+}
+document.getElementById('trMatrixBtn').addEventListener('click', openTrMatrix);
+document.getElementById('trMatrixModalClose').addEventListener('click', ()=> document.getElementById('trMatrixModal').classList.remove('open'));
+document.getElementById('trMatrixModal').addEventListener('click', (e)=>{ if(e.target.id==='trMatrixModal') document.getElementById('trMatrixModal').classList.remove('open'); });
+
+// ── Admin: reset an EBS tech's password ──
+let resetPwTargetUsername = null;
+function openResetPwModal(username, name){
+  resetPwTargetUsername = username;
+  document.getElementById('resetPwWho').textContent = `Set a new password for ${name}.`;
+  document.getElementById('resetPwNew').value = '';
+  document.getElementById('resetPwError').textContent = '';
+  document.getElementById('resetPwModal').classList.add('open');
+  document.getElementById('resetPwNew').focus();
+}
+function closeResetPwModal(){ document.getElementById('resetPwModal').classList.remove('open'); }
+document.getElementById('resetPwModalClose').addEventListener('click', closeResetPwModal);
+document.getElementById('resetPwModal').addEventListener('click', (e)=>{ if(e.target.id==='resetPwModal') closeResetPwModal(); });
+document.getElementById('resetPwForm').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const newPassword = document.getElementById('resetPwNew').value;
+  const errEl = document.getElementById('resetPwError');
+  errEl.textContent = '';
+  try{
+    const res = await fetch('/api/admin/reset-password', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ username: resetPwTargetUsername, newPassword })
+    });
+    const data = await res.json();
+    if(data.success){
+      closeResetPwModal();
+      showToast('Password reset. Share the new password with them directly.', 't-success');
+    } else {
+      errEl.textContent = data.message || 'Could not reset password.';
+    }
+  }catch(e){ errEl.textContent = 'Could not reach the server.'; }
+});
+
+// refresh the live tracker every 20s while it's the visible page (light polling
+// so multiple EBS techs on different machines see each other's clicks)
+setInterval(()=>{ if(currentPage === 'tracker') loadTracker(trackerDate); }, 20000);
+
+// ── Auth ──────────────────────────────────────────────────────
+let CURRENT_ROLE = null, CURRENT_USERNAME = null, CURRENT_NAME = null, CURRENT_EBS_ID = null;
+
+function showRoleSelect(){
+  document.getElementById('roleSelect').style.display = 'flex';
+  document.getElementById('loginForm').style.display = 'none';
+  document.getElementById('ebsLoginForm').style.display = 'none';
+  document.getElementById('loginPassword').value = '';
+  document.getElementById('loginError').textContent = '';
+  document.getElementById('ebsLoginPassword').value = '';
+  document.getElementById('ebsLoginError').textContent = '';
+}
+function showLogin(){
+  document.getElementById('loginOverlay').style.display = 'flex';
+  document.getElementById('appShell').style.display = 'none';
+  showRoleSelect();
+}
+function enterApp(){
+  document.getElementById('loginOverlay').style.display = 'none';
+  document.getElementById('appShell').style.display = 'block';
+  const roleLabel = CURRENT_ROLE === 'admin' ? 'Admin' : CURRENT_ROLE === 'ebs' ? 'EBS' : 'Guest';
+  const pillClass = CURRENT_ROLE === 'admin' ? ' role-admin' : CURRENT_ROLE === 'ebs' ? ' role-ebs' : '';
+  document.getElementById('userChipText').innerHTML =
+    `${escAttr(CURRENT_NAME || CURRENT_USERNAME)} <span class="role-pill${pillClass}">${roleLabel}</span>`;
+  document.body.classList.toggle('guest-mode', CURRENT_ROLE === 'guest');
+  document.body.classList.toggle('ebs-mode', CURRENT_ROLE === 'ebs');
+  loadDate(istTodayISO());
+  loadTrackerRoster();
+}
+async function checkSession(){
+  try{
+    const res = await fetch('/api/me');
+    if(res.ok){
+      const data = await res.json();
+      CURRENT_ROLE = data.role; CURRENT_USERNAME = data.username;
+      CURRENT_NAME = data.name || null; CURRENT_EBS_ID = data.ebsId || null;
+      enterApp();
+    } else {
+      showLogin();
+    }
+  }catch(e){ showLogin(); }
+}
+
+// Guest: one click, no password. View-only.
+document.getElementById('pickGuestBtn').addEventListener('click', async ()=>{
+  try{
+    const res = await fetch('/api/login/guest', { method:'POST' });
+    const data = await res.json();
+    if(data.success){ CURRENT_ROLE = data.role; CURRENT_USERNAME = data.username; CURRENT_NAME = null; CURRENT_EBS_ID = null; enterApp(); }
+    else showToast('Could not start a guest session.', 't-error');
+  }catch(e){ showToast('Could not reach the server.', 't-error'); }
+});
+
+// Admin: reveal the password step.
+document.getElementById('pickAdminBtn').addEventListener('click', ()=>{
+  document.getElementById('roleSelect').style.display = 'none';
+  document.getElementById('loginForm').style.display = 'block';
+  document.getElementById('loginPassword').focus();
+});
+
+// EBS Tech: reveal the name + password step.
+document.getElementById('pickEbsBtn').addEventListener('click', async ()=>{
+  document.getElementById('roleSelect').style.display = 'none';
+  document.getElementById('ebsLoginForm').style.display = 'block';
+  const sel = document.getElementById('ebsLoginUsername');
+  sel.innerHTML = '<option>Loading…</option>';
+  try{
+    const res = await fetch('/api/login/ebs-list');
+    const data = await res.json();
+    if(data.success && data.people.length){
+      sel.innerHTML = data.people.map(p => `<option value="${escAttr(p.username)}">${escAttr(p.name)}</option>`).join('');
+    } else {
+      sel.innerHTML = '<option value="">No EBS accounts set up yet</option>';
+    }
+  }catch(e){ sel.innerHTML = '<option value="">Could not load list</option>'; }
+  document.getElementById('ebsLoginPassword').focus();
+});
+
+document.getElementById('backToRoleBtn').addEventListener('click', showRoleSelect);
+document.getElementById('backToRoleBtnEbs').addEventListener('click', showRoleSelect);
+
+document.getElementById('loginForm').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const password = document.getElementById('loginPassword').value;
+  const errEl = document.getElementById('loginError');
+  errEl.textContent = '';
+  try{
+    const res = await fetch('/api/login/admin', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ password })
+    });
+    const data = await res.json();
+    if(data.success){
+      CURRENT_ROLE = data.role; CURRENT_USERNAME = data.username; CURRENT_NAME = null; CURRENT_EBS_ID = null;
+      enterApp();
+    } else {
+      errEl.textContent = data.message || 'Incorrect admin password.';
+    }
+  }catch(e){ errEl.textContent = 'Could not reach the server.'; }
+});
+
+document.getElementById('ebsLoginForm').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const username = document.getElementById('ebsLoginUsername').value;
+  const password = document.getElementById('ebsLoginPassword').value;
+  const errEl = document.getElementById('ebsLoginError');
+  errEl.textContent = '';
+  if(!username){ errEl.textContent = 'No EBS account selected.'; return; }
+  try{
+    const res = await fetch('/api/login/ebs', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ username, password })
+    });
+    const data = await res.json();
+    if(data.success){
+      CURRENT_ROLE = data.role; CURRENT_USERNAME = data.username;
+      CURRENT_NAME = data.name; CURRENT_EBS_ID = data.ebsId;
+      enterApp();
+    } else {
+      errEl.textContent = data.message || 'Incorrect username or password.';
+    }
+  }catch(e){ errEl.textContent = 'Could not reach the server.'; }
+});
+
+document.getElementById('logoutBtn').addEventListener('click', async ()=>{
+  try{ await fetch('/api/logout', { method:'POST' }); }catch(e){}
+  CURRENT_ROLE = null; CURRENT_USERNAME = null; CURRENT_NAME = null; CURRENT_EBS_ID = null;
+  showLogin();
+});
+
+// ── Change password modal ───────────────────────────────────
+function openPwModal(){
+  document.getElementById('pwCurrent').value = '';
+  document.getElementById('pwNew').value = '';
+  document.getElementById('pwError').textContent = '';
+  document.getElementById('pwModal').classList.add('open');
+}
+function closePwModal(){ document.getElementById('pwModal').classList.remove('open'); }
+document.getElementById('changePwBtn').addEventListener('click', openPwModal);
+document.getElementById('pwModalClose').addEventListener('click', closePwModal);
+document.getElementById('pwModal').addEventListener('click', (e)=>{ if(e.target.id==='pwModal') closePwModal(); });
+document.getElementById('pwSaveBtn').addEventListener('click', async ()=>{
+  const currentPassword = document.getElementById('pwCurrent').value;
+  const newPassword = document.getElementById('pwNew').value;
+  const errEl = document.getElementById('pwError');
+  errEl.textContent = '';
+  if(!newPassword || newPassword.length < 4){ errEl.textContent = 'New password must be at least 4 characters.'; return; }
+  try{
+    const res = await fetch('/api/change-password', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ currentPassword, newPassword })
+    });
+    const data = await res.json();
+    if(data.success){
+      closePwModal();
+      showToast('Password updated.', 't-success');
+    } else {
+      errEl.textContent = data.message || 'Could not update password.';
+    }
+  }catch(e){ errEl.textContent = 'Could not reach the server.'; }
+});
+
+// ── Init ──────────────────────────────────────────────────
+checkSession();
+</script>
+</body>
+</html>

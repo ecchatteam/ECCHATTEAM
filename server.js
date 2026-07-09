@@ -598,6 +598,39 @@ app.post('/api/master-roster/import', requireAuth, requireAdmin, upload.single('
 
 // ── SMB Chat Assignment Live Tracker — routes ──────────────────
 // Roster: who's EBS (assigns chats), who's SMB (receives them)
+// Self-service correction — removes the caller's own most recent
+// assignment TO THIS SPECIFIC SMB TECH (not a global undo). An EBS tech
+// can only ever remove their own click on the card they clicked, never
+// anyone else's, and never a different SMB tech's count. No admin
+// needed for this everyday mis-click case.
+app.post('/api/tracker/:date/unassign', requireAuth, requireAssignAccess, async (req, res) => {
+  const { date } = req.params;
+  const { smbId } = req.body || {};
+  if (!isValidDate(date)) return res.status(400).json({ success: false, message: 'Invalid date format' });
+
+  let ebsId = req.body.ebsId;
+  if (req.session.role === 'ebs') {
+    const users = await readUsers();
+    const me = users[req.session.username];
+    ebsId = me && me.ebsId;
+  }
+  if (!ebsId || !smbId) return res.status(400).json({ success: false, message: 'ebsId and smbId are required' });
+
+  const day = await readTrackerDay(date);
+  day.events = day.events || [];
+  let idx = -1;
+  for (let i = day.events.length - 1; i >= 0; i--) {
+    if (day.events[i].ebsId === ebsId && day.events[i].smbId === smbId) { idx = i; break; }
+  }
+  if (idx === -1) {
+    return res.status(404).json({ success: false, message: "No assignment of yours to this person today — nothing to undo." });
+  }
+  const removed = day.events.splice(idx, 1)[0];
+  await writeTrackerDay(date, day);
+  console.log(`[tracker] ${date} — ${removed.ebsName} undid their own assignment to ${removed.smbName}`);
+  res.json({ success: true, date, ...summarizeTrackerDay(day) });
+});
+
 app.get('/api/tracker/roster', requireAuth, async (req, res) => {
   const roster = await readTrackerRoster();
   if (req.session.role === 'admin') {

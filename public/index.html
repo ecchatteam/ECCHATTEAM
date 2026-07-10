@@ -38,6 +38,36 @@
   .btn-today:hover{background:rgba(255,255,255,0.2)}
 
   main{max-width:1180px;margin:0 auto;padding:22px 20px 60px}
+  #trackerMain{max-width:1800px}
+  #shiftRosterMain{max-width:1180px}
+
+  /* ── Tracker 3-column layout ─────────────────────────────── */
+  .tr-layout{display:flex;gap:16px;align-items:flex-start}
+  .tr-center{flex:1;min-width:0}
+  .tr-side{width:230px;flex-shrink:0}
+  .tr-side-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;box-shadow:0 2px 10px rgba(16,35,63,0.06);position:sticky;top:16px}
+  .tr-side-head{font-size:11.5px;font-weight:800;color:var(--brand-dark);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px}
+  .tr-shift-ref{display:flex;flex-direction:column;gap:6px;max-height:70vh;overflow-y:auto}
+  .tr-shift-row{display:flex;align-items:center;justify-content:space-between;gap:6px;padding:6px 8px;border-radius:8px;font-size:11.5px;background:#FAFBFD}
+  .tr-shift-row.tr-shift-leave{opacity:.55}
+  .tr-shift-row.tr-shift-now{background:#FFF4E0}
+  .tr-shift-name{font-weight:700;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .tr-shift-time{font-family:var(--mono);color:var(--muted);font-size:10.5px;white-space:nowrap;flex-shrink:0}
+  .tr-shift-leave-tag{background:#FCEBEB;color:var(--danger);font-size:9px;font-weight:800;padding:1px 6px;border-radius:20px;flex-shrink:0}
+  .tr-phone-list{display:flex;flex-direction:column;gap:8px}
+  .tr-phone-row{display:flex;flex-direction:column;gap:2px;padding:9px 10px;border-radius:10px;background:#FAFBFD;text-decoration:none;border:1px solid var(--border);transition:border-color .12s,background .12s}
+  .tr-phone-row:hover{border-color:var(--teal);background:#F4FAF9}
+  .tr-phone-label{font-size:10.5px;font-weight:700;color:var(--muted)}
+  .tr-phone-num{font-family:var(--mono);font-size:13px;font-weight:700;color:var(--ink)}
+  @media (max-width:980px){
+    .tr-layout{flex-direction:column}
+    .tr-side{width:100%}
+    .tr-side-card{position:static}
+    .tr-shift-ref{max-height:220px}
+  }
+  .tr-onleave-note{font-size:10px;color:var(--danger);font-weight:700;margin-top:6px}
+  .tr-card.tr-card-leave{opacity:.55}
+  .tr-comment-note{font-size:11px;color:var(--muted);font-style:italic;margin-top:2px}
 
   /* ── Page nav (Shift Roster ⟷ SMB Chat Assignment Live Tracker) ── */
   .page-nav{max-width:1180px;margin:0 auto;padding:14px 20px 0;display:flex;gap:8px;flex-wrap:wrap}
@@ -62,7 +92,10 @@
   .tr-section-head{display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:6px;margin:4px 0 10px}
   .tr-section-head h2{font-size:13px;margin:0;color:var(--brand-dark);font-weight:800;text-transform:uppercase;letter-spacing:.6px}
 
-  .tr-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+  .tr-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+  @media (max-width:1300px){ .tr-grid{grid-template-columns:repeat(3,minmax(0,1fr))} }
+  @media (max-width:900px){ .tr-grid{grid-template-columns:repeat(2,minmax(0,1fr))} }
+  @media (max-width:600px){ .tr-grid{grid-template-columns:1fr} }
   .tr-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px 14px 12px;box-shadow:0 2px 10px rgba(16,35,63,0.06);border-top:4px solid var(--brand);position:relative;transition:transform .1s,box-shadow .12s}
   .tr-card.tr-recommend{border-top-color:var(--green);box-shadow:0 2px 14px rgba(30,158,109,0.18)}
   .tr-card-head{display:flex;align-items:center;justify-content:space-between;gap:6px}
@@ -76,12 +109,18 @@
   .tr-plus-btn:hover{background:var(--brand-dark)}
   .tr-plus-btn:active{transform:scale(0.92)}
   .tr-plus-btn:disabled{opacity:.4;cursor:not-allowed}
+  .tr-btn-group{display:flex;gap:6px;flex-shrink:0}
+  .tr-minus-btn{width:32px;height:46px;border-radius:10px;border:1.5px solid var(--border);background:#fff;color:var(--muted);font-size:18px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:border-color .12s,color .12s,background .12s,transform .08s}
+  .tr-minus-btn:hover{border-color:var(--danger);color:var(--danger);background:#FCEBEB}
+  .tr-minus-btn:active{transform:scale(0.92)}
   .tr-card-breakdown{margin-top:10px;padding-top:9px;border-top:1px dashed var(--border);font-size:10.5px;color:var(--muted);display:flex;flex-wrap:wrap;gap:5px}
   .tr-mini-chip{background:#F1F4F9;border-radius:20px;padding:2px 8px;font-weight:600}
 
   .tr-ebs-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px}
-  .tr-ebs-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:11px 13px;box-shadow:0 2px 10px rgba(16,35,63,0.06);display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .tr-ebs-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:11px 13px;box-shadow:0 2px 10px rgba(16,35,63,0.06);display:flex;align-items:center;justify-content:space-between;gap:8px;cursor:pointer;transition:border-color .12s,box-shadow .12s,background .12s}
+  .tr-ebs-card:hover{border-color:var(--purple)}
   .tr-ebs-card.tr-ebs-active{border-color:var(--purple);box-shadow:0 0 0 2px rgba(124,77,190,0.15)}
+  .tr-ebs-card.tr-ebs-selected{background:#F3EEFB;border-color:var(--purple);box-shadow:0 0 0 2px rgba(124,77,190,0.3)}
   .tr-ebs-name{font-weight:700;color:var(--ink);font-size:12.5px}
   .tr-ebs-name .tr-active-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--purple);margin-right:6px}
   .tr-ebs-count{font-family:var(--mono);font-weight:800;color:var(--purple);font-size:16px}
@@ -91,7 +130,7 @@
   .ebs-mode .tr-ebs-reset{display:none}
 
   .tr-feed-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px 16px;margin-top:20px;box-shadow:0 2px 10px rgba(16,35,63,0.06)}
-  .tr-feed{max-height:220px;overflow-y:auto;display:flex;flex-direction:column-reverse;gap:0}
+  .tr-feed{max-height:220px;overflow-y:auto;display:flex;flex-direction:column;gap:0}
   .tr-feed-row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:7px 2px;font-size:12.5px;border-bottom:1px solid #F0F2F6}
   .tr-feed-row:first-child{border-bottom:none}
   .tr-feed-empty{padding:20px 4px;text-align:center;color:var(--muted);font-size:12.5px}
@@ -180,8 +219,21 @@
   .leave-badge{background:#FCEBEB;color:var(--danger);font-size:10.5px;font-weight:800;letter-spacing:.4px;padding:3px 8px;border-radius:20px}
   .name-cell{font-weight:700;color:var(--ink)}
   .row-leave .name-cell{text-decoration:line-through;font-weight:500;color:var(--muted)}
+  .table-card-head{padding:16px 18px 4px;display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:6px}
+  .table-card-head h2{font-size:14px;margin:0;color:var(--brand-dark)}
+  tbody tr.row-ebs{background:#EAF8F1}
+  tbody tr.row-ebs:hover{background:#DFF3E8}
+  .mode-pill{display:inline-block;font-size:10.5px;font-weight:800;letter-spacing:.4px;padding:3px 9px;border-radius:20px}
+  .mode-pill.mode-ebs{background:#D9F0E3;color:#177A4C}
+  .mode-pill.mode-smb{background:#E7ECF5;color:#3A5A93}
 
-  .row-actions{display:flex;gap:2px;justify-content:center}
+  .row-actions{display:flex;gap:2px;justify-content:center;align-items:center;flex-wrap:nowrap}
+  .reorder-select{font-size:11px;padding:4px 4px;max-width:118px;border-radius:6px;border:1px solid var(--border);background:#FAFBFD;color:var(--ink);cursor:pointer}
+  .shift-select{font-size:12.5px;font-family:var(--mono);padding:5px 6px;border-radius:6px;border:1px solid var(--border);background:#FAFBFD;color:var(--ink);cursor:pointer}
+  .guest-mode .shift-select,
+  .guest-mode .reorder-select,
+  .ebs-mode .shift-select,
+  .ebs-mode .reorder-select{opacity:.45;pointer-events:none}
   .icon-btn{background:transparent;border:none;cursor:pointer;width:26px;height:26px;border-radius:6px;display:flex;align-items:center;justify-content:center;color:var(--muted);transition:background .12s,color .12s}
   .icon-btn:hover{background:#F1F4F9;color:var(--ink)}
   .icon-btn.danger:hover{background:#FCEBEB;color:var(--danger)}
@@ -279,7 +331,8 @@
   .guest-mode .switch,
   .ebs-mode .icon-btn,
   .ebs-mode .switch{opacity:.45;pointer-events:none}
-  .guest-mode .tr-plus-btn{display:none}
+  .guest-mode .tr-plus-btn,
+  .guest-mode .tr-minus-btn{display:none}
   .guest-mode #trUndoBtn,
   .guest-mode #trResetBtn,
   .ebs-mode #trUndoBtn,
@@ -373,9 +426,35 @@
 </header>
 
 <nav class="page-nav" id="pageNav">
-  <button class="page-nav-btn active" id="navRosterBtn" data-page="roster">📅 Shift Roster</button>
+  <button class="page-nav-btn" id="navShiftRosterBtn" data-page="shiftroster">🗓️ Shift Roster</button>
+  <button class="page-nav-btn active" id="navRosterBtn" data-page="roster">📅 ZIA SLOT</button>
   <button class="page-nav-btn" id="navTrackerBtn" data-page="tracker">📊 SMB Chat Assignment Live Tracker</button>
 </nav>
+
+<!-- NEW: Shift Roster — static reference table (Name / Support Role / Mode / Region / Shift) -->
+<main id="shiftRosterMain" style="display:none">
+  <div class="table-card">
+    <div class="table-card-head">
+      <h2>EBS/SMB Support Shift Roster</h2>
+      <span class="tz-note">Reference only — who's EBS, who's SMB, and their base shift start.</span>
+    </div>
+    <div class="table-scroll">
+      <table id="shiftRosterTable">
+        <thead>
+          <tr>
+            <th style="width:44px">#</th>
+            <th>Name</th>
+            <th>Support Role</th>
+            <th>Mode</th>
+            <th>Region</th>
+            <th>Shift</th>
+          </tr>
+        </thead>
+        <tbody id="shiftRosterTbody"></tbody>
+      </table>
+    </div>
+  </div>
+</main>
 
 <main id="rosterMain">
 
@@ -423,7 +502,7 @@
             <th style="text-align:center">S.No</th>
             <th>Name</th>
             <th>Region</th>
-            <th style="width:110px">Shift Slot</th>
+            <th style="width:110px">Shift Timing</th>
             <th style="width:220px">Ticket Time Window</th>
             <th style="width:100px">Duration</th>
             <th style="text-align:center">On leave</th>
@@ -439,43 +518,102 @@
 
 <main id="trackerMain" style="display:none">
 
-  <div class="tr-toolbar">
-    <div class="tr-toolbar-left">
-      <div id="trWhoamiWrap"></div>
-      <span class="tr-datebadge" id="trDateBadge"></span>
+<div class="tr-layout">
+  <!-- LEFT: today's shift roster reference + leave status -->
+  <aside class="tr-side tr-side-left">
+    <div class="tr-side-card">
+      <div class="tr-side-head">🗓️ Today's shift</div>
+      <div id="trShiftRef" class="tr-shift-ref"></div>
     </div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap">
-      <button class="btn btn-ghost" id="trTodayBtn">Today</button>
-      <button class="btn btn-purple" id="trMatrixBtn">🔢 View EBS × SMB matrix</button>
-      <button class="btn btn-amber" id="trUndoBtn">↩ Undo last</button>
-      <button class="btn" id="trResetBtn" style="background:#FCEBEB;color:var(--danger);border:1px solid #F0C4C4">🗑 Reset day</button>
+  </aside>
+
+  <!-- CENTER: the tracker itself -->
+  <div class="tr-center">
+    <div class="tr-toolbar">
+      <div class="tr-toolbar-left">
+        <div id="trWhoamiWrap"></div>
+        <span class="tr-datebadge" id="trDateBadge"></span>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-ghost" id="trTodayBtn">Today</button>
+        <button class="btn btn-purple" id="trMatrixBtn">🔢 View EBS × SMB matrix</button>
+        <button class="btn btn-amber" id="trUndoBtn">↩ Undo last</button>
+        <button class="btn" id="trResetBtn" style="background:#FCEBEB;color:var(--danger);border:1px solid #F0C4C4">🗑 Reset day</button>
+      </div>
+    </div>
+
+    <div class="tr-summary-row" id="trSummaryRow"></div>
+
+    <div class="tr-section-head">
+      <h2>SMB techs — tap + when you assign a chat</h2>
+      <span class="tz-note">Shown in shift order · card position stays fixed</span>
+    </div>
+    <div class="tr-grid" id="trGrid"></div>
+
+    <div class="tr-section-head" style="margin-top:22px">
+      <h2>EBS techs — chats assigned today</h2>
+      <span class="tz-note">Tap a name to filter Live Activity to just them</span>
+    </div>
+    <div class="tr-ebs-row" id="trEbsRow"></div>
+
+    <div class="tr-feed-card">
+      <div class="tr-section-head" style="margin:0 0 8px">
+        <h2>Live activity</h2>
+        <span class="tz-note" id="trFeedFilterNote"></span>
+      </div>
+      <div id="trFeed" class="tr-feed"></div>
     </div>
   </div>
 
-  <div class="tr-summary-row" id="trSummaryRow"></div>
-
-  <div class="tr-section-head">
-    <h2>SMB techs — tap + when you assign a chat</h2>
-    <span class="tz-note">Sorted lowest load first, so the next chat goes to whoever's freest</span>
-  </div>
-  <div class="tr-grid" id="trGrid"></div>
-
-  <div class="tr-section-head" style="margin-top:22px">
-    <h2>EBS techs — chats assigned today</h2>
-  </div>
-  <div class="tr-ebs-row" id="trEbsRow"></div>
-
-  <div class="tr-feed-card">
-    <div class="tr-section-head" style="margin:0 0 8px">
-      <h2>Live activity</h2>
+  <!-- RIGHT: EBS support numbers -->
+  <aside class="tr-side tr-side-right">
+    <div class="tr-side-card">
+      <div class="tr-side-head">☎️ EBS support numbers</div>
+      <div class="tr-phone-list">
+        <a class="tr-phone-row" href="tel:+18334110998">
+          <span class="tr-phone-label">🇺🇸 US Toll Free</span>
+          <span class="tr-phone-num">+1 833 411 0998</span>
+        </a>
+        <a class="tr-phone-row" href="tel:+448000268068">
+          <span class="tr-phone-label">🇬🇧 UK Tollfree</span>
+          <span class="tr-phone-num">+44 800 026 8068</span>
+        </a>
+        <a class="tr-phone-row" href="tel:+914469656025">
+          <span class="tr-phone-label">🇮🇳 India Tollfree</span>
+          <span class="tr-phone-num">+91 44 6965 6025</span>
+        </a>
+      </div>
     </div>
-    <div id="trFeed" class="tr-feed"></div>
-  </div>
+  </aside>
+</div>
 
 </main>
 </div>
 
 <div class="toast" id="toast"></div>
+
+<!-- Assign-with-comment modal -->
+<div class="modal-overlay" id="assignModal">
+  <div class="modal" style="max-width:380px">
+    <div class="modal-head">
+      <div>
+        <h2 id="assignModalTitle">Assign chat</h2>
+        <p id="assignModalSub">Confirm this assignment.</p>
+      </div>
+      <button class="modal-close" id="assignModalClose" aria-label="Close">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <form id="assignForm">
+        <label style="display:block;font-size:12px;color:var(--muted);font-weight:600;margin-bottom:6px" id="assignCommentLabel">Comment (optional)</label>
+        <textarea id="assignComment" rows="3" style="width:100%;padding:9px 11px;border:1px solid var(--border);border-radius:8px;font-size:13px;box-sizing:border-box;font-family:var(--sans);resize:vertical" placeholder="Reason, ticket #, context…"></textarea>
+        <div class="form-error" id="assignCommentError" style="margin-top:8px"></div>
+        <button type="submit" class="btn btn-teal" style="width:100%;justify-content:center;margin-top:10px">Confirm assignment</button>
+      </form>
+    </div>
+  </div>
+</div>
 
 <!-- EBS x SMB matrix modal -->
 <div class="modal-overlay" id="trMatrixModal">
@@ -638,10 +776,32 @@ function istTodayISO(){
   const parts = new Intl.DateTimeFormat('en-CA', { timeZone:'Asia/Kolkata', year:'numeric', month:'2-digit', day:'2-digit' }).formatToParts(new Date());
   return `${parts.find(p=>p.type==='year').value}-${parts.find(p=>p.type==='month').value}-${parts.find(p=>p.type==='day').value}`;
 }
+// The SMB Chat Assignment Live Tracker's "day" isn't a calendar day — it
+// runs on the shift cycle (05:00 -> 04:59 the next calendar date, using
+// whatever cycle start time the master roster is set to). Anything
+// logged before the cycle's start time still belongs to the PREVIOUS
+// day's file, so "today" for the tracker needs its own calculation.
+function shiftDayISO(cycleStartHHMM){
+  const startMin = timeToMinutes(cycleStartHHMM) ?? 300; // default 05:00
+  const parts = new Intl.DateTimeFormat('en-CA', { timeZone:'Asia/Kolkata', year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit', hour12:false }).formatToParts(new Date());
+  const dateStr = `${parts.find(p=>p.type==='year').value}-${parts.find(p=>p.type==='month').value}-${parts.find(p=>p.type==='day').value}`;
+  const nowMin = Number(parts.find(p=>p.type==='hour').value)*60 + Number(parts.find(p=>p.type==='minute').value);
+  return nowMin < startMin ? addDays(dateStr, -1) : dateStr;
+}
+function trackerTodayISO(){ return shiftDayISO(masterRoster.cycleStart || '05:00'); }
 function timeToMinutes(t){
   if(!t || !/^\d{2}:\d{2}$/.test(t)) return null;
   const [h,m] = t.split(':').map(Number);
   return h*60+m;
+}
+// "05:00" -> "5:00 AM" — matches the Ticket Time Window column's style
+function fmtTime12(hhmm24){
+  const mins = timeToMinutes(hhmm24);
+  if(mins == null) return '—';
+  let h = Math.floor(mins/60) % 24, m = mins % 60;
+  const ap = h < 12 ? 'AM' : 'PM';
+  let h12 = h % 12; if(h12 === 0) h12 = 12;
+  return `${h12}:${String(m).padStart(2,'0')} ${ap}`;
 }
 function formatDuration(min){
   if(min == null || isNaN(min)) return '—';
@@ -660,6 +820,39 @@ function isCurrentSlot(row, nowMin){
   const endMod = (start + row.durationMin) % 1440;
   if(startMod <= endMod) return nowMin >= startMod && nowMin < endMod;
   return nowMin >= startMod || nowMin < endMod; // wraps midnight
+}
+// Shift Timing column shows each person's fixed, nominal shift time
+// (from the tracker roster's "shift" field — the same reference values
+// used on the Shift Roster tab) rather than the auto-balanced slot,
+// which shifts around whenever someone's on leave or the order changes.
+function fixedShiftFor(id){
+  const p = trackerRoster.people.find(p => p.id === id);
+  return p && p.shift ? p.shift : null;
+}
+// The full set of standard shift start times, deduped + sorted — same
+// list shown on the Shift Roster tab. `ensureVal` guards against a saved
+// value that's no longer in the master list (so the dropdown never
+// silently shows the wrong thing selected).
+function shiftOptionsList(ensureVal){
+  const set = new Set();
+  trackerRoster.people.forEach(p => { if(p.shift) set.add(p.shift); });
+  if(ensureVal) set.add(ensureVal);
+  return Array.from(set).sort((a,b)=> (timeToMinutes(a)??0) - (timeToMinutes(b)??0));
+}
+// Manual, per-day "Shift Timing" override — e.g. reassigning Manoj to the
+// 05:00 slot when Arun is on leave. Purely a display label: it never
+// touches shiftSlot, ticketTimeWindow, or the day's actual order/reorder —
+// those keep working exactly as before, independently of this.
+async function setShiftLabel(rosterId, shiftLabel){
+  try{
+    const res = await fetch(`/api/schedule/${currentDate}/shift-label`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ rosterId, shiftLabel })
+    });
+    const data = await res.json();
+    if(data.success){ rows = data.rows; renderAll(); showToast('Shift timing updated.', 't-success'); }
+    else showToast(data.message || 'Could not update shift timing.', 't-error');
+  }catch(e){ showToast('Could not reach the server.', 't-error'); }
 }
 function escAttr(v){
   return String(v==null?'':v).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
@@ -731,7 +924,11 @@ function renderTable(){
       <td class="sno-cell">${i+1}</td>
       <td class="name-cell">${escAttr(r.name)}</td>
       <td>${escAttr(r.region)}</td>
-      <td class="mono-cell">${r.onLeave ? '<span class="leave-badge">ON LEAVE</span>' : escAttr(r.shiftSlot)}</td>
+      <td class="mono-cell">${r.onLeave ? '<span class="leave-badge">ON LEAVE</span>' : `
+        <select class="shift-select" title="Manually set this person's shift timing for today (doesn't affect Ticket Time Window)" onchange="setShiftLabel('${r.id}', this.value)">
+          ${shiftOptionsList(r.shiftLabel || fixedShiftFor(r.id)).map(t=>`<option value="${t}" ${t===(r.shiftLabel||fixedShiftFor(r.id))?'selected':''}>${t}</option>`).join('')}
+        </select>
+      `}</td>
       <td class="mono-cell">${r.onLeave ? '—' : escAttr(r.ticketTimeWindow)}${isNow ? '<span class="now-badge">NOW</span>' : ''}</td>
       <td class="duration-cell">${formatDuration(r.durationMin)}</td>
       <td style="text-align:center">
@@ -748,6 +945,9 @@ function renderTable(){
           <button class="icon-btn" onclick="moveRow(${i},1)" ${i===rows.length-1?'disabled':''} title="Move down" aria-label="Move down">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12l7 7 7-7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
           </button>
+          <select class="tr-select reorder-select" title="Jump straight to a slot" onchange="moveRowToPosition(${i}, Number(this.value))">
+            ${rows.map((row2,j)=>`<option value="${j}" ${j===i?'selected':''}>#${j+1} — ${row2.onLeave ? 'on leave' : fmtTime12(row2.shiftSlot)}</option>`).join('')}
+          </select>
         </div>
       </td>
     </tr>
@@ -884,11 +1084,7 @@ async function toggleLeave(rosterId, onLeave){
   }catch(e){ showToast('Could not reach the server.', 't-error'); }
 }
 
-async function moveRow(idx, dir){
-  const target = idx + dir;
-  if(target < 0 || target >= rows.length) return;
-  const order = rows.map(r=>r.id);
-  [order[idx], order[target]] = [order[target], order[idx]];
+async function sendReorder(order){
   try{
     const res = await fetch(`/api/schedule/${currentDate}/reorder`, {
       method:'POST', headers:{'Content-Type':'application/json'},
@@ -898,6 +1094,26 @@ async function moveRow(idx, dir){
     if(data.success){ rows = data.rows; renderAll(); }
     else showToast(data.message || 'Could not reorder.', 't-error');
   }catch(e){ showToast('Could not reach the server.', 't-error'); }
+}
+
+async function moveRow(idx, dir){
+  const target = idx + dir;
+  if(target < 0 || target >= rows.length) return;
+  const order = rows.map(r=>r.id);
+  [order[idx], order[target]] = [order[target], order[idx]];
+  await sendReorder(order);
+}
+
+// Dropdown-driven reorder: jump a row straight to any slot position
+// (e.g. #1 = 5AM start) instead of clicking up/down one step at a time.
+// The server always recomputes shiftSlot/ticketTimeWindow from the new
+// order, so the dropdown and the ticket window can never fall out of sync.
+async function moveRowToPosition(idx, targetIdx){
+  if(idx === targetIdx) return;
+  const order = rows.map(r=>r.id);
+  const [movedId] = order.splice(idx, 1);
+  order.splice(targetIdx, 0, movedId);
+  await sendReorder(order);
 }
 
 async function regenerateDay(){
@@ -1006,9 +1222,20 @@ async function handleRosterImport(file){
 }
 
 // ── Date navigation ──────────────────────────────────────────
-document.getElementById('prevBtn').addEventListener('click', ()=> loadDate(addDays(currentDate,-1)));
-document.getElementById('nextBtn').addEventListener('click', ()=> loadDate(addDays(currentDate,1)));
-document.getElementById('todayBtn').addEventListener('click', ()=> loadDate(istTodayISO()));
+// The header date nav is shared across pages. It always drives the
+// Shift Roster/ZIA Slot schedule (currentDate/rows), and — if the
+// Tracker tab happens to be the visible page — it drives the tracker's
+// own date too, so picking a date there actually reloads that day's
+// chat-assignment counts instead of leaving yesterday's numbers on
+// screen.
+function navigateDate(dateStr){
+  loadDate(dateStr);
+  if(currentPage === 'tracker') loadTracker(dateStr);
+  else trackerDate = dateStr;
+}
+document.getElementById('prevBtn').addEventListener('click', ()=> navigateDate(addDays(currentDate,-1)));
+document.getElementById('nextBtn').addEventListener('click', ()=> navigateDate(addDays(currentDate,1)));
+document.getElementById('todayBtn').addEventListener('click', ()=> navigateDate(currentPage === 'tracker' ? trackerTodayISO() : istTodayISO()));
 document.getElementById('regenerateBtn').addEventListener('click', regenerateDay);
 document.getElementById('exportDayBtn').addEventListener('click', ()=>{
   window.location.href = `/api/export/leave/day/${currentDate}`;
@@ -1022,7 +1249,7 @@ const dateDisplay = document.getElementById('dateDisplay');
 const datePicker  = document.getElementById('datePicker');
 dateDisplay.addEventListener('click', ()=> datePicker.showPicker ? datePicker.showPicker() : datePicker.click());
 dateDisplay.addEventListener('keydown', (e)=>{ if(e.key==='Enter' || e.key===' ') { e.preventDefault(); datePicker.showPicker ? datePicker.showPicker() : datePicker.click(); } });
-datePicker.addEventListener('change', ()=>{ if(datePicker.value) loadDate(datePicker.value); });
+datePicker.addEventListener('change', ()=>{ if(datePicker.value) navigateDate(datePicker.value); });
 
 document.getElementById('rosterBtn').addEventListener('click', openRosterModal);
 document.getElementById('rosterModalClose').addEventListener('click', closeRosterModal);
@@ -1041,26 +1268,47 @@ setInterval(()=>{ if(currentDate === istTodayISO()){ renderTimeline(); renderTab
 // ── SMB Chat Assignment Live Tracker ───────────────────────────
 let trackerRoster = { people: [] };
 let trackerState = { events: [], countsBySmb: {}, totalsByEbs: {}, matrix: {}, totalToday: 0 };
-let trackerDate = istTodayISO();
+let trackerDate = trackerTodayISO();
+let trackerDayRows = []; // today's schedule rows, for the left sidebar + leave flags
 let selectedEbsId = localStorage.getItem('ziashift_ebs_id') || ''; // only meaningful for Admin's override picker
 let currentPage = 'roster';
+let trFeedFilterEbsId = null; // click an EBS tech's card to show only their entries in Live Activity
 
 function ebsList(){ return trackerRoster.people.filter(p => p.mode === 'EBS'); }
 function smbList(){ return trackerRoster.people.filter(p => p.mode === 'SMB'); }
 
 function switchPage(page){
   currentPage = page;
+  document.getElementById('shiftRosterMain').style.display = page === 'shiftroster' ? 'block' : 'none';
   document.getElementById('rosterMain').style.display = page === 'roster' ? 'block' : 'none';
   document.getElementById('trackerMain').style.display = page === 'tracker' ? 'block' : 'none';
+  document.getElementById('navShiftRosterBtn').classList.toggle('active', page === 'shiftroster');
   document.getElementById('navRosterBtn').classList.toggle('active', page === 'roster');
   document.getElementById('navTrackerBtn').classList.toggle('active', page === 'tracker');
   if(page === 'tracker') loadTracker(trackerDate);
+  if(page === 'shiftroster') renderShiftRosterTable();
 }
+document.getElementById('navShiftRosterBtn').addEventListener('click', ()=> switchPage('shiftroster'));
 document.getElementById('navRosterBtn').addEventListener('click', ()=> switchPage('roster'));
 document.getElementById('navTrackerBtn').addEventListener('click', ()=> switchPage('tracker'));
 
+// ── Shift Roster (new, static reference table) ──
+function renderShiftRosterTable(){
+  const tbody = document.getElementById('shiftRosterTbody');
+  tbody.innerHTML = trackerRoster.people.map((p, i) => `
+    <tr class="${p.mode === 'EBS' ? 'row-ebs' : ''}">
+      <td class="sno-cell">${i+1}</td>
+      <td class="name-cell">${escAttr(p.name)}</td>
+      <td>Chat</td>
+      <td><span class="mode-pill mode-${p.mode==='EBS'?'ebs':'smb'}">${p.mode}</span></td>
+      <td>${escAttr(p.region||'—')}</td>
+      <td class="mono-cell">${escAttr(p.shift||'—')}</td>
+    </tr>
+  `).join('') || `<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:24px">No roster set up yet.</td></tr>`;
+}
+
 function updateTrDateBadge(){
-  const today = istTodayISO();
+  const today = trackerTodayISO();
   document.getElementById('trDateBadge').textContent =
     formatDisplayDate(trackerDate) + (trackerDate === today ? ' · Today' : '');
 }
@@ -1073,6 +1321,8 @@ async function loadTrackerRoster(){
     if(data.success) trackerRoster = { people: data.people };
   }catch(e){ /* keep whatever we had */ }
   renderWhoami();
+  if(currentPage === 'shiftroster') renderShiftRosterTable();
+  if(currentPage === 'roster') renderTable();
 }
 
 // Who's assigning is now identity-based, not a free-pick dropdown:
@@ -1103,14 +1353,22 @@ async function loadTracker(dateStr){
   trackerDate = dateStr;
   updateTrDateBadge();
   try{
-    const res = await fetch(`/api/tracker/${dateStr}`);
-    if(res.status === 401){ showLogin(); return; }
-    const data = await res.json();
+    const [trackerRes, scheduleRes] = await Promise.all([
+      fetch(`/api/tracker/${dateStr}`),
+      fetch(`/api/schedule/${dateStr}`)
+    ]);
+    if(trackerRes.status === 401){ showLogin(); return; }
+    const data = await trackerRes.json();
     if(data.success) trackerState = data;
+    if(scheduleRes.ok){
+      const schedData = await scheduleRes.json();
+      trackerDayRows = schedData.success ? schedData.rows : [];
+    }
   }catch(e){
     showToast('Could not reach the server. Is it running?', 't-error');
   }
   renderTracker();
+  renderShiftSidebar();
 }
 
 function timeAgo(iso){
@@ -1122,62 +1380,93 @@ function timeAgo(iso){
   return `${h}h ${m%60}m ago`;
 }
 
+function formatClockTime(iso){
+  try{
+    return new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  }catch(e){ return ''; }
+}
+
+// Left sidebar: today's shift roster reference, with live leave status
+function renderShiftSidebar(){
+  const wrap = document.getElementById('trShiftRef');
+  if(!wrap) return;
+  if(!trackerDayRows.length){
+    wrap.innerHTML = `<div class="tz-note" style="padding:4px 2px">No schedule for this day yet.</div>`;
+    return;
+  }
+  const nowWindow = typeof getCurrentWindowId === 'function' ? getCurrentWindowId() : null;
+  wrap.innerHTML = trackerDayRows.map(r => `
+    <div class="tr-shift-row${r.onLeave ? ' tr-shift-leave' : ''}${nowWindow && r.id === nowWindow ? ' tr-shift-now' : ''}">
+      <span class="tr-shift-name">${escAttr(r.name)}</span>
+      ${r.onLeave ? '<span class="tr-shift-leave-tag">LEAVE</span>' : `<span class="tr-shift-time">${escAttr(r.shiftSlot||'')}</span>`}
+    </div>
+  `).join('');
+}
+
 function renderTracker(){
   const isAdmin = CURRENT_ROLE === 'admin';
   const canAssign = CURRENT_ROLE === 'admin' || CURRENT_ROLE === 'ebs';
-  const smb = smbList();
+  const smb = smbList(); // already in stable shift-roster order — never resorted by count
   const counts = trackerState.countsBySmb || {};
   const totalToday = trackerState.totalToday || 0;
+  const leaveById = {};
+  trackerDayRows.forEach(r => { leaveById[r.id] = !!r.onLeave; });
 
-  const sorted = [...smb].sort((a,b) => (counts[a.id]||0) - (counts[b.id]||0));
-  const lowestCount = sorted.length ? (counts[sorted[0].id]||0) : 0;
+  const lowestCount = smb.length ? Math.min(...smb.map(p => counts[p.id] || 0)) : 0;
 
   // ── Summary stats ──
   const busiest = smb.reduce((max,p)=> (counts[p.id]||0) > (counts[max?.id]||-1) ? p : max, null);
+  const quietest = smb.reduce((min,p)=> (counts[p.id]||0) < (counts[min?.id]||Infinity) ? p : min, null);
   const avg = smb.length ? (totalToday / smb.length) : 0;
   document.getElementById('trSummaryRow').innerHTML = `
     <div class="tr-stat"><div class="tr-stat-num">${totalToday}</div><div class="tr-stat-label">Chats assigned today</div></div>
     <div class="tr-stat"><div class="tr-stat-num">${avg.toFixed(1)}</div><div class="tr-stat-label">Avg per SMB tech</div></div>
     <div class="tr-stat tr-stat-high"><div class="tr-stat-num">${busiest && counts[busiest.id] ? counts[busiest.id] : 0}</div><div class="tr-stat-label">${busiest && counts[busiest.id] ? escAttr(busiest.name) : '—'} · highest load</div></div>
-    <div class="tr-stat tr-stat-low"><div class="tr-stat-num">${lowestCount}</div><div class="tr-stat-label">${sorted[0] ? escAttr(sorted[0].name) : '—'} · lowest load</div></div>
+    <div class="tr-stat tr-stat-low"><div class="tr-stat-num">${lowestCount}</div><div class="tr-stat-label">${quietest ? escAttr(quietest.name) : '—'} · lowest load</div></div>
   `;
 
-  // ── SMB grid ──
-  document.getElementById('trGrid').innerHTML = sorted.map(p => {
+  // ── SMB grid (stable shift-roster order; badge highlights lowest load without moving cards) ──
+  document.getElementById('trGrid').innerHTML = smb.map(p => {
     const count = counts[p.id] || 0;
     const isRecommend = count === lowestCount && smb.length > 1;
+    const onLeave = !!leaveById[p.id];
     const ebsBreakdown = ebsList().map(e => {
       const c = (trackerState.matrix[e.id] || {})[p.id] || 0;
       return c ? `<span class="tr-mini-chip">${escAttr(e.name)}: ${c}</span>` : '';
     }).filter(Boolean).join('');
     return `
-      <div class="tr-card${isRecommend ? ' tr-recommend' : ''}">
+      <div class="tr-card${isRecommend && !onLeave ? ' tr-recommend' : ''}${onLeave ? ' tr-card-leave' : ''}">
         <div class="tr-card-head">
           <div>
             <div class="tr-card-name">${escAttr(p.name)}</div>
             <div class="tr-card-region">${escAttr(p.region||'—')}</div>
           </div>
-          ${isRecommend ? '<span class="tr-recommend-badge">Lowest load</span>' : ''}
+          ${onLeave ? '<span class="tr-recommend-badge" style="background:#FCEBEB;color:var(--danger)">On leave</span>' : (isRecommend ? '<span class="tr-recommend-badge">Lowest load</span>' : '')}
         </div>
         <div class="tr-card-body">
           <div>
             <div class="tr-count">${count}</div>
             <div class="tr-count-label">Assigned</div>
           </div>
-          ${canAssign ? `<button class="tr-plus-btn" data-smb-id="${escAttr(p.id)}">+</button>` : ''}
+          ${canAssign && !onLeave ? `<div class="tr-btn-group"><button class="tr-minus-btn" data-smb-id="${escAttr(p.id)}" title="Undo my last assignment to this person">−</button><button class="tr-plus-btn" data-smb-id="${escAttr(p.id)}" data-smb-name="${escAttr(p.name)}">+</button></div>` : ''}
         </div>
+        ${onLeave ? '<div class="tr-onleave-note">Not available today — skip for now</div>' : ''}
         ${ebsBreakdown ? `<div class="tr-card-breakdown">${ebsBreakdown}</div>` : ''}
       </div>
     `;
   }).join('') || `<div class="empty-state"><div class="em-icon">👥</div><h3>No SMB techs set up</h3><p>Add SMB techs to the tracker roster to get started.</p></div>`;
 
   document.querySelectorAll('.tr-plus-btn').forEach(btn => {
-    btn.addEventListener('click', () => assignChat(btn.getAttribute('data-smb-id')));
+    btn.addEventListener('click', () => openAssignModal(btn.getAttribute('data-smb-id'), btn.getAttribute('data-smb-name')));
+  });
+  document.querySelectorAll('.tr-minus-btn').forEach(btn => {
+    btn.addEventListener('click', () => unassignChat(btn.getAttribute('data-smb-id')));
   });
 
-  // ── EBS row ──
+  // ── EBS row — click a card to filter Live Activity down to just
+  // that tech (click again, or "Clear filter", to go back to everyone) ──
   document.getElementById('trEbsRow').innerHTML = ebsList().map(p => `
-    <div class="tr-ebs-card${p.id === CURRENT_EBS_ID ? ' tr-ebs-active' : ''}">
+    <div class="tr-ebs-card${p.id === CURRENT_EBS_ID ? ' tr-ebs-active' : ''}${p.id === trFeedFilterEbsId ? ' tr-ebs-selected' : ''}" data-ebs-id="${escAttr(p.id)}" role="button" tabindex="0" title="Show only ${escAttr(p.name)}'s chat assignments">
       <div class="tr-ebs-name">${p.id === CURRENT_EBS_ID ? '<span class="tr-active-dot"></span>' : ''}${escAttr(p.name)}</div>
       <div style="display:flex;align-items:center;gap:6px">
         <div class="tr-ebs-count">${trackerState.totalsByEbs[p.id] || 0}</div>
@@ -1186,28 +1475,90 @@ function renderTracker(){
     </div>
   `).join('') || `<div class="tz-note">No EBS techs set up yet.</div>`;
   document.querySelectorAll('.tr-ebs-reset').forEach(btn => {
-    btn.addEventListener('click', () => openResetPwModal(btn.getAttribute('data-username'), btn.getAttribute('data-name')));
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation(); // don't also trigger the card's filter click
+      openResetPwModal(btn.getAttribute('data-username'), btn.getAttribute('data-name'));
+    });
+  });
+  document.querySelectorAll('.tr-ebs-card').forEach(card => {
+    const toggle = () => {
+      const id = card.getAttribute('data-ebs-id');
+      trFeedFilterEbsId = (trFeedFilterEbsId === id) ? null : id;
+      renderTracker();
+    };
+    card.addEventListener('click', toggle);
+    card.addEventListener('keydown', (e) => { if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); toggle(); } });
   });
 
-  // ── Live feed ──
+  // ── Live feed — actual clock time + comment, most recent first.
+  // Optionally filtered down to one EBS tech via trFeedFilterEbsId. ──
   const events = trackerState.events || [];
-  const recent = events.slice(-30);
+  const filteredEvents = trFeedFilterEbsId ? events.filter(ev => ev.ebsId === trFeedFilterEbsId) : events;
+  const recent = filteredEvents.slice(-50).reverse();
+  const filterNoteEl = document.getElementById('trFeedFilterNote');
+  if(trFeedFilterEbsId){
+    const person = trackerRoster.people.find(p => p.id === trFeedFilterEbsId);
+    filterNoteEl.innerHTML = `Showing only <b style="color:var(--ink)">${escAttr(person ? person.name : 'selected tech')}</b> · <a href="#" id="trFeedClearFilter" style="color:var(--purple);font-weight:700;text-decoration:none">Clear filter</a>`;
+    document.getElementById('trFeedClearFilter').addEventListener('click', (e) => { e.preventDefault(); trFeedFilterEbsId = null; renderTracker(); });
+  } else {
+    filterNoteEl.textContent = '';
+  }
   document.getElementById('trFeed').innerHTML = recent.length
     ? recent.map(ev => `
-        <div class="tr-feed-row">
-          <span>${escAttr(ev.ebsName)} → <b>${escAttr(ev.smbName)}</b></span>
-          <span class="tr-feed-time">${timeAgo(ev.ts)}</span>
+        <div class="tr-feed-row" style="flex-direction:column;align-items:stretch;gap:2px">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+            <span>${escAttr(ev.ebsName)} → <b>${escAttr(ev.smbName)}</b></span>
+            <span class="tr-feed-time">${formatClockTime(ev.ts)} · ${timeAgo(ev.ts)}</span>
+          </div>
+          ${ev.comment ? `<div class="tr-comment-note">💬 ${escAttr(ev.comment)}</div>` : ''}
         </div>
       `).join('')
-    : `<div class="tr-feed-empty">No chats assigned yet today.</div>`;
+    : `<div class="tr-feed-empty">${trFeedFilterEbsId ? 'No chats assigned by this tech yet today.' : 'No chats assigned yet today.'}</div>`;
 
   // ── Admin-only actions ──
   document.getElementById('trUndoBtn').style.display = isAdmin ? 'inline-flex' : 'none';
   document.getElementById('trResetBtn').style.display = isAdmin ? 'inline-flex' : 'none';
 }
 
-async function assignChat(smbId){
-  const body = { smbId };
+let assignModalSmbId = null;
+function myEbsIdForAssign(){
+  return CURRENT_ROLE === 'admin' ? selectedEbsId : CURRENT_EBS_ID;
+}
+function openAssignModal(smbId, smbName){
+  assignModalSmbId = smbId;
+  const myId = myEbsIdForAssign();
+  const priorCount = (trackerState.matrix[myId] || {})[smbId] || 0;
+  const required = priorCount >= 2;
+  document.getElementById('assignModalTitle').textContent = `Assign chat to ${smbName}`;
+  document.getElementById('assignModalSub').textContent = required
+    ? `You've already assigned ${priorCount} chats to ${smbName} today — please add a note.`
+    : 'Add a note if useful, or just confirm.';
+  document.getElementById('assignCommentLabel').textContent = required ? 'Comment (required)' : 'Comment (optional)';
+  document.getElementById('assignComment').value = '';
+  document.getElementById('assignComment').dataset.required = required ? '1' : '';
+  document.getElementById('assignCommentError').textContent = '';
+  document.getElementById('assignModal').classList.add('open');
+  document.getElementById('assignComment').focus();
+}
+function closeAssignModal(){ document.getElementById('assignModal').classList.remove('open'); assignModalSmbId = null; }
+document.getElementById('assignModalClose').addEventListener('click', closeAssignModal);
+document.getElementById('assignModal').addEventListener('click', (e)=>{ if(e.target.id==='assignModal') closeAssignModal(); });
+document.getElementById('assignForm').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const commentEl = document.getElementById('assignComment');
+  const comment = commentEl.value.trim();
+  const errEl = document.getElementById('assignCommentError');
+  errEl.textContent = '';
+  if(commentEl.dataset.required === '1' && !comment){
+    errEl.textContent = 'Please add a short note before confirming.';
+    return;
+  }
+  await assignChat(assignModalSmbId, comment);
+  closeAssignModal();
+});
+
+async function assignChat(smbId, comment){
+  const body = { smbId, comment: comment || '' };
   if(CURRENT_ROLE === 'admin') body.ebsId = selectedEbsId; // EBS role: server uses the logged-in identity, client value is ignored
   try{
     const res = await fetch(`/api/tracker/${trackerDate}/assign`, {
@@ -1224,7 +1575,34 @@ async function assignChat(smbId){
   }catch(e){ showToast('Could not reach the server.', 't-error'); }
 }
 
-document.getElementById('trTodayBtn').addEventListener('click', ()=> loadTracker(istTodayISO()));
+// Self-service correction: removes only the caller's own most recent
+// click on this specific SMB tech. Safe for any EBS tech to use on
+// themselves — can't touch anyone else's count.
+async function unassignChat(smbId){
+  const body = { smbId };
+  if(CURRENT_ROLE === 'admin') body.ebsId = selectedEbsId;
+  try{
+    const res = await fetch(`/api/tracker/${trackerDate}/unassign`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify(body)
+    });
+    const data = await res.json();
+    if(data.success){
+      trackerState = data;
+      renderTracker();
+      showToast('Undone.', 't-success');
+    } else {
+      showToast(data.message || 'Nothing of yours to undo for this person.', 't-error');
+    }
+  }catch(e){ showToast('Could not reach the server.', 't-error'); }
+}
+
+document.getElementById('trTodayBtn').addEventListener('click', ()=> {
+  const t = trackerTodayISO();
+  loadTracker(t);
+  currentDate = t;
+  updateHeaderDate();
+});
 
 document.getElementById('trUndoBtn').addEventListener('click', async ()=>{
   if(!confirm('Undo the most recent chat assignment for this day?')) return;
@@ -1300,7 +1678,15 @@ document.getElementById('resetPwForm').addEventListener('submit', async (e)=>{
 
 // refresh the live tracker every 20s while it's the visible page (light polling
 // so multiple EBS techs on different machines see each other's clicks)
-setInterval(()=>{ if(currentPage === 'tracker') loadTracker(trackerDate); }, 20000);
+// refresh the live tracker every 20s while it's the visible page (light polling
+// so multiple EBS techs on different machines see each other's clicks).
+// Also auto-rolls to the new day at midnight instead of silently staying
+// on yesterday's file until someone manually reloads the page.
+setInterval(()=>{
+  if(currentPage !== 'tracker') return;
+  const today = trackerTodayISO();
+  loadTracker(today !== trackerDate ? today : trackerDate);
+}, 20000);
 
 // ── Auth ──────────────────────────────────────────────────────
 let CURRENT_ROLE = null, CURRENT_USERNAME = null, CURRENT_NAME = null, CURRENT_EBS_ID = null;

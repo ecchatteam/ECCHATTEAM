@@ -1,109 +1,118 @@
-// Mongo Atlas data layer — replaces local JSON file storage so data
-// survives Render's free-tier sleep/restart cycles (which wipe local disk).
-const { MongoClient } = require('mongodb');
+// db.js — Storage abstraction for ZIASHIFT
+//
+// Local (Windows/pm2): MONGODB_URI is not set → every call below reads and
+// writes the exact same files, in the exact same locations, that the app
+// has always used. Local behavior is 100% unchanged.
+//
+// Cloud (Render): MONGODB_URI is set as an environment variable there →
+// all data is stored in MongoDB Atlas instead, in a single "kv" collection
+// (one document per logical key: roster, users, trackerRoster,
+// schedule:YYYY-MM-DD, tracker:YYYY-MM-DD). An in-memory cache is loaded
+// once at startup so every route in server.js can keep calling these
+// functions synchronously, same as before — writes update the cache
+// immediately and are persisted to Mongo in the background, in order.
 
-const uri = process.env.MONGODB_URI;
-if (!uri) {
-  console.error('FATAL: MONGODB_URI environment variable is not set.');
-  console.error('Set it in Render → your service → Environment.');
-  process.exit(1);
-}
+const fs   = require('fs');
+const path = require('path');
 
-const client = new MongoClient(uri);
-let db;
+const USE_MONGO = !!process.env.MONGODB_URI;
+const DATA_DIR  = path.join(__dirname, 'data');
 
-async function connect() {
+let cache      = new Map();
+let collection = null;
+let writeQueue = Promise.resolve();
+
+async function init() {
+  if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
+
+  if (!USE_MONGO) {
+    console.log('[db] MONGODB_URI not set — using local JSON file storage (unchanged local behavior).');
+    return;
+  }
+
+  const { MongoClient } = require('mongodb');
+  const client = new MongoClient(process.env.MONGODB_URI, { serverSelectionTimeoutMS: 10000 });
   await client.connect();
-  db = client.db('ziashift'); // database name — created automatically on first write
-  await db.collection('schedules').createIndex({ _id: 1 });
-  await db.collection('tracker_days').createIndex({ _id: 1 });
-  console.log('[db] Connected to MongoDB Atlas.');
+  const dbName = process.env.MONGODB_DBNAME || 'ziashift';
+  const db = client.db(dbName);
+  collection = db.collection('kv');
+  await collection.createIndex({ _id: 1 });
+
+  const docs = await collection.find({}).toArray();
+  docs.forEach(d => cache.set(d._id, d.data));
+  console.log(`[db] Connected to MongoDB Atlas ("${dbName}") — loaded ${docs.length} record(s) into memory.`);
 }
 
-// ── settings collection: one doc each for roster, users, tracker roster ──
-async function getRoster() {
-  const doc = await db.collection('settings').findOne({ _id: 'roster' });
-  return doc ? { cycleStart: doc.cycleStart, people: doc.people } : { cycleStart: '05:00', people: [] };
+// ── File-mode key → path mapping (identical to the app's original layout) ─
+function keyToFilePath(key) {
+  if (key === 'roster')        return path.join(DATA_DIR, 'master-roster.json');
+  if (key === 'users')         return path.join(DATA_DIR, 'users.json');
+  if (key === 'trackerRoster') return path.join(DATA_DIR, 'tracker-roster.json');
+  if (key.startsWith('schedule:')) return path.join(DATA_DIR, 'schedules', `${key.slice(9)}.json`);
+  if (key.startsWith('tracker:'))  return path.join(DATA_DIR, 'tracker', `${key.slice(8)}.json`);
+  throw new Error(`[db] Unknown key: ${key}`);
 }
-async function setRoster(roster) {
-  await db.collection('settings').updateOne(
-    { _id: 'roster' },
-    { $set: { cycleStart: roster.cycleStart, people: roster.people } },
-    { upsert: true }
-  );
-}
-async function rosterExists() {
-  return !!(await db.collection('settings').findOne({ _id: 'roster' }));
+function ensureDirFor(fp) {
+  const dir = path.dirname(fp);
+  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
 }
 
-async function getUsers() {
-  const doc = await db.collection('settings').findOne({ _id: 'users' });
-  return doc ? doc.users : {};
-}
-async function setUsers(users) {
-  await db.collection('settings').updateOne(
-    { _id: 'users' },
-    { $set: { users } },
-    { upsert: true }
-  );
-}
-async function usersExist() {
-  return !!(await db.collection('settings').findOne({ _id: 'users' }));
+// ── Public API ──────────────────────────────────────────────────────────
+function has(key) {
+  if (!USE_MONGO) return fs.existsSync(keyToFilePath(key));
+  return cache.has(key);
 }
 
-async function getTrackerRoster() {
-  const doc = await db.collection('settings').findOne({ _id: 'trackerRoster' });
-  return doc ? { people: doc.people } : { people: [] };
-}
-async function setTrackerRoster(roster) {
-  await db.collection('settings').updateOne(
-    { _id: 'trackerRoster' },
-    { $set: { people: roster.people } },
-    { upsert: true }
-  );
-}
-async function trackerRosterExists() {
-  return !!(await db.collection('settings').findOne({ _id: 'trackerRoster' }));
+function get(key, fallback = null) {
+  if (!USE_MONGO) {
+    const fp = keyToFilePath(key);
+    if (!fs.existsSync(fp)) return fallback;
+    try {
+      const parsed = JSON.parse(fs.readFileSync(fp, 'utf8') || 'null');
+      return parsed === null ? fallback : parsed;
+    } catch (e) { return fallback; }
+  }
+  return cache.has(key) ? cache.get(key) : fallback;
 }
 
-// ── schedules collection: one doc per date, _id = 'YYYY-MM-DD' ──
-async function getSchedule(date) {
-  const doc = await db.collection('schedules').findOne({ _id: date });
-  return doc ? doc.rows : null;
-}
-async function setSchedule(date, rows) {
-  await db.collection('schedules').updateOne(
-    { _id: date },
-    { $set: { rows } },
-    { upsert: true }
-  );
-}
-async function scheduleExists(date) {
-  return !!(await db.collection('schedules').findOne({ _id: date }, { projection: { _id: 1 } }));
-}
-async function listScheduleDates() {
-  const docs = await db.collection('schedules').find({}, { projection: { _id: 1 } }).toArray();
-  return docs.map(d => d._id).sort();
+function set(key, value) {
+  if (!USE_MONGO) {
+    const fp = keyToFilePath(key);
+    ensureDirFor(fp);
+    fs.writeFileSync(fp, JSON.stringify(value, null, 2), 'utf8');
+    return;
+  }
+  cache.set(key, value);
+  writeQueue = writeQueue
+    .then(() => collection.updateOne({ _id: key }, { $set: { data: value } }, { upsert: true }))
+    .catch(err => console.error(`[db] Mongo write failed for "${key}":`, err.message));
 }
 
-// ── tracker_days collection: one doc per date, _id = 'YYYY-MM-DD' ──
-async function getTrackerDay(date) {
-  const doc = await db.collection('tracker_days').findOne({ _id: date });
-  return doc ? { events: doc.events || [] } : { events: [] };
-}
-async function setTrackerDay(date, day) {
-  await db.collection('tracker_days').updateOne(
-    { _id: date },
-    { $set: { events: day.events || [] } },
-    { upsert: true }
-  );
+function del(key) {
+  if (!USE_MONGO) {
+    const fp = keyToFilePath(key);
+    if (fs.existsSync(fp)) fs.unlinkSync(fp);
+    return;
+  }
+  cache.delete(key);
+  writeQueue = writeQueue
+    .then(() => collection.deleteOne({ _id: key }))
+    .catch(err => console.error(`[db] Mongo delete failed for "${key}":`, err.message));
 }
 
-module.exports = {
-  connect,
-  getRoster, setRoster, rosterExists,
-  getUsers, setUsers, usersExist,
-  getTrackerRoster, setTrackerRoster, trackerRosterExists,
-  getSchedule, setSchedule, scheduleExists, listScheduleDates,
-  getTrackerDay, setTrackerDay
-};
+// Returns the date suffixes (YYYY-MM-DD) of every key stored under a given
+// prefix, e.g. listDatesWithPrefix('schedule:') for the calendar dots.
+function listDatesWithPrefix(prefix) {
+  if (!USE_MONGO) {
+    const dir = prefix === 'schedule:' ? path.join(DATA_DIR, 'schedules') : path.join(DATA_DIR, 'tracker');
+    if (!fs.existsSync(dir)) return [];
+    return fs.readdirSync(dir).filter(f => f.endsWith('.json')).map(f => f.replace('.json', ''));
+  }
+  const out = [];
+  for (const key of cache.keys()) {
+    if (key.startsWith(prefix)) out.push(key.slice(prefix.length));
+  }
+  return out;
+}
+
+module.exports = { init, has, get, set, del, listDatesWithPrefix, USE_MONGO };

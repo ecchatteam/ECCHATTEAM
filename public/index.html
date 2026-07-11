@@ -1677,15 +1677,27 @@ document.getElementById('resetPwForm').addEventListener('submit', async (e)=>{
 });
 
 // refresh the live tracker every 20s while it's the visible page (light polling
-// so multiple EBS techs on different machines see each other's clicks)
-// refresh the live tracker every 20s while it's the visible page (light polling
 // so multiple EBS techs on different machines see each other's clicks).
 // Also auto-rolls to the new day at midnight instead of silently staying
-// on yesterday's file until someone manually reloads the page.
+// on yesterday's file until someone manually reloads the page — but only
+// when midnight actually passes, never just because you're browsing a
+// past date on purpose.
+let lastKnownTrackerToday = trackerTodayISO();
 setInterval(()=>{
   if(currentPage !== 'tracker') return;
   const today = trackerTodayISO();
-  loadTracker(today !== trackerDate ? today : trackerDate);
+  if(today !== lastKnownTrackerToday){
+    // Real midnight rollover — move forward to the new day.
+    lastKnownTrackerToday = today;
+    trackerDate = today;
+    currentDate = today;
+    loadTracker(today);
+    updateHeaderDate();
+  } else {
+    // Just refresh whatever date is currently being viewed — don't touch
+    // the date itself, so browsing history stays put between polls.
+    loadTracker(trackerDate);
+  }
 }, 20000);
 
 // ── Auth ──────────────────────────────────────────────────────

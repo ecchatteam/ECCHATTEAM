@@ -127,7 +127,8 @@
   .tr-ebs-reset{background:transparent;border:none;color:var(--muted);font-size:13px;cursor:pointer;padding:3px;border-radius:6px;line-height:1}
   .tr-ebs-reset:hover{color:var(--purple);background:#F3EEFB}
   .guest-mode .tr-ebs-reset,
-  .ebs-mode .tr-ebs-reset{display:none}
+  .ebs-mode .tr-ebs-reset,
+  .smb-mode .tr-ebs-reset{display:none}
 
   .tr-feed-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px 16px;margin-top:20px;box-shadow:0 2px 10px rgba(16,35,63,0.06)}
   .tr-feed{max-height:220px;overflow-y:auto;display:flex;flex-direction:column;gap:0}
@@ -226,6 +227,9 @@
   .mode-pill{display:inline-block;font-size:10.5px;font-weight:800;letter-spacing:.4px;padding:3px 9px;border-radius:20px}
   .mode-pill.mode-ebs{background:#D9F0E3;color:#177A4C}
   .mode-pill.mode-smb{background:#E7ECF5;color:#3A5A93}
+  .mode-pill.mode-security{background:#FDE9D9;color:#A85A1A}
+  tbody tr.row-security{background:#FDF3E9}
+  tbody tr.row-security:hover{background:#FCE9D8}
 
   .row-actions{display:flex;gap:2px;justify-content:center;align-items:center;flex-wrap:nowrap}
   .reorder-select{font-size:11px;padding:4px 4px;max-width:118px;border-radius:6px;border:1px solid var(--border);background:#FAFBFD;color:var(--ink);cursor:pointer}
@@ -233,7 +237,9 @@
   .guest-mode .shift-select,
   .guest-mode .reorder-select,
   .ebs-mode .shift-select,
-  .ebs-mode .reorder-select{opacity:.45;pointer-events:none}
+  .ebs-mode .reorder-select,
+  .smb-mode .shift-select,
+  .smb-mode .reorder-select{opacity:.45;pointer-events:none}
   .icon-btn{background:transparent;border:none;cursor:pointer;width:26px;height:26px;border-radius:6px;display:flex;align-items:center;justify-content:center;color:var(--muted);transition:background .12s,color .12s}
   .icon-btn:hover{background:#F1F4F9;color:var(--ink)}
   .icon-btn.danger:hover{background:#FCEBEB;color:var(--danger)}
@@ -302,10 +308,12 @@
   .role-card:hover{border-color:var(--teal);background:#F4FAF9}
   #pickGuestBtn:hover{border-color:var(--green);background:#F4FBF7}
   #pickEbsBtn:hover{border-color:var(--purple);background:#FAF7FD}
+  #pickSmbBtn:hover{border-color:var(--teal);background:#F0FAF8}
   .role-card:active{transform:translateY(1px)}
   .role-card-icon{font-size:22px;width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--brand-light)}
   #pickGuestBtn .role-card-icon{background:#EAF8F1}
   #pickEbsBtn .role-card-icon{background:#F3EEFB}
+  #pickSmbBtn .role-card-icon{background:#E3F5F2}
   .role-card-title{font-weight:800;font-size:12.5px;color:var(--ink);text-align:center}
   .role-card-sub{font-size:10.5px;color:var(--muted);text-align:center}
   .back-link{background:transparent;border:none;color:var(--muted);font-size:12px;font-weight:600;cursor:pointer;padding:0;margin-bottom:16px;display:inline-flex;align-items:center;gap:4px}
@@ -317,6 +325,7 @@
   .role-pill{background:rgba(255,255,255,0.15);padding:3px 9px;border-radius:20px;font-size:10px;font-weight:800;letter-spacing:.4px;text-transform:uppercase}
   .role-pill.role-admin{background:rgba(232,163,61,0.28);color:#FFE3B0}
   .role-pill.role-ebs{background:rgba(124,77,190,0.32);color:#E4D6FA}
+  .role-pill.role-smb{background:rgba(22,132,122,0.32);color:#C8F0E8}
   .user-chip button{background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:#fff;padding:6px 10px;border-radius:8px;font-size:11.5px;cursor:pointer;font-weight:600}
   .user-chip button:hover{background:rgba(255,255,255,0.2)}
 
@@ -326,17 +335,23 @@
   .guest-mode #regenerateBtn,
   .guest-mode #changePwBtn,
   .ebs-mode #rosterBtn,
-  .ebs-mode #regenerateBtn{display:none}
+  .ebs-mode #regenerateBtn,
+  .smb-mode #rosterBtn,
+  .smb-mode #regenerateBtn{display:none}
   .guest-mode .icon-btn,
   .guest-mode .switch,
   .ebs-mode .icon-btn,
-  .ebs-mode .switch{opacity:.45;pointer-events:none}
+  .ebs-mode .switch,
+  .smb-mode .icon-btn,
+  .smb-mode .switch{opacity:.45;pointer-events:none}
   .guest-mode .tr-plus-btn,
   .guest-mode .tr-minus-btn{display:none}
   .guest-mode #trUndoBtn,
   .guest-mode #trResetBtn,
   .ebs-mode #trUndoBtn,
-  .ebs-mode #trResetBtn{display:none}
+  .ebs-mode #trResetBtn,
+  .smb-mode #trUndoBtn,
+  .smb-mode #trResetBtn{display:none}
 </style>
 </head>
 <body>
@@ -359,6 +374,11 @@
         <div class="role-card-icon">🎧</div>
         <div class="role-card-title">EBS Tech</div>
         <div class="role-card-sub">Log assignments</div>
+      </button>
+      <button type="button" class="role-card" id="pickSmbBtn">
+        <div class="role-card-icon">💬</div>
+        <div class="role-card-title">Security Zia</div>
+        <div class="role-card-sub">Log security tickets</div>
       </button>
       <button type="button" class="role-card" id="pickGuestBtn">
         <div class="role-card-icon">👀</div>
@@ -386,6 +406,18 @@
       </label>
       <div class="form-error" id="ebsLoginError"></div>
       <button type="submit" class="btn btn-purple" style="width:100%;justify-content:center">Sign in</button>
+    </form>
+
+    <form id="smbLoginForm" style="display:none">
+      <button type="button" class="back-link" id="backToRoleBtnSmb">← Back</button>
+      <label>Who are you?
+        <select id="smbLoginUsername"></select>
+      </label>
+      <label>Password
+        <input type="password" id="smbLoginPassword" autocomplete="current-password">
+      </label>
+      <div class="form-error" id="smbLoginError"></div>
+      <button type="submit" class="btn btn-teal" style="width:100%;justify-content:center">Sign in</button>
     </form>
   </div>
 </div>
@@ -429,6 +461,7 @@
   <button class="page-nav-btn" id="navShiftRosterBtn" data-page="shiftroster">🗓️ Shift Roster</button>
   <button class="page-nav-btn active" id="navRosterBtn" data-page="roster">📅 ZIA SLOT</button>
   <button class="page-nav-btn" id="navTrackerBtn" data-page="tracker">📊 SMB Chat Assignment Live Tracker</button>
+  <button class="page-nav-btn" id="navSecurityBtn" data-page="security">🛡️ Security Team Zia Assignment Live Tracker</button>
 </nav>
 
 <!-- NEW: Shift Roster — static reference table (Name / Support Role / Mode / Region / Shift) -->
@@ -588,7 +621,51 @@
 </div>
 
 </main>
+
+<main id="securityMain" style="display:none">
+
+<div class="tr-layout">
+  <!-- LEFT: Security team's shift roster reference (top-left corner, as requested) -->
+  <aside class="tr-side tr-side-left">
+    <div class="tr-side-card">
+      <div class="tr-side-head">🗓️ Security team — shift roster</div>
+      <div id="secShiftRef" class="tr-shift-ref"></div>
+    </div>
+  </aside>
+
+  <!-- CENTER: the security tracker itself -->
+  <div class="tr-center">
+    <div class="tr-toolbar">
+      <div class="tr-toolbar-left">
+        <div id="secWhoamiWrap"></div>
+        <span class="tr-datebadge" id="secDateBadge"></span>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        <select id="secAssignerPicker" class="tr-select" style="display:none" title="Log this assignment as…"></select>
+        <button class="btn btn-ghost" id="secTodayBtn">Today</button>
+        <button class="btn btn-amber" id="secUndoBtn">↩ Undo last</button>
+        <button class="btn" id="secResetBtn" style="background:#FCEBEB;color:var(--danger);border:1px solid #F0C4C4">🗑 Reset day</button>
+      </div>
+    </div>
+
+    <div class="tr-summary-row" id="secSummaryRow"></div>
+
+    <div class="tr-section-head">
+      <h2>Security techs — tap + when you assign a ticket</h2>
+      <span class="tz-note">Any EBS/SMB tech or Admin can log this · card position stays fixed</span>
+    </div>
+    <div class="tr-grid" id="secGrid"></div>
+
+    <div class="tr-feed-card">
+      <div class="tr-section-head" style="margin:0 0 8px">
+        <h2>Live activity</h2>
+      </div>
+      <div id="secFeed" class="tr-feed"></div>
+    </div>
+  </div>
 </div>
+
+</main>
 
 <div class="toast" id="toast"></div>
 
@@ -609,6 +686,29 @@
         <label style="display:block;font-size:12px;color:var(--muted);font-weight:600;margin-bottom:6px" id="assignCommentLabel">Comment (optional)</label>
         <textarea id="assignComment" rows="3" style="width:100%;padding:9px 11px;border:1px solid var(--border);border-radius:8px;font-size:13px;box-sizing:border-box;font-family:var(--sans);resize:vertical" placeholder="Reason, ticket #, context…"></textarea>
         <div class="form-error" id="assignCommentError" style="margin-top:8px"></div>
+        <button type="submit" class="btn btn-teal" style="width:100%;justify-content:center;margin-top:10px">Confirm assignment</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Security assign modal -->
+<div class="modal-overlay" id="assignSecModal">
+  <div class="modal" style="max-width:380px">
+    <div class="modal-head">
+      <div>
+        <h2 id="assignSecModalTitle">Assign ticket</h2>
+        <p id="assignSecModalSub">Confirm this assignment.</p>
+      </div>
+      <button class="modal-close" id="assignSecModalClose" aria-label="Close">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <form id="assignSecForm">
+        <label style="display:block;font-size:12px;color:var(--muted);font-weight:600;margin-bottom:6px" id="assignSecCommentLabel">Comment (optional)</label>
+        <textarea id="assignSecComment" rows="3" style="width:100%;padding:9px 11px;border:1px solid var(--border);border-radius:8px;font-size:13px;box-sizing:border-box;font-family:var(--sans);resize:vertical" placeholder="Reason, ticket #, context…"></textarea>
+        <div class="form-error" id="assignSecCommentError" style="margin-top:8px"></div>
         <button type="submit" class="btn btn-teal" style="width:100%;justify-content:center;margin-top:10px">Confirm assignment</button>
       </form>
     </div>
@@ -1274,33 +1374,45 @@ let selectedEbsId = localStorage.getItem('ziashift_ebs_id') || ''; // only meani
 let currentPage = 'roster';
 let trFeedFilterEbsId = null; // click an EBS tech's card to show only their entries in Live Activity
 
+let secTrackerState = { securityEvents: [], countsBySecurity: {}, totalsByAssigner: {}, matrixSecurity: {}, totalSecurityToday: 0 };
+let securityDate = trackerTodayISO();
+let selectedAssignerId = localStorage.getItem('ziashift_assigner_id') || ''; // admin's override picker only
+
 function ebsList(){ return trackerRoster.people.filter(p => p.mode === 'EBS'); }
 function smbList(){ return trackerRoster.people.filter(p => p.mode === 'SMB'); }
+function securityList(){ return trackerRoster.people.filter(p => p.mode === 'SECURITY'); }
 
 function switchPage(page){
   currentPage = page;
   document.getElementById('shiftRosterMain').style.display = page === 'shiftroster' ? 'block' : 'none';
   document.getElementById('rosterMain').style.display = page === 'roster' ? 'block' : 'none';
   document.getElementById('trackerMain').style.display = page === 'tracker' ? 'block' : 'none';
+  document.getElementById('securityMain').style.display = page === 'security' ? 'block' : 'none';
   document.getElementById('navShiftRosterBtn').classList.toggle('active', page === 'shiftroster');
   document.getElementById('navRosterBtn').classList.toggle('active', page === 'roster');
   document.getElementById('navTrackerBtn').classList.toggle('active', page === 'tracker');
+  document.getElementById('navSecurityBtn').classList.toggle('active', page === 'security');
   if(page === 'tracker') loadTracker(trackerDate);
+  if(page === 'security') loadSecurityTracker(securityDate);
   if(page === 'shiftroster') renderShiftRosterTable();
 }
 document.getElementById('navShiftRosterBtn').addEventListener('click', ()=> switchPage('shiftroster'));
 document.getElementById('navRosterBtn').addEventListener('click', ()=> switchPage('roster'));
 document.getElementById('navTrackerBtn').addEventListener('click', ()=> switchPage('tracker'));
+document.getElementById('navSecurityBtn').addEventListener('click', ()=> switchPage('security'));
 
 // ── Shift Roster (new, static reference table) ──
 function renderShiftRosterTable(){
   const tbody = document.getElementById('shiftRosterTbody');
+  const modeClass = m => m === 'EBS' ? 'ebs' : m === 'SECURITY' ? 'security' : 'smb';
+  const rowClass = m => m === 'EBS' ? 'row-ebs' : m === 'SECURITY' ? 'row-security' : '';
+  const groupLabel = m => m === 'EBS' ? 'EBS Chat' : m === 'SECURITY' ? 'Security' : 'Chat';
   tbody.innerHTML = trackerRoster.people.map((p, i) => `
-    <tr class="${p.mode === 'EBS' ? 'row-ebs' : ''}">
+    <tr class="${rowClass(p.mode)}">
       <td class="sno-cell">${i+1}</td>
       <td class="name-cell">${escAttr(p.name)}</td>
-      <td>Chat</td>
-      <td><span class="mode-pill mode-${p.mode==='EBS'?'ebs':'smb'}">${p.mode}</span></td>
+      <td>${groupLabel(p.mode)}</td>
+      <td><span class="mode-pill mode-${modeClass(p.mode)}">${escAttr(p.mode)}</span></td>
       <td>${escAttr(p.region||'—')}</td>
       <td class="mono-cell">${escAttr(p.shift||'—')}</td>
     </tr>
@@ -1398,7 +1510,7 @@ function renderShiftSidebar(){
   wrap.innerHTML = trackerDayRows.map(r => `
     <div class="tr-shift-row${r.onLeave ? ' tr-shift-leave' : ''}${nowWindow && r.id === nowWindow ? ' tr-shift-now' : ''}">
       <span class="tr-shift-name">${escAttr(r.name)}</span>
-      ${r.onLeave ? '<span class="tr-shift-leave-tag">LEAVE</span>' : `<span class="tr-shift-time">${escAttr(r.shiftSlot||'')}</span>`}
+      ${r.onLeave ? '<span class="tr-shift-leave-tag">LEAVE</span>' : `<span class="tr-shift-time">${escAttr(r.shiftLabel || fixedShiftFor(r.id) || r.shiftSlot || '')}</span>`}
     </div>
   `).join('');
 }
@@ -1625,6 +1737,232 @@ document.getElementById('trResetBtn').addEventListener('click', async ()=>{
 });
 
 // ── EBS x SMB matrix modal ──
+function renderSecShiftRef(){
+  const wrap = document.getElementById('secShiftRef');
+  if(!wrap) return;
+  const list = securityList();
+  if(!list.length){ wrap.innerHTML = `<div class="tz-note" style="padding:4px 2px">No Security techs set up yet.</div>`; return; }
+  const sorted = [...list].sort((a,b) => (timeToMinutes(a.shift)??9999) - (timeToMinutes(b.shift)??9999));
+  wrap.innerHTML = sorted.map(p => `
+    <div class="tr-shift-row">
+      <span class="tr-shift-name">${escAttr(p.name)}</span>
+      <span class="tr-shift-time">${escAttr(p.shift||'—')}</span>
+    </div>
+  `).join('');
+}
+
+// Who's assigning, for Security: EBS/SMB roles are locked to their own
+// account; Admin gets a dropdown covering everyone (EBS + SMB pool).
+function myAssignerIdForSecurity(){
+  if(CURRENT_ROLE === 'ebs') return CURRENT_EBS_ID;
+  if(CURRENT_ROLE === 'smb') return CURRENT_SMB_ID;
+  if(CURRENT_ROLE === 'admin') return selectedAssignerId;
+  return null;
+}
+function renderSecWhoami(){
+  const wrap = document.getElementById('secWhoamiWrap');
+  if(CURRENT_ROLE === 'ebs' || CURRENT_ROLE === 'smb'){
+    wrap.innerHTML = `<div class="tr-whoami-label">Assigning as <b style="color:var(--ink)">${escAttr(CURRENT_NAME || CURRENT_USERNAME)}</b></div>`;
+    document.getElementById('secAssignerPicker').style.display = 'none';
+  } else if(CURRENT_ROLE === 'admin'){
+    const pool = [...ebsList(), ...smbList()];
+    if(!pool.some(p => p.id === selectedAssignerId)) selectedAssignerId = pool[0] ? pool[0].id : '';
+    const picker = document.getElementById('secAssignerPicker');
+    picker.style.display = 'inline-block';
+    picker.innerHTML = pool.map(p=>`<option value="${escAttr(p.id)}"${p.id===selectedAssignerId?' selected':''}>${escAttr(p.name)} (${p.mode})</option>`).join('');
+    wrap.innerHTML = `<div class="tr-whoami-label">Assign on behalf of \u2192</div>`;
+    picker.onchange = (e)=>{
+      selectedAssignerId = e.target.value;
+      localStorage.setItem('ziashift_assigner_id', selectedAssignerId);
+      renderSecurityTracker();
+    };
+  } else {
+    wrap.innerHTML = `<div class="tr-whoami-label">👀 View only — sign in as an EBS/SMB tech or Admin to log assignments</div>`;
+    document.getElementById('secAssignerPicker').style.display = 'none';
+  }
+}
+
+async function loadSecurityTracker(dateStr){
+  securityDate = dateStr;
+  updateSecDateBadge();
+  try{
+    const res = await fetch(`/api/tracker/${dateStr}`);
+    if(res.status === 401){ showLogin(); return; }
+    const data = await res.json();
+    if(data.success) secTrackerState = data;
+  }catch(e){
+    showToast('Could not reach the server. Is it running?', 't-error');
+  }
+  renderSecurityTracker();
+  renderSecShiftRef();
+}
+
+function updateSecDateBadge(){
+  const badge = document.getElementById('secDateBadge');
+  if(badge) badge.textContent = formatDisplayDate(securityDate) + (securityDate === trackerTodayISO() ? ' · Today' : '');
+}
+
+let secFeedFilterAssignerId = null;
+
+function renderSecurityTracker(){
+  const isAdmin = CURRENT_ROLE === 'admin';
+  const canAssign = ['admin','ebs','smb'].includes(CURRENT_ROLE);
+  const security = securityList();
+  const counts = secTrackerState.countsBySecurity || {};
+  const totalToday = secTrackerState.totalSecurityToday || 0;
+
+  renderSecWhoami();
+
+  const lowestCount = security.length ? Math.min(...security.map(p => counts[p.id] || 0)) : 0;
+  const busiest = security.reduce((max,p)=> (counts[p.id]||0) > (counts[max?.id]||-1) ? p : max, null);
+  const quietest = security.reduce((min,p)=> (counts[p.id]||0) < (counts[min?.id]||Infinity) ? p : min, null);
+  const avg = security.length ? (totalToday / security.length) : 0;
+  document.getElementById('secSummaryRow').innerHTML = `
+    <div class="tr-stat"><div class="tr-stat-num">${totalToday}</div><div class="tr-stat-label">Tickets assigned today</div></div>
+    <div class="tr-stat"><div class="tr-stat-num">${avg.toFixed(1)}</div><div class="tr-stat-label">Avg per Security tech</div></div>
+    <div class="tr-stat tr-stat-high"><div class="tr-stat-num">${busiest && counts[busiest.id] ? counts[busiest.id] : 0}</div><div class="tr-stat-label">${busiest && counts[busiest.id] ? escAttr(busiest.name) : '—'} · highest load</div></div>
+    <div class="tr-stat tr-stat-low"><div class="tr-stat-num">${lowestCount}</div><div class="tr-stat-label">${quietest ? escAttr(quietest.name) : '—'} · lowest load</div></div>
+  `;
+
+  document.getElementById('secGrid').innerHTML = security.map(p => {
+    const count = counts[p.id] || 0;
+    const isRecommend = count === lowestCount && security.length > 1;
+    const assignerBreakdown = [...ebsList(), ...smbList()].map(a => {
+      const c = (secTrackerState.matrixSecurity[a.id] || {})[p.id] || 0;
+      return c ? `<span class="tr-mini-chip">${escAttr(a.name)}: ${c}</span>` : '';
+    }).filter(Boolean).join('');
+    return `
+      <div class="tr-card${isRecommend ? ' tr-recommend' : ''}">
+        <div class="tr-card-head">
+          <div>
+            <div class="tr-card-name">${escAttr(p.name)}</div>
+            <div class="tr-card-region">${escAttr(p.shift||'—')}</div>
+          </div>
+          ${isRecommend ? '<span class="tr-recommend-badge">Lowest load</span>' : ''}
+        </div>
+        <div class="tr-card-body">
+          <div>
+            <div class="tr-count">${count}</div>
+            <div class="tr-count-label">Assigned</div>
+          </div>
+          ${canAssign ? `<div class="tr-btn-group"><button class="tr-minus-btn" data-sec-id="${escAttr(p.id)}" title="Undo my last assignment to this person">−</button><button class="tr-plus-btn" data-sec-id="${escAttr(p.id)}" data-sec-name="${escAttr(p.name)}">+</button></div>` : ''}
+        </div>
+        ${assignerBreakdown ? `<div class="tr-card-breakdown">${assignerBreakdown}</div>` : ''}
+      </div>
+    `;
+  }).join('') || `<div class="empty-state"><div class="em-icon">🛡️</div><h3>No Security techs set up</h3><p>Add Security techs to the tracker roster to get started.</p></div>`;
+
+  document.querySelectorAll('#secGrid .tr-plus-btn').forEach(btn => {
+    btn.addEventListener('click', () => openAssignSecurityModal(btn.getAttribute('data-sec-id'), btn.getAttribute('data-sec-name')));
+  });
+  document.querySelectorAll('#secGrid .tr-minus-btn').forEach(btn => {
+    btn.addEventListener('click', () => unassignSecurityTicket(btn.getAttribute('data-sec-id')));
+  });
+
+  const events = secTrackerState.securityEvents || [];
+  const filteredEvents = secFeedFilterAssignerId ? events.filter(ev => ev.assignerId === secFeedFilterAssignerId) : events;
+  const recent = filteredEvents.slice(-50).reverse();
+  document.getElementById('secFeed').innerHTML = recent.length
+    ? recent.map(ev => `
+        <div class="tr-feed-row" style="flex-direction:column;align-items:stretch;gap:2px">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+            <span>${escAttr(ev.assignerName)} → <b>${escAttr(ev.securityName)}</b></span>
+            <span class="tr-feed-time">${formatClockTime(ev.ts)} · ${timeAgo(ev.ts)}</span>
+          </div>
+          ${ev.comment ? `<div class="tr-comment-note">💬 ${escAttr(ev.comment)}</div>` : ''}
+        </div>
+      `).join('')
+    : `<div class="tr-feed-empty">No tickets assigned yet today.</div>`;
+
+  document.getElementById('secUndoBtn').style.display = isAdmin ? 'inline-flex' : 'none';
+  document.getElementById('secResetBtn').style.display = isAdmin ? 'inline-flex' : 'none';
+}
+
+let assignModalSecurityId = null;
+function openAssignSecurityModal(securityId, securityName){
+  assignModalSecurityId = securityId;
+  const myId = myAssignerIdForSecurity();
+  const priorCount = (secTrackerState.matrixSecurity[myId] || {})[securityId] || 0;
+  const required = priorCount >= 2;
+  document.getElementById('assignSecModalTitle').textContent = `Assign ticket to ${securityName}`;
+  document.getElementById('assignSecModalSub').textContent = required
+    ? `You've already assigned ${priorCount} tickets to ${securityName} today — please add a note.`
+    : 'Add a note if useful, or just confirm.';
+  document.getElementById('assignSecCommentLabel').textContent = required ? 'Comment (required)' : 'Comment (optional)';
+  document.getElementById('assignSecComment').value = '';
+  document.getElementById('assignSecComment').dataset.required = required ? '1' : '';
+  document.getElementById('assignSecCommentError').textContent = '';
+  document.getElementById('assignSecModal').classList.add('open');
+  document.getElementById('assignSecComment').focus();
+}
+function closeAssignSecModal(){ document.getElementById('assignSecModal').classList.remove('open'); assignModalSecurityId = null; }
+document.getElementById('assignSecModalClose').addEventListener('click', closeAssignSecModal);
+document.getElementById('assignSecModal').addEventListener('click', (e)=>{ if(e.target.id==='assignSecModal') closeAssignSecModal(); });
+document.getElementById('assignSecForm').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const commentEl = document.getElementById('assignSecComment');
+  const comment = commentEl.value.trim();
+  const errEl = document.getElementById('assignSecCommentError');
+  errEl.textContent = '';
+  if(commentEl.dataset.required === '1' && !comment){
+    errEl.textContent = 'Please add a short note before confirming.';
+    return;
+  }
+  await assignSecurityTicket(assignModalSecurityId, comment);
+  closeAssignSecModal();
+});
+
+async function assignSecurityTicket(securityId, comment){
+  const body = { securityId, comment: comment || '' };
+  if(CURRENT_ROLE === 'admin') body.assignerId = selectedAssignerId;
+  try{
+    const res = await fetch(`/api/tracker/${securityDate}/assign-security`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify(body)
+    });
+    const data = await res.json();
+    if(data.success){ secTrackerState = data; renderSecurityTracker(); }
+    else showToast(data.message || 'Could not log this assignment.', 't-error');
+  }catch(e){ showToast('Could not reach the server.', 't-error'); }
+}
+
+async function unassignSecurityTicket(securityId){
+  const body = { securityId };
+  if(CURRENT_ROLE === 'admin') body.assignerId = selectedAssignerId;
+  try{
+    const res = await fetch(`/api/tracker/${securityDate}/unassign-security`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify(body)
+    });
+    const data = await res.json();
+    if(data.success){ secTrackerState = data; renderSecurityTracker(); showToast('Undone.', 't-success'); }
+    else showToast(data.message || 'Nothing of yours to undo for this person.', 't-error');
+  }catch(e){ showToast('Could not reach the server.', 't-error'); }
+}
+
+document.getElementById('secTodayBtn').addEventListener('click', ()=> loadSecurityTracker(trackerTodayISO()));
+
+document.getElementById('secUndoBtn').addEventListener('click', async ()=>{
+  if(!confirm('Undo the most recent security ticket assignment for this day?')) return;
+  try{
+    const res = await fetch(`/api/tracker/${securityDate}/undo-security`, { method:'POST' });
+    const data = await res.json();
+    if(data.success){ secTrackerState = data; renderSecurityTracker(); showToast('Last assignment undone.', 't-success'); }
+    else showToast(data.message || 'Could not undo.', 't-error');
+  }catch(e){ showToast('Could not reach the server.', 't-error'); }
+});
+
+document.getElementById('secResetBtn').addEventListener('click', async ()=>{
+  if(!confirm(`Reset all Security ticket counts for ${formatDisplayDate(securityDate)}? This can't be undone.`)) return;
+  try{
+    const res = await fetch(`/api/tracker/${securityDate}/reset-security`, { method:'POST' });
+    const data = await res.json();
+    if(data.success){ secTrackerState = data; renderSecurityTracker(); showToast('Counts reset for the day.', 't-success'); }
+    else showToast(data.message || 'Could not reset.', 't-error');
+  }catch(e){ showToast('Could not reach the server.', 't-error'); }
+});
+
+// ── EBS x SMB matrix modal ──
 function openTrMatrix(){
   const ebs = ebsList(), smb = smbList();
   const thead = document.querySelector('#trMatrixTable thead');
@@ -1701,16 +2039,19 @@ setInterval(()=>{
 }, 20000);
 
 // ── Auth ──────────────────────────────────────────────────────
-let CURRENT_ROLE = null, CURRENT_USERNAME = null, CURRENT_NAME = null, CURRENT_EBS_ID = null;
+let CURRENT_ROLE = null, CURRENT_USERNAME = null, CURRENT_NAME = null, CURRENT_EBS_ID = null, CURRENT_SMB_ID = null;
 
 function showRoleSelect(){
   document.getElementById('roleSelect').style.display = 'flex';
   document.getElementById('loginForm').style.display = 'none';
   document.getElementById('ebsLoginForm').style.display = 'none';
+  document.getElementById('smbLoginForm').style.display = 'none';
   document.getElementById('loginPassword').value = '';
   document.getElementById('loginError').textContent = '';
   document.getElementById('ebsLoginPassword').value = '';
   document.getElementById('ebsLoginError').textContent = '';
+  document.getElementById('smbLoginPassword').value = '';
+  document.getElementById('smbLoginError').textContent = '';
 }
 function showLogin(){
   document.getElementById('loginOverlay').style.display = 'flex';
@@ -1720,12 +2061,13 @@ function showLogin(){
 function enterApp(){
   document.getElementById('loginOverlay').style.display = 'none';
   document.getElementById('appShell').style.display = 'block';
-  const roleLabel = CURRENT_ROLE === 'admin' ? 'Admin' : CURRENT_ROLE === 'ebs' ? 'EBS' : 'Guest';
-  const pillClass = CURRENT_ROLE === 'admin' ? ' role-admin' : CURRENT_ROLE === 'ebs' ? ' role-ebs' : '';
+  const roleLabel = CURRENT_ROLE === 'admin' ? 'Admin' : CURRENT_ROLE === 'ebs' ? 'EBS' : CURRENT_ROLE === 'smb' ? 'Security Zia' : 'Guest';
+  const pillClass = CURRENT_ROLE === 'admin' ? ' role-admin' : CURRENT_ROLE === 'ebs' ? ' role-ebs' : CURRENT_ROLE === 'smb' ? ' role-smb' : '';
   document.getElementById('userChipText').innerHTML =
     `${escAttr(CURRENT_NAME || CURRENT_USERNAME)} <span class="role-pill${pillClass}">${roleLabel}</span>`;
   document.body.classList.toggle('guest-mode', CURRENT_ROLE === 'guest');
   document.body.classList.toggle('ebs-mode', CURRENT_ROLE === 'ebs');
+  document.body.classList.toggle('smb-mode', CURRENT_ROLE === 'smb');
   loadDate(istTodayISO());
   loadTrackerRoster();
 }
@@ -1735,7 +2077,7 @@ async function checkSession(){
     if(res.ok){
       const data = await res.json();
       CURRENT_ROLE = data.role; CURRENT_USERNAME = data.username;
-      CURRENT_NAME = data.name || null; CURRENT_EBS_ID = data.ebsId || null;
+      CURRENT_NAME = data.name || null; CURRENT_EBS_ID = data.ebsId || null; CURRENT_SMB_ID = data.smbId || null;
       enterApp();
     } else {
       showLogin();
@@ -1748,7 +2090,7 @@ document.getElementById('pickGuestBtn').addEventListener('click', async ()=>{
   try{
     const res = await fetch('/api/login/guest', { method:'POST' });
     const data = await res.json();
-    if(data.success){ CURRENT_ROLE = data.role; CURRENT_USERNAME = data.username; CURRENT_NAME = null; CURRENT_EBS_ID = null; enterApp(); }
+    if(data.success){ CURRENT_ROLE = data.role; CURRENT_USERNAME = data.username; CURRENT_NAME = null; CURRENT_EBS_ID = null; CURRENT_SMB_ID = null; enterApp(); }
     else showToast('Could not start a guest session.', 't-error');
   }catch(e){ showToast('Could not reach the server.', 't-error'); }
 });
@@ -1778,8 +2120,27 @@ document.getElementById('pickEbsBtn').addEventListener('click', async ()=>{
   document.getElementById('ebsLoginPassword').focus();
 });
 
+// SMB Tech: reveal the name + password step.
+document.getElementById('pickSmbBtn').addEventListener('click', async ()=>{
+  document.getElementById('roleSelect').style.display = 'none';
+  document.getElementById('smbLoginForm').style.display = 'block';
+  const sel = document.getElementById('smbLoginUsername');
+  sel.innerHTML = '<option>Loading…</option>';
+  try{
+    const res = await fetch('/api/login/smb-list');
+    const data = await res.json();
+    if(data.success && data.people.length){
+      sel.innerHTML = data.people.map(p => `<option value="${escAttr(p.username)}">${escAttr(p.name)}</option>`).join('');
+    } else {
+      sel.innerHTML = '<option value="">No SMB accounts set up yet</option>';
+    }
+  }catch(e){ sel.innerHTML = '<option value="">Could not load list</option>'; }
+  document.getElementById('smbLoginPassword').focus();
+});
+
 document.getElementById('backToRoleBtn').addEventListener('click', showRoleSelect);
 document.getElementById('backToRoleBtnEbs').addEventListener('click', showRoleSelect);
+document.getElementById('backToRoleBtnSmb').addEventListener('click', showRoleSelect);
 
 document.getElementById('loginForm').addEventListener('submit', async (e)=>{
   e.preventDefault();
@@ -1793,7 +2154,7 @@ document.getElementById('loginForm').addEventListener('submit', async (e)=>{
     });
     const data = await res.json();
     if(data.success){
-      CURRENT_ROLE = data.role; CURRENT_USERNAME = data.username; CURRENT_NAME = null; CURRENT_EBS_ID = null;
+      CURRENT_ROLE = data.role; CURRENT_USERNAME = data.username; CURRENT_NAME = null; CURRENT_EBS_ID = null; CURRENT_SMB_ID = null;
       enterApp();
     } else {
       errEl.textContent = data.message || 'Incorrect admin password.';
@@ -1816,7 +2177,30 @@ document.getElementById('ebsLoginForm').addEventListener('submit', async (e)=>{
     const data = await res.json();
     if(data.success){
       CURRENT_ROLE = data.role; CURRENT_USERNAME = data.username;
-      CURRENT_NAME = data.name; CURRENT_EBS_ID = data.ebsId;
+      CURRENT_NAME = data.name; CURRENT_EBS_ID = data.ebsId; CURRENT_SMB_ID = null;
+      enterApp();
+    } else {
+      errEl.textContent = data.message || 'Incorrect username or password.';
+    }
+  }catch(e){ errEl.textContent = 'Could not reach the server.'; }
+});
+
+document.getElementById('smbLoginForm').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const username = document.getElementById('smbLoginUsername').value;
+  const password = document.getElementById('smbLoginPassword').value;
+  const errEl = document.getElementById('smbLoginError');
+  errEl.textContent = '';
+  if(!username){ errEl.textContent = 'No SMB account selected.'; return; }
+  try{
+    const res = await fetch('/api/login/smb', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ username, password })
+    });
+    const data = await res.json();
+    if(data.success){
+      CURRENT_ROLE = data.role; CURRENT_USERNAME = data.username;
+      CURRENT_NAME = data.name; CURRENT_SMB_ID = data.smbId; CURRENT_EBS_ID = null;
       enterApp();
     } else {
       errEl.textContent = data.message || 'Incorrect username or password.';
@@ -1826,7 +2210,7 @@ document.getElementById('ebsLoginForm').addEventListener('submit', async (e)=>{
 
 document.getElementById('logoutBtn').addEventListener('click', async ()=>{
   try{ await fetch('/api/logout', { method:'POST' }); }catch(e){}
-  CURRENT_ROLE = null; CURRENT_USERNAME = null; CURRENT_NAME = null; CURRENT_EBS_ID = null;
+  CURRENT_ROLE = null; CURRENT_USERNAME = null; CURRENT_NAME = null; CURRENT_EBS_ID = null; CURRENT_SMB_ID = null;
   showLogin();
 });
 

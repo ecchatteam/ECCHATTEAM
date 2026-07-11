@@ -52,6 +52,48 @@ const SEED_ROSTER = {
     { id: 'r20', name: 'Ranjith Kumar R',    region: 'US/LATAM'   }
   ]
 };
+// ── Seed the tracker roster (same 20 people, tagged EBS/SMB per your
+// screenshot) — lives in its own file so editing it never touches the
+// master shift roster above ──────────────────────────────────
+const SEED_TRACKER_ROSTER = {
+  people: [
+    { id: 'r1',  name: 'Arun R',             region: 'ANZ/APAC',   mode: 'SMB', shift: '05:00' },
+    { id: 'r2',  name: 'Gokulakrishnan P',   region: 'ANZ/APAC',   mode: 'SMB', shift: '06:00' },
+    { id: 'r3',  name: 'Premnath V',         region: 'APAC/India', mode: 'SMB', shift: '07:00' },
+    { id: 'r4',  name: 'Tamilselvan G',      region: 'APAC/India', mode: 'SMB', shift: '08:00' },
+    { id: 'r5',  name: 'Subbu',              region: 'India/MEA',  mode: 'EBS', shift: '10:00' },
+    { id: 'r6',  name: 'Manoj Kumar',        region: 'India/MEA',  mode: 'SMB', shift: '10:00' },
+    { id: 'r7',  name: 'Prasanth Ganesan',   region: 'India/MEA',  mode: 'SMB', shift: '10:00' },
+    { id: 'r8',  name: 'Anto',               region: 'India/MEA',  mode: 'EBS', shift: '11:00' },
+    { id: 'r9',  name: 'Kewin',              region: 'MEA/Europe', mode: 'EBS', shift: '11:00' },
+    { id: 'r10', name: 'Santhoshraj V',      region: 'MEA/Europe', mode: 'SMB', shift: '13:00' },
+    { id: 'r11', name: 'Sabrishwaran',       region: 'UK/Europe',  mode: 'SMB', shift: '13:00' },
+    { id: 'r12', name: 'Vinoth Kumar',       region: 'UK/Europe',  mode: 'EBS', shift: '13:00' },
+    { id: 'r13', name: 'Arunkumar E',        region: 'UK/Europe',  mode: 'SMB', shift: '14:00' },
+    { id: 'r14', name: 'Prabhakaran K',      region: 'US/LATAM',   mode: 'SMB', shift: '16:00' },
+    { id: 'r15', name: 'Lokesh',             region: 'US/LATAM',   mode: 'EBS', shift: '16:00' },
+    { id: 'r16', name: 'Rahul Muthiah V',    region: 'US/LATAM',   mode: 'SMB', shift: '17:00' },
+    { id: 'r17', name: 'Abinaya K',          region: 'US/LATAM',   mode: 'SMB', shift: '19:00' },
+    { id: 'r18', name: 'Guna',               region: 'US/LATAM',   mode: 'EBS', shift: '19:00' },
+    { id: 'r19', name: 'Santhosh L',         region: 'US/LATAM',   mode: 'SMB', shift: '20:00' },
+    { id: 'r20', name: 'Ranjith Kumar R',    region: 'US/LATAM',   mode: 'SMB', shift: '21:00' },
+    // Security team — card-only, no individual login. Any of the 20
+    // SMB/EBS accounts can assign a ticket to them.
+    { id: 'r21', name: 'Guru Prasad',        region: '', mode: 'SECURITY', shift: '07:00' },
+    { id: 'r22', name: 'Abishek',            region: '', mode: 'SECURITY', shift: '10:00' },
+    { id: 'r23', name: 'Arun Sandeep',       region: '', mode: 'SECURITY', shift: '10:00' },
+    { id: 'r24', name: 'Poovarasan',         region: '', mode: 'SECURITY', shift: '12:00' },
+    { id: 'r25', name: 'Kirusanthan',        region: '', mode: 'SECURITY', shift: '14:00' },
+    { id: 'r26', name: 'Giri Prasad',        region: '', mode: 'SECURITY', shift: '14:00' },
+    { id: 'r27', name: 'Sameer',             region: '', mode: 'SECURITY', shift: '18:00' },
+    { id: 'r28', name: 'Karthik K',          region: '', mode: 'SECURITY', shift: '20:00' },
+    { id: 'r29', name: 'Shyam',              region: '', mode: 'SECURITY', shift: '21:00' },
+    { id: 'r30', name: 'Saithirumalai',      region: '', mode: 'SECURITY', shift: '06:00' },
+    { id: 'r31', name: 'Karthikeyan HK',     region: '', mode: 'SECURITY', shift: '10:00' },
+    { id: 'r32', name: 'Gopinath L',         region: '', mode: 'SECURITY', shift: '18:00' }
+  ]
+};
+
 function seedAll() {
   if (!db.has('roster')) {
     db.set('roster', SEED_ROSTER);
@@ -61,8 +103,28 @@ function seedAll() {
     db.set('trackerRoster', SEED_TRACKER_ROSTER);
   }
 
+  // Migration for installs that already had a tracker roster before
+  // the Security team was added — appends any seed person whose id isn't
+  // already present (e.g. the 12 Security techs), leaves every existing
+  // person (and any edits already made to them) completely untouched.
+  (function migrateMissingPeople() {
+    if (!db.has('trackerRoster')) return;
+    try {
+      const current = db.get('trackerRoster');
+      if (!current) return;
+      current.people = current.people || [];
+      const existingIds = new Set(current.people.map(p => p.id));
+      const missing = SEED_TRACKER_ROSTER.people.filter(p => !existingIds.has(p.id));
+      if (missing.length) {
+        current.people = [...current.people, ...missing];
+        db.set('trackerRoster', current);
+        console.log(`[tracker] Added ${missing.length} missing roster people to tracker roster: ${missing.map(p=>p.name).join(', ')}`);
+      }
+    } catch (e) { /* leave data untouched if it can't be parsed */ }
+  })();
+
   // Migration for installs provisioned before the "shift" field existed
-  // (e.g. your production tracker-roster.json) — fills in only what's
+  // (e.g. your production tracker roster) — fills in only what's
   // missing, never touches mode/region/id that may have been edited since.
   (function migrateShiftField() {
     if (!db.has('trackerRoster')) return;
@@ -93,35 +155,8 @@ function seedAll() {
   }
 
   ensureEbsAccounts();
+  ensureSmbAccounts();
 }
-
-// ── Seed the tracker roster (same 20 people, tagged EBS/SMB per your
-// screenshot) — lives in its own file so editing it never touches the
-// master shift roster above ──────────────────────────────────
-const SEED_TRACKER_ROSTER = {
-  people: [
-    { id: 'r1',  name: 'Arun R',             region: 'ANZ/APAC',   mode: 'SMB', shift: '05:00' },
-    { id: 'r2',  name: 'Gokulakrishnan P',   region: 'ANZ/APAC',   mode: 'SMB', shift: '06:00' },
-    { id: 'r3',  name: 'Premnath V',         region: 'APAC/India', mode: 'SMB', shift: '07:00' },
-    { id: 'r4',  name: 'Tamilselvan G',      region: 'APAC/India', mode: 'SMB', shift: '08:00' },
-    { id: 'r5',  name: 'Subbu',              region: 'India/MEA',  mode: 'EBS', shift: '10:00' },
-    { id: 'r6',  name: 'Manoj Kumar',        region: 'India/MEA',  mode: 'SMB', shift: '10:00' },
-    { id: 'r7',  name: 'Prasanth Ganesan',   region: 'India/MEA',  mode: 'SMB', shift: '10:00' },
-    { id: 'r8',  name: 'Anto',               region: 'India/MEA',  mode: 'EBS', shift: '11:00' },
-    { id: 'r9',  name: 'Kewin',              region: 'MEA/Europe', mode: 'EBS', shift: '11:00' },
-    { id: 'r10', name: 'Santhoshraj V',      region: 'MEA/Europe', mode: 'SMB', shift: '13:00' },
-    { id: 'r11', name: 'Sabrishwaran',       region: 'UK/Europe',  mode: 'SMB', shift: '13:00' },
-    { id: 'r12', name: 'Vinoth Kumar',       region: 'UK/Europe',  mode: 'EBS', shift: '13:00' },
-    { id: 'r13', name: 'Arunkumar E',        region: 'UK/Europe',  mode: 'SMB', shift: '14:00' },
-    { id: 'r14', name: 'Prabhakaran K',      region: 'US/LATAM',   mode: 'SMB', shift: '16:00' },
-    { id: 'r15', name: 'Lokesh',             region: 'US/LATAM',   mode: 'EBS', shift: '16:00' },
-    { id: 'r16', name: 'Rahul Muthiah V',    region: 'US/LATAM',   mode: 'SMB', shift: '17:00' },
-    { id: 'r17', name: 'Abinaya K',          region: 'US/LATAM',   mode: 'SMB', shift: '19:00' },
-    { id: 'r18', name: 'Guna',               region: 'US/LATAM',   mode: 'EBS', shift: '19:00' },
-    { id: 'r19', name: 'Santhosh L',         region: 'US/LATAM',   mode: 'SMB', shift: '20:00' },
-    { id: 'r20', name: 'Ranjith Kumar R',    region: 'US/LATAM',   mode: 'SMB', shift: '21:00' }
-  ]
-};
 
 // ── Auth: password hashing helpers ────────────────────────────
 function hashPassword(password, salt) {
@@ -170,6 +205,29 @@ function ensureEbsAccounts() {
     };
     changed = true;
     console.log(`[users] Created EBS account "${username}" / ${defaultPassword} — linked to ${p.name}. Please have them change this password after first login.`);
+  });
+  if (changed) writeUsers(users);
+}
+
+// ── Same idea, for SMB techs — role 'smb', linked via smbId instead of
+// ebsId. Security techs are NOT provisioned here; they stay card-only. ──
+function ensureSmbAccounts() {
+  const roster = readTrackerRoster();
+  const smbPeople = roster.people.filter(p => p.mode === 'SMB');
+  if (smbPeople.length === 0) return;
+  const users = readUsers();
+  let changed = false;
+  smbPeople.forEach(p => {
+    const username = usernameFor(p.name);
+    if (!username || users[username]) return; // already exists — never overwrite
+    const defaultPassword = `${username}123`;
+    users[username] = {
+      ...makeUserRecord(username, defaultPassword, 'smb'),
+      smbId: p.id,
+      displayName: p.name
+    };
+    changed = true;
+    console.log(`[users] Created SMB account "${username}" / ${defaultPassword} — linked to ${p.name}. Please have them change this password after first login.`);
   });
   if (changed) writeUsers(users);
 }
@@ -223,6 +281,14 @@ function requireAdmin(req, res, next) {
 function requireAssignAccess(req, res, next) {
   if (!req.session || (req.session.role !== 'admin' && req.session.role !== 'ebs')) {
     return res.status(403).json({ success: false, message: 'View-only access — sign in as an EBS tech or Admin to log a chat assignment.' });
+  }
+  next();
+}
+// Security ticket assignment is open to all 20 real accounts (admin,
+// EBS, or SMB) — broader than the chat tracker above, which is EBS-only.
+function requireSecurityAssignAccess(req, res, next) {
+  if (!req.session || !['admin', 'ebs', 'smb'].includes(req.session.role)) {
+    return res.status(403).json({ success: false, message: 'View-only access — sign in as an EBS/SMB tech or Admin to log a security assignment.' });
   }
   next();
 }
@@ -281,7 +347,9 @@ function writeTrackerRoster(roster) {
   db.set('trackerRoster', roster);
 }
 function readTrackerDay(date) {
-  return db.get(`tracker:${date}`, { events: [] });
+  const day = db.get(`tracker:${date}`, { events: [], securityEvents: [] });
+  if (!Array.isArray(day.securityEvents)) day.securityEvents = [];
+  return day;
 }
 function writeTrackerDay(date, day) {
   db.set(`tracker:${date}`, day);
@@ -299,12 +367,30 @@ function summarizeTrackerDay(day) {
     if (!matrix[ev.ebsId]) matrix[ev.ebsId] = {};
     matrix[ev.ebsId][ev.smbId] = (matrix[ev.ebsId][ev.smbId] || 0) + 1;
   });
+
+  // Security side: any of the 20 real accounts (EBS or SMB) can be the
+  // assigner, so this is keyed by a generic assignerId rather than ebsId.
+  const countsBySecurity = {};
+  const totalsByAssigner = {};
+  const matrixSecurity = {}; // matrixSecurity[assignerId][securityId] = count
+  (day.securityEvents || []).forEach(ev => {
+    countsBySecurity[ev.securityId] = (countsBySecurity[ev.securityId] || 0) + 1;
+    totalsByAssigner[ev.assignerId] = (totalsByAssigner[ev.assignerId] || 0) + 1;
+    if (!matrixSecurity[ev.assignerId]) matrixSecurity[ev.assignerId] = {};
+    matrixSecurity[ev.assignerId][ev.securityId] = (matrixSecurity[ev.assignerId][ev.securityId] || 0) + 1;
+  });
+
   return {
     events: day.events || [],
     countsBySmb,
     totalsByEbs,
     matrix,
-    totalToday: (day.events || []).length
+    totalToday: (day.events || []).length,
+    securityEvents: day.securityEvents || [],
+    countsBySecurity,
+    totalsByAssigner,
+    matrixSecurity,
+    totalSecurityToday: (day.securityEvents || []).length
   };
 }
 
@@ -433,6 +519,29 @@ app.post('/api/login/ebs', (req, res) => {
   res.json({ success: true, username: record.username, role: record.role, ebsId: record.ebsId, name: record.displayName || record.username });
 });
 
+// Public — lists SMB tech display names for the login picker.
+app.get('/api/login/smb-list', (req, res) => {
+  const users = readUsers();
+  const list = Object.values(users)
+    .filter(u => u.role === 'smb')
+    .map(u => ({ username: u.username, name: u.displayName || u.username }))
+    .sort((a, b) => a.name.localeCompare(b.name));
+  res.json({ success: true, people: list });
+});
+
+app.post('/api/login/smb', (req, res) => {
+  const { username, password } = req.body || {};
+  const users = readUsers();
+  const record = users[String(username || '').toLowerCase()];
+  if (!record || record.role !== 'smb' || !verifyPassword(String(password || ''), record.salt, record.hash)) {
+    return res.status(401).json({ success: false, message: 'Incorrect username or password.' });
+  }
+  const token = createSession(record.username, record.role);
+  res.setHeader('Set-Cookie', `sid=${token}; HttpOnly; Path=/; Max-Age=${SESSION_TTL_MS / 1000}; SameSite=Lax`);
+  console.log(`[auth] ${record.displayName || record.username} (SMB) logged in`);
+  res.json({ success: true, username: record.username, role: record.role, smbId: record.smbId, name: record.displayName || record.username });
+});
+
 app.post('/api/logout', (req, res) => {
   const token = parseCookies(req).sid;
   if (token) sessions.delete(token);
@@ -450,6 +559,7 @@ app.get('/api/me', (req, res) => {
     username: session.username,
     role: session.role,
     ebsId: record && record.ebsId ? record.ebsId : null,
+    smbId: record && record.smbId ? record.smbId : null,
     name: record && record.displayName ? record.displayName : session.username
   });
 });
@@ -476,9 +586,10 @@ app.post('/api/change-password', requireAuth, (req, res) => {
   res.json({ success: true });
 });
 
-// Admin-only — reset any EBS tech's password without needing the old one
-// (for the inevitable "I forgot my password" case). Cannot be used to
-// touch the admin account itself; that always requires the current password.
+// Admin-only — reset any EBS or SMB tech's password without needing the
+// old one (for the inevitable "I forgot my password" case). Cannot be
+// used to touch the admin account itself; that always requires the
+// current password.
 app.post('/api/admin/reset-password', requireAuth, requireAdmin, (req, res) => {
   const { username, newPassword } = req.body || {};
   if (!newPassword || String(newPassword).length < 4) {
@@ -487,8 +598,8 @@ app.post('/api/admin/reset-password', requireAuth, requireAdmin, (req, res) => {
   const users = readUsers();
   const target = String(username || '').toLowerCase();
   const record = users[target];
-  if (!record || record.role !== 'ebs') {
-    return res.status(404).json({ success: false, message: 'EBS account not found.' });
+  if (!record || (record.role !== 'ebs' && record.role !== 'smb')) {
+    return res.status(404).json({ success: false, message: 'Account not found.' });
   }
   const salt = crypto.randomBytes(16).toString('hex');
   users[target] = { ...record, salt, hash: hashPassword(String(newPassword), salt) };
@@ -650,8 +761,16 @@ app.get('/api/tracker/roster', requireAuth, (req, res) => {
   if (req.session.role === 'admin') {
     const users = readUsers();
     const byEbsId = {};
-    Object.values(users).forEach(u => { if (u.role === 'ebs' && u.ebsId) byEbsId[u.ebsId] = u.username; });
-    roster.people = roster.people.map(p => p.mode === 'EBS' ? { ...p, username: byEbsId[p.id] || null } : p);
+    const bySmbId = {};
+    Object.values(users).forEach(u => {
+      if (u.role === 'ebs' && u.ebsId) byEbsId[u.ebsId] = u.username;
+      if (u.role === 'smb' && u.smbId) bySmbId[u.smbId] = u.username;
+    });
+    roster.people = roster.people.map(p => {
+      if (p.mode === 'EBS') return { ...p, username: byEbsId[p.id] || null };
+      if (p.mode === 'SMB') return { ...p, username: bySmbId[p.id] || null };
+      return p;
+    });
   }
   res.json({ success: true, ...roster });
 });
@@ -663,7 +782,11 @@ app.put('/api/tracker/roster', requireAuth, requireAdmin, (req, res) => {
     id:     p.id && String(p.id).trim() ? String(p.id).trim() : genId(),
     name:   String(p.name || '').trim(),
     region: String(p.region || '').trim(),
-    mode:   String(p.mode || '').trim().toUpperCase() === 'EBS' ? 'EBS' : 'SMB'
+    shift:  String(p.shift || '').trim(),
+    mode:   (() => {
+      const m = String(p.mode || '').trim().toUpperCase();
+      return m === 'EBS' ? 'EBS' : m === 'SECURITY' ? 'SECURITY' : 'SMB';
+    })()
   })).filter(p => p.name);
   writeTrackerRoster({ people: cleanPeople });
   console.log(`[tracker] Roster saved — ${cleanPeople.length} people`);
@@ -773,13 +896,114 @@ app.post('/api/tracker/:date/undo', requireAuth, requireAdmin, (req, res) => {
   res.json({ success: true, date, ...summarizeTrackerDay(day) });
 });
 
-// Reset a day's counts back to zero
+// Reset a day's chat counts back to zero (leaves Security counts alone —
+// use the Security page's own "Reset day" for those)
 app.post('/api/tracker/:date/reset', requireAuth, requireAdmin, (req, res) => {
   const { date } = req.params;
   if (!isValidDate(date)) return res.status(400).json({ success: false, message: 'Invalid date format' });
-  writeTrackerDay(date, { events: [] });
-  console.log(`[tracker] ${date} — reset to zero`);
-  res.json({ success: true, date, ...summarizeTrackerDay({ events: [] }) });
+  const day = readTrackerDay(date);
+  const cleared = { ...day, events: [] };
+  writeTrackerDay(date, cleared);
+  console.log(`[tracker] ${date} — chat counts reset to zero`);
+  res.json({ success: true, date, ...summarizeTrackerDay(cleared) });
+});
+
+// ── Security Team Zia Assignment Live Tracker — routes ────────
+// Any of the 20 real accounts (admin/ebs/smb) can log a ticket to a
+// Security tech. Mirrors the chat-tracker endpoints above, but keyed by
+// a generic "assignerId" instead of ebsId, since the assigner pool here
+// is broader than just EBS.
+function myLinkedIdForRole(req) {
+  if (req.session.role === 'admin') return null; // admin must specify assignerId explicitly
+  const users = readUsers();
+  const me = users[req.session.username];
+  if (!me) return null;
+  return req.session.role === 'ebs' ? me.ebsId : req.session.role === 'smb' ? me.smbId : null;
+}
+
+app.post('/api/tracker/:date/assign-security', requireAuth, requireSecurityAssignAccess, (req, res) => {
+  const { date } = req.params;
+  const { securityId } = req.body || {};
+  const comment = String(req.body.comment || '').trim().slice(0, 500);
+  if (!isValidDate(date)) return res.status(400).json({ success: false, message: 'Invalid date format' });
+
+  let assignerId = req.body.assignerId;
+  if (req.session.role !== 'admin') assignerId = myLinkedIdForRole(req); // never trust client identity except for admin
+  if (!assignerId || !securityId) return res.status(400).json({ success: false, message: 'assignerId and securityId are required' });
+
+  const roster = readTrackerRoster();
+  const assigner = roster.people.find(p => p.id === assignerId);
+  const securityPerson = roster.people.find(p => p.id === securityId);
+  if (!assigner) return res.status(404).json({ success: false, message: 'Assigner not found. Refresh and try again.' });
+  if (!securityPerson) return res.status(404).json({ success: false, message: 'Security tech not found. Refresh and try again.' });
+
+  const day = readTrackerDay(date);
+  day.securityEvents = day.securityEvents || [];
+
+  const priorFromMeToThem = day.securityEvents.filter(e => e.assignerId === assignerId && e.securityId === securityId).length;
+  if (priorFromMeToThem >= 2 && !comment) {
+    return res.status(400).json({
+      success: false,
+      message: `You've already assigned ${priorFromMeToThem} tickets to ${securityPerson.name} today — please add a note for this one.`,
+      requiresComment: true
+    });
+  }
+
+  day.securityEvents.push({
+    id: genEventId(),
+    ts: new Date().toISOString(),
+    assignerId: assigner.id, assignerName: assigner.name,
+    securityId: securityPerson.id, securityName: securityPerson.name,
+    comment: comment || null
+  });
+  writeTrackerDay(date, day);
+  console.log(`[tracker-security] ${date} — ${assigner.name} assigned a ticket to ${securityPerson.name}${comment ? ` — "${comment}"` : ''}`);
+  res.json({ success: true, date, ...summarizeTrackerDay(day) });
+});
+
+app.post('/api/tracker/:date/unassign-security', requireAuth, requireSecurityAssignAccess, (req, res) => {
+  const { date } = req.params;
+  const { securityId } = req.body || {};
+  if (!isValidDate(date)) return res.status(400).json({ success: false, message: 'Invalid date format' });
+
+  let assignerId = req.body.assignerId;
+  if (req.session.role !== 'admin') assignerId = myLinkedIdForRole(req);
+  if (!assignerId || !securityId) return res.status(400).json({ success: false, message: 'assignerId and securityId are required' });
+
+  const day = readTrackerDay(date);
+  day.securityEvents = day.securityEvents || [];
+  let idx = -1;
+  for (let i = day.securityEvents.length - 1; i >= 0; i--) {
+    if (day.securityEvents[i].assignerId === assignerId && day.securityEvents[i].securityId === securityId) { idx = i; break; }
+  }
+  if (idx === -1) {
+    return res.status(404).json({ success: false, message: "No assignment of yours to this person today — nothing to undo." });
+  }
+  const removed = day.securityEvents.splice(idx, 1)[0];
+  writeTrackerDay(date, day);
+  console.log(`[tracker-security] ${date} — ${removed.assignerName} undid their own assignment to ${removed.securityName}`);
+  res.json({ success: true, date, ...summarizeTrackerDay(day) });
+});
+
+app.post('/api/tracker/:date/undo-security', requireAuth, requireAdmin, (req, res) => {
+  const { date } = req.params;
+  if (!isValidDate(date)) return res.status(400).json({ success: false, message: 'Invalid date format' });
+  const day = readTrackerDay(date);
+  day.securityEvents = day.securityEvents || [];
+  const removed = day.securityEvents.pop();
+  writeTrackerDay(date, day);
+  console.log(`[tracker-security] ${date} — undo${removed ? ` (${removed.assignerName} → ${removed.securityName})` : ' (nothing to undo)'}`);
+  res.json({ success: true, date, ...summarizeTrackerDay(day) });
+});
+
+app.post('/api/tracker/:date/reset-security', requireAuth, requireAdmin, (req, res) => {
+  const { date } = req.params;
+  if (!isValidDate(date)) return res.status(400).json({ success: false, message: 'Invalid date format' });
+  const day = readTrackerDay(date);
+  const cleared = { ...day, securityEvents: [] };
+  writeTrackerDay(date, cleared);
+  console.log(`[tracker-security] ${date} — reset to zero`);
+  res.json({ success: true, date, ...summarizeTrackerDay(cleared) });
 });
 
 // ── Leave-tech export helpers ──────────────────────────────────

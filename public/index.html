@@ -1553,7 +1553,10 @@ function renderTracker(){
             <div class="tr-card-name">${escAttr(p.name)}</div>
             <div class="tr-card-region">${escAttr(p.region||'—')}</div>
           </div>
-          ${onLeave ? '<span class="tr-recommend-badge" style="background:#FCEBEB;color:var(--danger)">On leave</span>' : (isRecommend ? '<span class="tr-recommend-badge">Lowest load</span>' : '')}
+          <div style="display:flex;align-items:center;gap:6px">
+            ${onLeave ? '<span class="tr-recommend-badge" style="background:#FCEBEB;color:var(--danger)">On leave</span>' : (isRecommend ? '<span class="tr-recommend-badge">Lowest load</span>' : '')}
+            ${isAdmin && p.username ? `<button class="tr-ebs-reset" data-username="${escAttr(p.username)}" data-name="${escAttr(p.name)}" title="Reset password">🔑</button>` : ''}
+          </div>
         </div>
         <div class="tr-card-body">
           <div>

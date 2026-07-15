@@ -2,65 +2,368 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Missed Chat Tracker</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shift Roster — EC Support</title>
 <style>
   :root{
-    --ink:#1A2233; --muted:#6B7690; --border:#E1E6EF; --bg:#F1F4F9;
-    --blue:#2F80ED; --green:#1D9A6C; --amber:#E8A33D; --danger:#D6455A;
-    --card:#fff; --brand:var(--blue); --teal:#0EA5B7; --text:var(--ink); --ink-soft:var(--muted);
+    --ink:#0A2A4D; --ink-soft:#123F6E;
+    --sun:#E8A33D; --teal:#1671C9; --teal-dark:#0F5296;
+    --brand:#1671C9; --brand-dark:#0F5296; --brand-light:#EAF3FC;
+    --purple:#7C4DBE; --green:#1E9E6D;
+    --bg:#EEF3F9; --card:#FFFFFF;
+    --text:#1A2233; --muted:#64748B; --border:#D9E4F0;
+    --danger:#C0392B;
+    --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   }
   *{box-sizing:border-box}
-  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--ink)}
-  header{background:#152040;color:#fff;padding:16px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
-  header h1{font-size:18px;margin:0}
-  header .sub{font-size:12.5px;color:#AEB9D1}
-  .container{max-width:1200px;margin:0 auto;padding:20px}
-  .tabs{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
-  .tab-btn{background:#fff;border:1px solid var(--border);padding:9px 16px;border-radius:8px;font-weight:700;font-size:13px;cursor:pointer;color:var(--muted)}
-  .tab-btn.active{background:var(--blue);color:#fff;border-color:var(--blue)}
-  .card{background:#fff;border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:16px}
-  .toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
-  select,input[type=file]{padding:7px 10px;border:1px solid var(--border);border-radius:7px;font-size:13px}
-  button{cursor:pointer}
-  .btn{background:var(--blue);color:#fff;border:none;padding:8px 16px;border-radius:7px;font-size:13px;font-weight:700}
-  .btn.ghost{background:#fff;color:var(--blue);border:1px solid var(--blue)}
-  .btn.danger{background:#fff;color:var(--danger);border:1px solid var(--danger)}
-  table{width:100%;border-collapse:collapse;font-size:12.5px}
-  th,td{border:1px solid var(--border);padding:7px 9px;text-align:left}
-  th{background:#F5F7FB;font-weight:700}
-  .week-head td{background:#DCE8FB;font-weight:800;color:#16406E}
-  input.cell-input, select.cell-select{width:100%;border:1px solid transparent;padding:4px 6px;font-size:12.5px;border-radius:5px;background:transparent}
-  input.cell-input:hover, select.cell-select:hover{border-color:var(--border);background:#FAFBFD}
-  select.cell-select.empty{background:#FFF6E0}
-  .toast{position:fixed;bottom:20px;right:20px;background:var(--ink);color:#fff;padding:10px 16px;border-radius:8px;font-size:13px;opacity:0;transition:.2s;pointer-events:none;z-index:99}
-  .toast.show{opacity:1}
-  .toast.err{background:var(--danger)}
-  .stat-row{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:14px}
-  .stat{background:#F5F7FB;border-radius:8px;padding:10px 16px;min-width:120px}
-  .stat b{display:block;font-size:22px}
-  .stat span{font-size:11.5px;color:var(--muted);font-weight:700;text-transform:uppercase}
-  .chart-wrap{max-width:900px;margin-top:14px;height:340px;position:relative}
-  .empty{color:var(--muted);text-align:center;padding:30px}
-  /* ── Reports module (executive dashboard style) ──────────────── */
-  .rep-topbar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:8px}
-  .rep-title{font-size:16px;font-weight:800;color:var(--ink)}
-  .rep-range-controls{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-  .rep-preset-btn{background:var(--card);border:1px solid var(--border);color:var(--muted);padding:7px 14px;border-radius:8px;font-size:12.5px;font-weight:700;cursor:pointer}
-  .rep-preset-btn:hover{border-color:var(--brand)}
-  .rep-preset-btn.active{background:var(--brand);border-color:var(--brand);color:#fff}
-  .edit-preset-btn{background:var(--card);border:1px solid var(--border);color:var(--muted);padding:7px 14px;border-radius:8px;font-size:12.5px;font-weight:700;cursor:pointer}
-  .edit-preset-btn:hover{border-color:var(--brand)}
-  .edit-preset-btn.active{background:var(--brand);border-color:var(--brand);color:#fff}
-  .rep-more-select{background:var(--card);border:1px solid var(--border);color:var(--muted);padding:7px 10px;border-radius:8px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit}
-  .rep-more-select.active{background:var(--brand);border-color:var(--brand);color:#fff}
-  .rep-range-sep{color:var(--border);font-weight:700}
-  .rep-range-label{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--muted);font-weight:700}
-  .rep-range-label input[type=date], .rep-range-label select{border:1px solid var(--border);border-radius:8px;padding:6px 8px;font-size:12.5px;font-family:inherit;color:var(--ink);background:var(--card)}
-  .rep-range-summary{font-size:12.5px;color:var(--muted);margin:2px 0 16px;font-family:ui-monospace,monospace}
+  body{margin:0;font-family:var(--sans);background:var(--bg);color:var(--text)}
+  a{color:inherit}
+
+  /* ── Header ───────────────────────────────────────────── */
+  header{background:linear-gradient(135deg,var(--ink),var(--ink-soft));color:#fff;padding:18px 28px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px}
+  .brand{display:flex;align-items:center;gap:12px}
+  .brand-mark{width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,var(--sun),#F2994A);display:flex;align-items:center;justify-content:center;font-size:18px}
+  .brand h1{font-size:17px;margin:0;font-weight:700;letter-spacing:.2px}
+  .brand p{margin:1px 0 0;font-size:12px;color:#B8C6DE}
+
+  .datenav{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,0.08);padding:6px;border-radius:10px}
+  .datenav button{background:transparent;border:none;color:#fff;cursor:pointer;width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;transition:background .15s}
+  .datenav button:hover{background:rgba(255,255,255,0.15)}
+  .datenav button:focus-visible{outline:2px solid var(--sun);outline-offset:1px}
+  .date-display{font-weight:700;font-size:14px;min-width:150px;text-align:center;font-family:var(--mono)}
+  .date-sub{font-size:11px;color:#B8C6DE;font-weight:400;display:block;margin-top:1px;font-family:var(--sans)}
+  #datePicker{background:transparent;border:none;color:transparent;position:absolute;width:1px;height:1px;opacity:0}
+  .btn-today{background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);color:#fff;padding:7px 12px;border-radius:8px;font-size:12px;cursor:pointer;font-weight:600}
+  .btn-today:hover{background:rgba(255,255,255,0.2)}
+
+  main{max-width:1180px;margin:0 auto;padding:22px 20px 60px}
+  #trackerMain{max-width:1800px}
+  #shiftRosterMain{max-width:1180px}
+
+  /* ── Tracker 3-column layout ─────────────────────────────── */
+  .tr-layout{display:flex;gap:16px;align-items:flex-start}
+  .tr-center{flex:1;min-width:0}
+  .tr-side{width:230px;flex-shrink:0}
+  .tr-side-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;box-shadow:0 2px 10px rgba(16,35,63,0.06);position:sticky;top:16px}
+  .tr-side-head{font-size:11.5px;font-weight:800;color:var(--brand-dark);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px}
+  .tr-shift-ref{display:flex;flex-direction:column;gap:6px;max-height:70vh;overflow-y:auto}
+  .tr-shift-row{display:flex;align-items:center;justify-content:space-between;gap:6px;padding:6px 8px;border-radius:8px;font-size:11.5px;background:#FAFBFD}
+  .tr-shift-row.tr-shift-leave{opacity:.55}
+  .tr-shift-row.tr-shift-now{background:#FFF4E0}
+  .tr-shift-name{font-weight:700;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .tr-shift-time{font-family:var(--mono);color:var(--muted);font-size:10.5px;white-space:nowrap;flex-shrink:0}
+  .tr-shift-leave-tag{background:#FCEBEB;color:var(--danger);font-size:9px;font-weight:800;padding:1px 6px;border-radius:20px;flex-shrink:0}
+  .tr-phone-list{display:flex;flex-direction:column;gap:8px}
+  .tr-phone-row{display:flex;flex-direction:column;gap:2px;padding:9px 10px;border-radius:10px;background:#FAFBFD;text-decoration:none;border:1px solid var(--border);transition:border-color .12s,background .12s}
+  .tr-phone-row:hover{border-color:var(--teal);background:#F4FAF9}
+  .tr-phone-label{font-size:10.5px;font-weight:700;color:var(--muted)}
+  .tr-phone-num{font-family:var(--mono);font-size:13px;font-weight:700;color:var(--ink)}
+  @media (max-width:980px){
+    .tr-layout{flex-direction:column}
+    .tr-side{width:100%}
+    .tr-side-card{position:static}
+    .tr-shift-ref{max-height:220px}
+  }
+  .tr-onleave-note{font-size:10px;color:var(--danger);font-weight:700;margin-top:6px}
+  .tr-card.tr-card-leave{opacity:.55}
+  .tr-comment-note{font-size:11px;color:var(--muted);font-style:italic;margin-top:2px}
+
+  /* ── Page nav (Shift Roster ⟷ SMB Chat Assignment Live Tracker) ── */
+  .page-nav{max-width:1180px;margin:0 auto;padding:14px 20px 0;display:flex;gap:8px;flex-wrap:wrap}
+  .page-nav-btn{background:var(--card);border:1px solid var(--border);color:var(--muted);padding:9px 16px;border-radius:10px 10px 0 0;font-size:12.5px;font-weight:700;cursor:pointer;border-bottom:none;transition:color .12s,background .12s}
+  .page-nav-btn:hover{color:var(--ink)}
+  .page-nav-btn.active{color:var(--brand-dark);background:var(--card);box-shadow:0 -2px 8px rgba(16,35,63,0.04);border-top:3px solid var(--brand);padding-top:7px}
+
+  /* ── SMB Chat Assignment Live Tracker ────────────────────── */
+  .tr-toolbar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;background:var(--card);border:1px solid var(--border);border-top:4px solid var(--purple);border-radius:14px;padding:14px 16px;margin-bottom:16px;box-shadow:0 2px 10px rgba(16,35,63,0.06)}
+  .tr-toolbar-left{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+  .tr-whoami-label{font-size:12px;font-weight:700;color:var(--muted);display:flex;align-items:center;gap:8px}
+  .tr-select{font-size:13px;font-weight:700;color:var(--ink);padding:7px 10px;border-radius:8px;border:1px solid var(--border);background:#FAFBFD}
+  .tr-datebadge{font-family:var(--mono);font-size:12px;color:var(--muted);background:var(--brand-light);padding:5px 10px;border-radius:20px}
+
+  .tr-summary-row{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px}
+  .tr-stat{flex:1;min-width:150px;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 16px;box-shadow:0 2px 10px rgba(16,35,63,0.06)}
+  .tr-stat .tr-stat-num{font-family:var(--mono);font-size:24px;font-weight:800;color:var(--brand-dark)}
+  .tr-stat .tr-stat-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;font-weight:700;margin-top:2px}
+  .tr-stat.tr-stat-high .tr-stat-num{color:var(--danger)}
+  .tr-stat.tr-stat-low .tr-stat-num{color:var(--green)}
+
+  .tr-section-head{display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:6px;margin:4px 0 10px}
+  .tr-section-head h2{font-size:13px;margin:0;color:var(--brand-dark);font-weight:800;text-transform:uppercase;letter-spacing:.6px}
+
+  .tr-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+  @media (max-width:1300px){ .tr-grid{grid-template-columns:repeat(3,minmax(0,1fr))} }
+  @media (max-width:900px){ .tr-grid{grid-template-columns:repeat(2,minmax(0,1fr))} }
+  @media (max-width:600px){ .tr-grid{grid-template-columns:1fr} }
+  .tr-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px 14px 12px;box-shadow:0 2px 10px rgba(16,35,63,0.06);border-top:4px solid var(--brand);position:relative;transition:transform .1s,box-shadow .12s}
+  .tr-card.tr-recommend{border-top-color:var(--green);box-shadow:0 2px 14px rgba(30,158,109,0.18)}
+  .tr-card-head{display:flex;align-items:center;justify-content:space-between;gap:6px}
+  .tr-card-name{font-weight:700;color:var(--ink);font-size:13.5px}
+  .tr-card-region{font-size:11px;color:var(--muted);margin-top:1px}
+  .tr-recommend-badge{background:#EAF8F1;color:var(--green);font-size:9.5px;font-weight:800;letter-spacing:.4px;padding:2px 8px;border-radius:20px;white-space:nowrap}
+  .tr-card-body{display:flex;align-items:center;justify-content:space-between;margin-top:12px;gap:8px}
+  .tr-count{font-family:var(--mono);font-size:30px;font-weight:800;color:var(--ink);line-height:1}
+  .tr-count-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;font-weight:700}
+  .tr-plus-btn{width:46px;height:46px;border-radius:12px;border:none;background:var(--brand);color:#fff;font-size:22px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .12s,transform .08s;flex-shrink:0}
+  .tr-plus-btn:hover{background:var(--brand-dark)}
+  .tr-plus-btn:active{transform:scale(0.92)}
+  .tr-plus-btn:disabled{opacity:.4;cursor:not-allowed}
+  .tr-btn-group{display:flex;gap:6px;flex-shrink:0}
+  .tr-minus-btn{width:32px;height:46px;border-radius:10px;border:1.5px solid var(--border);background:#fff;color:var(--muted);font-size:18px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:border-color .12s,color .12s,background .12s,transform .08s}
+  .tr-minus-btn:hover{border-color:var(--danger);color:var(--danger);background:#FCEBEB}
+  .tr-minus-btn:active{transform:scale(0.92)}
+  .tr-card-breakdown{margin-top:10px;padding-top:9px;border-top:1px dashed var(--border);font-size:10.5px;color:var(--muted);display:flex;flex-wrap:wrap;gap:5px}
+  .tr-mini-chip{background:#F1F4F9;border-radius:20px;padding:2px 8px;font-weight:600}
+
+  .tr-ebs-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px}
+  .tr-ebs-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:11px 13px;box-shadow:0 2px 10px rgba(16,35,63,0.06);display:flex;align-items:center;justify-content:space-between;gap:8px;cursor:pointer;transition:border-color .12s,box-shadow .12s,background .12s}
+  .tr-ebs-card:hover{border-color:var(--purple)}
+  .tr-ebs-card.tr-ebs-active{border-color:var(--purple);box-shadow:0 0 0 2px rgba(124,77,190,0.15)}
+  .tr-ebs-card.tr-ebs-selected{background:#F3EEFB;border-color:var(--purple);box-shadow:0 0 0 2px rgba(124,77,190,0.3)}
+  .tr-ebs-name{font-weight:700;color:var(--ink);font-size:12.5px}
+  .tr-ebs-name .tr-active-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--purple);margin-right:6px}
+  .tr-ebs-count{font-family:var(--mono);font-weight:800;color:var(--purple);font-size:16px}
+  .tr-ebs-reset{background:transparent;border:none;color:var(--muted);font-size:13px;cursor:pointer;padding:3px;border-radius:6px;line-height:1}
+  .tr-ebs-reset:hover{color:var(--purple);background:#F3EEFB}
+  .guest-mode .tr-ebs-reset,
+  .ebs-mode .tr-ebs-reset,
+  .smb-mode .tr-ebs-reset{display:none}
+
+  .tr-feed-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px 16px;margin-top:20px;box-shadow:0 2px 10px rgba(16,35,63,0.06)}
+  .tr-feed{max-height:220px;overflow-y:auto;display:flex;flex-direction:column;gap:0}
+  .tr-feed-row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:7px 2px;font-size:12.5px;border-bottom:1px solid #F0F2F6}
+  .tr-feed-row:first-child{border-bottom:none}
+  .tr-feed-empty{padding:20px 4px;text-align:center;color:var(--muted);font-size:12.5px}
+  .tr-feed-time{font-family:var(--mono);color:var(--muted);font-size:11px}
+
+  /* ── Timeline ─────────────────────────────────────────── */
+  .timeline-card{background:var(--card);border-radius:14px;padding:18px 20px 14px;box-shadow:0 2px 10px rgba(16,35,63,0.06);margin-bottom:20px;border:1px solid var(--border);border-top:4px solid var(--brand)}
+  .timeline-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px;flex-wrap:wrap;gap:6px}
+  .timeline-head h2{font-size:13px;margin:0;color:var(--brand-dark);font-weight:800;text-transform:uppercase;letter-spacing:.6px}
+  .timeline-head .tz-note{font-size:11.5px;color:var(--muted)}
+  .timeline-track{position:relative;height:46px;border-radius:8px;overflow:hidden;background:#EEF1F6;display:flex}
+  .tl-seg{height:100%;position:relative;cursor:default;transition:filter .15s}
+  .tl-seg:hover{filter:brightness(1.08)}
+  .tl-seg.tl-leave{background:repeating-linear-gradient(45deg,#D7DCE5,#D7DCE5 6px,#CBD2DE 6px,#CBD2DE 12px) !important}
+  .tl-seg .tl-tip{position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;font-size:11px;padding:6px 9px;border-radius:6px;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .12s;z-index:5;font-family:var(--sans)}
+  .tl-seg .tl-tip::after{content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);border:5px solid transparent;border-top-color:var(--ink)}
+  .tl-seg:hover .tl-tip{opacity:1}
+  .tl-hours{display:flex;justify-content:space-between;margin-top:5px;font-size:10px;color:var(--muted);font-family:var(--mono)}
+  .now-marker{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--sun);z-index:4;box-shadow:0 0 0 3px rgba(232,163,61,0.25)}
+  .now-marker::before{content:'NOW';position:absolute;top:-18px;left:50%;transform:translateX(-50%);font-size:9px;font-weight:800;color:var(--sun);letter-spacing:.5px}
+  .timeline-empty{padding:14px 4px;color:var(--muted);font-size:13px;text-align:center}
+  .legend{display:flex;flex-wrap:wrap;gap:12px;margin-top:12px}
+  .legend-item{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--muted)}
+  .legend-dot{width:9px;height:9px;border-radius:3px;flex-shrink:0}
+
+  .warn-banner{margin-top:12px;padding:9px 12px;border-radius:8px;font-size:12px;display:flex;flex-direction:column;gap:4px}
+  .warn-banner.w-gap{background:#FFF4E0;color:#8A5A0A;border:1px solid #F4D9A0}
+  .warn-banner.w-overlap{background:#FCEBEB;color:#9A2E2E;border:1px solid #F0C4C4}
+  .warn-row{display:flex;align-items:center;gap:6px}
+
+  /* ── Leave summary dashboard ─────────────────────────────── */
+  .leave-card{background:var(--card);border-radius:14px;padding:16px 20px;box-shadow:0 2px 10px rgba(16,35,63,0.06);margin-bottom:20px;border:1px solid var(--border);border-top:4px solid var(--green)}
+  .leave-card.has-leave{border-color:#F0C4C4;border-top-color:var(--danger)}
+  .leave-card-head{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:2px}
+  .leave-card-title{display:flex;align-items:center;gap:10px}
+  .leave-card-title h2{font-size:13px;margin:0;color:var(--brand-dark);font-weight:800;text-transform:uppercase;letter-spacing:.6px}
+  .leave-count-badge{font-family:var(--mono);font-weight:800;font-size:12px;padding:2px 10px;border-radius:20px;background:#EAF8F1;color:var(--green)}
+  .leave-count-badge.non-zero{background:#FCEBEB;color:var(--danger)}
+  .leave-card .tz-note{font-size:11.5px;color:var(--muted)}
+  .leave-chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+  .leave-chip{display:flex;align-items:center;gap:7px;background:#FAFBFD;border:1px solid var(--border);border-radius:20px;padding:5px 12px 5px 6px;font-size:12.5px}
+  .leave-chip-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+  .leave-chip-name{font-weight:600;color:var(--ink)}
+  .leave-chip-region{color:var(--muted);font-size:11px}
+  .leave-empty{margin-top:10px;font-size:12.5px;color:var(--muted);display:flex;align-items:center;gap:7px}
+
+  /* ── Toolbar ──────────────────────────────────────────── */
+  .toolbar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:12px}
+  .toolbar-left{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .row-count{font-size:12.5px;color:var(--muted)}
+  .row-count b{color:var(--brand);font-weight:800}
+  .btn{border:none;border-radius:8px;padding:8px 14px;font-size:12.5px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:transform .08s, box-shadow .12s}
+  .btn:active{transform:translateY(1px)}
+  .btn-teal{background:var(--teal);color:#fff}
+  .btn-teal:hover{background:var(--teal-dark)}
+  .btn-ghost{background:var(--brand-light);color:var(--brand-dark);border:1px solid #BFDCF5}
+  .btn-ghost:hover{background:var(--brand);color:#fff;border-color:var(--brand)}
+  .btn-amber{background:#FFF3E0;color:#9A5B0A;border:1px solid #F4D9A0}
+  .btn-amber:hover{background:var(--sun);color:#3D2600;border-color:var(--sun)}
+  .btn-green{background:#EAF8F1;color:#146C48;border:1px solid #BFE8D3}
+  .btn-green:hover{background:var(--green);color:#fff;border-color:var(--green)}
+  .btn-purple{background:#F3EEFB;color:#5B3894;border:1px solid #D9C7F0}
+  .btn-purple:hover{background:var(--purple);color:#fff;border-color:var(--purple)}
+  .btn-save{background:var(--sun);color:#3D2600}
+  .btn-save:hover{filter:brightness(0.96)}
+  .btn:disabled{opacity:.5;cursor:not-allowed}
+
+  /* ── Table ────────────────────────────────────────────── */
+  .table-card{background:var(--card);border-radius:14px;box-shadow:0 2px 10px rgba(16,35,63,0.06);border:1px solid var(--border);border-top:4px solid var(--brand);overflow:hidden}
+  .table-scroll{overflow-x:auto}
+  table{width:100%;border-collapse:collapse;min-width:760px}
+  thead th{background:var(--brand-light);color:var(--ink);font-size:11.5px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;text-align:left;padding:11px 12px;border-bottom:2px solid var(--brand);white-space:nowrap}
+  tbody td{padding:10px 12px;border-bottom:1px solid #F0F2F6;vertical-align:middle;font-size:13.5px}
+  tbody tr:hover{background:#FAFBFD}
+  tbody tr:last-child td{border-bottom:none}
+  tbody tr.row-leave{background:#FAFAFA}
+  tbody tr.row-leave td{color:var(--muted)}
+  .duration-cell{font-family:var(--mono);color:var(--muted);white-space:nowrap}
+  tbody tr.row-current{background:#FFF4E0;position:relative}
+  tbody tr.row-current td{color:var(--ink)}
+  tbody tr.row-current td:first-child{box-shadow:inset 3px 0 0 var(--sun)}
+  tbody tr.row-current:hover{background:#FCEACB}
+  .now-badge{display:inline-flex;align-items:center;gap:4px;background:var(--sun);color:#3D2600;font-size:9.5px;font-weight:800;letter-spacing:.4px;padding:2px 7px;border-radius:20px;margin-left:8px;vertical-align:middle}
+  .sno-cell{font-family:var(--mono);font-weight:800;color:var(--brand);text-align:center;width:44px}
+  .mono-cell{font-family:var(--mono)}
+  .leave-badge{background:#FCEBEB;color:var(--danger);font-size:10.5px;font-weight:800;letter-spacing:.4px;padding:3px 8px;border-radius:20px}
+  .name-cell{font-weight:700;color:var(--ink)}
+  .row-leave .name-cell{text-decoration:line-through;font-weight:500;color:var(--muted)}
+  .table-card-head{padding:16px 18px 4px;display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:6px}
+  .table-card-head h2{font-size:14px;margin:0;color:var(--brand-dark)}
+  tbody tr.row-ebs{background:#EAF8F1}
+  tbody tr.row-ebs:hover{background:#DFF3E8}
+  .mode-pill{display:inline-block;font-size:10.5px;font-weight:800;letter-spacing:.4px;padding:3px 9px;border-radius:20px}
+  .mode-pill.mode-ebs{background:#D9F0E3;color:#177A4C}
+  .mode-pill.mode-smb{background:#E7ECF5;color:#3A5A93}
+  .mode-pill.mode-security{background:#FDE9D9;color:#A85A1A}
+  tbody tr.row-security{background:#FDF3E9}
+  tbody tr.row-security:hover{background:#FCE9D8}
+
+  .row-actions{display:flex;gap:2px;justify-content:center;align-items:center;flex-wrap:nowrap}
+  .reorder-select{font-size:11px;padding:4px 4px;max-width:118px;border-radius:6px;border:1px solid var(--border);background:#FAFBFD;color:var(--ink);cursor:pointer}
+  .shift-select{font-size:12.5px;font-family:var(--mono);padding:5px 6px;border-radius:6px;border:1px solid var(--border);background:#FAFBFD;color:var(--ink);cursor:pointer}
+  .guest-mode .shift-select,
+  .guest-mode .reorder-select,
+  .ebs-mode .shift-select,
+  .ebs-mode .reorder-select,
+  .smb-mode .shift-select,
+  .smb-mode .reorder-select{opacity:.45;pointer-events:none}
+  .icon-btn{background:transparent;border:none;cursor:pointer;width:26px;height:26px;border-radius:6px;display:flex;align-items:center;justify-content:center;color:var(--muted);transition:background .12s,color .12s}
+  .icon-btn:hover{background:#F1F4F9;color:var(--ink)}
+  .icon-btn.danger:hover{background:#FCEBEB;color:var(--danger)}
+  .icon-btn:disabled{opacity:.3;cursor:not-allowed}
+  .icon-btn:disabled:hover{background:transparent;color:var(--muted)}
+
+  .switch{position:relative;display:inline-block;width:38px;height:22px;vertical-align:middle}
+  .switch input{opacity:0;width:0;height:0}
+  .slider{position:absolute;cursor:pointer;inset:0;background:#D7DCE5;border-radius:22px;transition:.15s}
+  .slider::before{content:'';position:absolute;height:16px;width:16px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.15s;box-shadow:0 1px 3px rgba(0,0,0,0.25)}
+  .switch input:checked + .slider{background:#C0392B}
+  .switch input:checked + .slider::before{transform:translateX(16px)}
+  .switch input:focus-visible + .slider{outline:2px solid var(--teal);outline-offset:2px}
+
+  .empty-state{padding:50px 20px;text-align:center}
+  .empty-state .em-icon{font-size:34px;margin-bottom:10px}
+  .empty-state h3{margin:0 0 6px;font-size:15px;color:var(--ink)}
+  .empty-state p{margin:0 0 18px;font-size:13px;color:var(--muted)}
+
+  .add-row-bar{padding:10px 12px;border-top:1px solid var(--border)}
+  .add-row-bar button{width:100%;padding:10px;border:1.5px dashed var(--border);background:transparent;border-radius:8px;color:var(--muted);font-size:12.5px;font-weight:600;cursor:pointer;transition:border-color .12s,color .12s,background .12s}
+  .add-row-bar button:hover{border-color:var(--teal);color:var(--teal-dark);background:#F4FAF9}
+
+  /* ── Toast ────────────────────────────────────────────── */
+  .toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;padding:11px 18px;border-radius:9px;font-size:13px;opacity:0;pointer-events:none;transition:opacity .2s, transform .2s;z-index:50;box-shadow:0 6px 20px rgba(0,0,0,0.25);max-width:520px;text-align:center}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .toast.t-error{background:#7A2222}
+  .toast.t-success{background:var(--teal-dark)}
+
+  /* ── Modal (master roster) ───────────────────────────────── */
+  .modal-overlay{position:fixed;inset:0;background:rgba(16,35,63,0.45);display:none;align-items:center;justify-content:center;z-index:40;padding:20px}
+  .modal-overlay.open{display:flex}
+  .modal{background:#fff;border-radius:14px;width:100%;max-width:820px;max-height:88vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,0.3)}
+  .modal-head{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+  .modal-head h2{margin:0;font-size:15px;color:var(--brand-dark);font-weight:800}
+  .modal-head p{margin:2px 0 0;font-size:12px;color:var(--muted)}
+  .modal-close{background:transparent;border:none;cursor:pointer;color:var(--muted);width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .modal-close:hover{background:#F1F4F9;color:var(--ink)}
+  .modal-toolbar{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 20px 0;flex-wrap:wrap}
+  .cycle-field{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--muted)}
+  .cycle-field input{font-family:var(--mono);border:1px solid var(--border);border-radius:6px;padding:5px 8px;font-size:13px}
+  .modal-body{padding:14px 20px;overflow-y:auto;flex:1}
+  .modal-foot{padding:14px 20px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;align-items:center;gap:10px}
+  td input[type=text]{width:100%;border:1px solid transparent;background:transparent;padding:7px 8px;border-radius:6px;font-size:13px;color:var(--text);font-family:var(--sans)}
+  td input[type=text]:hover{border-color:var(--border)}
+  td input[type=text]:focus{outline:none;border-color:var(--teal);background:#fff;box-shadow:0 0 0 3px rgba(22,132,122,0.12)}
+
+  @media (max-width:640px){
+    header{padding:14px 16px}
+    main{padding:16px 12px 50px}
+    .brand p{display:none}
+  }
+
+  /* ── Login screen ─────────────────────────────────────────── */
+  .login-overlay{position:fixed;inset:0;background:linear-gradient(135deg,var(--ink),var(--ink-soft));display:flex;align-items:center;justify-content:center;z-index:100;padding:20px}
+  .login-box{background:#fff;border-radius:16px;padding:34px 30px;width:100%;max-width:340px;box-shadow:0 20px 60px rgba(0,0,0,0.35)}
+  .login-brand{text-align:center;margin-bottom:24px}
+  .login-brand .brand-mark{margin:0 auto 12px}
+  .login-brand h1{margin:0;font-size:18px;color:var(--ink)}
+  .login-brand p{margin:4px 0 0;font-size:12px;color:var(--muted)}
+  #loginForm label, #ebsLoginForm label{display:block;font-size:12px;color:var(--muted);font-weight:600;margin-bottom:14px}
+  #loginForm input, #ebsLoginForm input, #ebsLoginForm select{width:100%;margin-top:6px;padding:9px 11px;border:1px solid var(--border);border-radius:8px;font-size:13.5px;box-sizing:border-box;font-family:var(--sans);background:#fff}
+  #loginForm input:focus, #ebsLoginForm input:focus, #ebsLoginForm select:focus{outline:none;border-color:var(--teal);box-shadow:0 0 0 3px rgba(22,132,122,0.12)}
+  .role-select{display:flex;gap:8px;flex-wrap:wrap}
+  .role-card{flex:1 1 28%;min-width:88px;display:flex;flex-direction:column;align-items:center;gap:6px;padding:16px 8px;border:1.5px solid var(--border);border-radius:12px;background:#fff;cursor:pointer;transition:border-color .12s,background .12s,transform .08s}
+  .role-card:hover{border-color:var(--teal);background:#F4FAF9}
+  #pickGuestBtn:hover{border-color:var(--green);background:#F4FBF7}
+  #pickEbsBtn:hover{border-color:var(--purple);background:#FAF7FD}
+  #pickSmbBtn:hover{border-color:var(--teal);background:#F0FAF8}
+  .role-card:active{transform:translateY(1px)}
+  .role-card-icon{font-size:22px;width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--brand-light)}
+  #pickGuestBtn .role-card-icon{background:#EAF8F1}
+  #pickEbsBtn .role-card-icon{background:#F3EEFB}
+  #pickSmbBtn .role-card-icon{background:#E3F5F2}
+  .role-card-title{font-weight:800;font-size:12.5px;color:var(--ink);text-align:center}
+  .role-card-sub{font-size:10.5px;color:var(--muted);text-align:center}
+  .back-link{background:transparent;border:none;color:var(--muted);font-size:12px;font-weight:600;cursor:pointer;padding:0;margin-bottom:16px;display:inline-flex;align-items:center;gap:4px}
+  .back-link:hover{color:var(--ink)}
+  .form-error{color:var(--danger);font-size:12px;margin:-6px 0 14px;min-height:14px}
+
+  /* ── User chip / role pill ────────────────────────────────── */
+  .user-chip{display:flex;align-items:center;gap:8px;font-size:12px;color:#fff}
+  .role-pill{background:rgba(255,255,255,0.15);padding:3px 9px;border-radius:20px;font-size:10px;font-weight:800;letter-spacing:.4px;text-transform:uppercase}
+  .role-pill.role-admin{background:rgba(232,163,61,0.28);color:#FFE3B0}
+  .role-pill.role-ebs{background:rgba(124,77,190,0.32);color:#E4D6FA}
+  .role-pill.role-smb{background:rgba(22,132,122,0.32);color:#C8F0E8}
+  .user-chip button{background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:#fff;padding:6px 10px;border-radius:8px;font-size:11.5px;cursor:pointer;font-weight:600}
+  .user-chip button:hover{background:rgba(255,255,255,0.2)}
+
+  /* guest-mode: strictly view-only. ebs-mode: can log chat assignments
+     but still can't touch the master roster / shift schedule editing. */
+  .guest-mode #rosterBtn,
+  .guest-mode #regenerateBtn,
+  .guest-mode #changePwBtn,
+  .ebs-mode #rosterBtn,
+  .ebs-mode #regenerateBtn,
+  .smb-mode #rosterBtn,
+  .smb-mode #regenerateBtn{display:none}
+  .guest-mode .icon-btn,
+  .guest-mode .switch,
+  .ebs-mode .icon-btn,
+  .ebs-mode .switch,
+  .smb-mode .icon-btn,
+  .smb-mode .switch{opacity:.45;pointer-events:none}
+  .guest-mode .tr-plus-btn,
+  .guest-mode .tr-minus-btn{display:none}
+  .guest-mode #trUndoBtn,
+  .guest-mode #trResetBtn,
+  .ebs-mode #trUndoBtn,
+  .ebs-mode #trResetBtn,
+  .smb-mode #trUndoBtn,
+  .smb-mode #trResetBtn{display:none}
+  /* ── Reports module ──────────────────────────────────────── */
+  .rep-topbar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:14px}
+  .rep-title{font-size:14px;font-weight:700;color:var(--muted)}
+  .rep-date-badge{font-size:12px;color:var(--muted);font-family:var(--mono)}
+  .rep-subtabs{display:flex;gap:8px;margin-bottom:18px}
+  .rep-subtab-btn{background:var(--card);border:1px solid var(--border);color:var(--muted);padding:9px 16px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;transition:all .15s}
+  .rep-subtab-btn:hover{border-color:var(--brand)}
+  .rep-subtab-btn.active{background:var(--brand);border-color:var(--brand);color:#fff}
+  .rep-panel{display:block}
   .rep-kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:18px}
   .rep-kpi-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px 18px}
-  .rep-kpi-num{font-size:28px;font-weight:800;color:var(--ink);line-height:1.1}
+  .rep-kpi-num{font-size:26px;font-weight:800;color:var(--ink);line-height:1.1}
   .rep-kpi-label{font-size:11.5px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.3px;margin-top:4px}
   .rep-kpi-sub{font-size:11.5px;color:var(--muted);margin-top:2px}
   .rep-kpi-card.rep-kpi-highest .rep-kpi-num{color:#C0392B}
@@ -70,712 +373,1278 @@
   .rep-chart-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px}
   .rep-chart-card h3{margin:0 0 14px;font-size:13px;color:var(--ink-soft);font-weight:700}
   .rep-chart-body{min-height:220px}
-  .rep-chart-body-donut{display:flex;align-items:center;justify-content:center;flex-wrap:wrap}
+  .rep-chart-body-donut{display:flex;align-items:center;justify-content:center}
   .rep-bar-row{display:flex;align-items:center;gap:10px;margin-bottom:9px}
-  .rep-bar-name{width:150px;flex-shrink:0;font-size:12px;color:var(--text);text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .rep-bar-name{width:120px;flex-shrink:0;font-size:12px;color:var(--text);text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .rep-bar-track{flex:1;background:var(--bg);border-radius:6px;height:18px;position:relative;overflow:hidden}
   .rep-bar-fill{height:100%;background:linear-gradient(90deg,var(--brand),var(--teal));border-radius:6px;transition:width .3s}
-  .rep-bar-val{width:30px;flex-shrink:0;font-size:12px;font-weight:700;color:var(--ink)}
+  .rep-bar-val{width:26px;flex-shrink:0;font-size:12px;font-weight:700;color:var(--ink)}
   .rep-empty{color:var(--muted);font-size:13px;text-align:center;padding:40px 10px}
   .rep-legend{display:flex;flex-direction:column;gap:8px;margin-left:18px}
   .rep-legend-item{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text)}
-  .rep-legend-swatch{width:11px;height:11px;border-radius:3px;flex-shrink:0}
-
-  /* ── Login screen — role picker card, matching Shift Roster style ──── */
-  .hidden{display:none !important}
-  #loginScreen{position:fixed;inset:0;background:#152040;display:flex;align-items:center;justify-content:center;z-index:200}
-  #loginScreen.hidden{display:none}
-  .login-card{background:#fff;border-radius:18px;padding:34px 38px;width:100%;max-width:380px;box-shadow:0 20px 60px rgba(0,0,0,.3);text-align:center}
-  .login-logo{width:52px;height:52px;border-radius:14px;background:linear-gradient(135deg,var(--blue),var(--teal));display:flex;align-items:center;justify-content:center;font-size:26px;margin:0 auto 14px}
-  .login-card h2{margin:0 0 4px;font-size:18px;color:var(--ink)}
-  .login-card .sub{font-size:12.5px;color:var(--muted);margin-bottom:22px}
-  .role-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-  .role-card{border:1px solid var(--border);border-radius:12px;padding:18px 10px;cursor:pointer;background:#fff;transition:.15s}
-  .role-card:hover{border-color:var(--blue);box-shadow:0 4px 14px rgba(47,128,237,.15)}
-  .role-icon{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;margin:0 auto 10px}
-  .role-icon.admin{background:#FDECD2}
-  .role-icon.guest{background:#E9ECF3}
-  .role-card b{display:block;font-size:13.5px;color:var(--ink)}
-  .role-card span{display:block;font-size:11px;color:var(--muted);margin-top:2px}
-  .login-form{margin-top:20px;text-align:left}
-  .login-form label{display:block;font-size:12px;font-weight:700;color:var(--muted);margin:10px 0 5px}
-  .login-form input{width:100%;padding:9px 11px;border:1px solid var(--border);border-radius:7px;font-size:13px}
-  .login-form .btn{width:100%;margin-top:16px;padding:10px;font-size:13.5px}
-  .login-back{background:none;border:none;color:var(--muted);font-size:12px;cursor:pointer;margin-top:12px;text-decoration:underline}
-  .login-error{color:var(--danger);font-size:12.5px;margin-top:10px;min-height:15px}
-  #appRoot.hidden{display:none}
-  /* Guest role: hide anything admin-only, and make the record table read-only */
-  body.role-guest .admin-only{display:none !important}
-  body.role-guest input.cell-input, body.role-guest select.cell-select{pointer-events:none;opacity:.65;background:#F5F7FB}
-  .user-badge{font-size:12px;color:#AEB9D1;display:flex;align-items:center;gap:8px}
-  .user-badge .role-pill{background:rgba(255,255,255,.12);padding:2px 9px;border-radius:20px;font-weight:700;text-transform:uppercase;font-size:10.5px;letter-spacing:.3px}
-  .user-badge button{background:none;border:1px solid #3A4A72;color:#fff;padding:5px 12px;border-radius:7px;font-size:12px;cursor:pointer}
-
-  /* ── Print (used by both "Print as PDF" buttons via window.print()) ──
-     Browsers turn "Save as PDF" into just another printer target, so the
-     same @media print rules cover both the literal print button and the
-     PDF option in the print dialog. Only the report/table content shows;
-     all nav, filters, and admin action buttons drop out of the page. */
-  @media print{
-    .no-print, .admin-only{ display:none !important }
-    body{ background:#fff !important }
-    .card{ box-shadow:none !important; border:1px solid #ddd !important; break-inside:avoid }
-    #loginScreen{ display:none !important }
-  }
+    .rep-range-controls{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .rep-preset-btn{background:var(--card);border:1px solid var(--border);color:var(--muted);padding:6px 12px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer}
+  .rep-preset-btn:hover{border-color:var(--brand)}
+  .rep-preset-btn.active{background:var(--brand);border-color:var(--brand);color:#fff}
+  .rep-range-sep{color:var(--border);font-weight:700}
+  .rep-range-label{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);font-weight:700}
+  .rep-range-label input[type=date]{border:1px solid var(--border);border-radius:8px;padding:5px 8px;font-size:12px;font-family:inherit;color:var(--ink);background:var(--card)}
+  .rep-range-summary{font-size:12px;color:var(--muted);margin:-6px 0 16px;font-family:var(--mono)}
+  .rep-leave-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px}
+  .rep-leave-row:last-child{border-bottom:none}
 </style>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
 <body>
 
-<!-- LOGIN SCREEN -->
-<div id="loginScreen">
-  <div class="login-card">
-    <div class="login-logo">📊</div>
-    <h2>Missed Chat Tracker</h2>
-    <div class="sub">Choose how you're signing in</div>
-
-    <div class="role-grid" id="roleGrid">
-      <div class="role-card" id="adminCard">
-        <div class="role-icon admin">🛠️</div>
-        <b>Admin</b>
-        <span>Full control</span>
-      </div>
-      <div class="role-card" id="guestCard">
-        <div class="role-icon guest">👀</div>
-        <b>Guest</b>
-        <span>View only</span>
-      </div>
+<div class="login-overlay" id="loginOverlay">
+  <div class="login-box">
+    <div class="login-brand">
+      <div class="brand-mark">🌐</div>
+      <h1>Shift Roster</h1>
+      <p>EC Support — choose how you're signing in</p>
     </div>
 
-    <div class="login-form hidden" id="adminForm">
-      <label>Username</label>
-      <input type="text" id="loginUsername" autocomplete="username">
-      <label>Password</label>
-      <input type="password" id="loginPassword" autocomplete="current-password">
-      <button class="btn" id="loginBtn">Log in as Admin</button>
-      <button class="login-back" id="showForgot">Forgot password?</button>
-      <button class="login-back" id="backToRoles">← Back</button>
+    <div class="role-select" id="roleSelect">
+      <button type="button" class="role-card" id="pickAdminBtn">
+        <div class="role-card-icon">🛠️</div>
+        <div class="role-card-title">Admin</div>
+        <div class="role-card-sub">Full control</div>
+      </button>
+      <button type="button" class="role-card" id="pickEbsBtn">
+        <div class="role-card-icon">🎧</div>
+        <div class="role-card-title">EBS Tech</div>
+        <div class="role-card-sub">Log assignments</div>
+      </button>
+      <button type="button" class="role-card" id="pickSmbBtn">
+        <div class="role-card-icon">💬</div>
+        <div class="role-card-title">Security Zia</div>
+        <div class="role-card-sub">Log security tickets</div>
+      </button>
+      <button type="button" class="role-card" id="pickGuestBtn">
+        <div class="role-card-icon">👀</div>
+        <div class="role-card-title">Guest</div>
+        <div class="role-card-sub">View only</div>
+      </button>
     </div>
 
-    <div class="login-form hidden" id="forgotForm">
-      <label>Username</label>
-      <input type="text" id="forgotUsername" autocomplete="username" placeholder="Admin">
-      <label>Reset key</label>
-      <input type="password" id="forgotResetKey" placeholder="ADMIN_RESET_KEY from Render">
-      <label>New password</label>
-      <input type="password" id="forgotNewPassword">
-      <button class="btn" id="forgotBtn">Reset password</button>
-      <button class="login-back" id="backToLoginFromForgot">← Back to login</button>
-    </div>
+    <form id="loginForm" style="display:none">
+      <button type="button" class="back-link" id="backToRoleBtn">← Back</button>
+      <label>Admin password
+        <input type="password" id="loginPassword" autocomplete="current-password">
+      </label>
+      <div class="form-error" id="loginError"></div>
+      <button type="submit" class="btn btn-teal" style="width:100%;justify-content:center">Sign in</button>
+    </form>
 
-    <div class="login-error" id="loginError"></div>
+    <form id="ebsLoginForm" style="display:none">
+      <button type="button" class="back-link" id="backToRoleBtnEbs">← Back</button>
+      <label>Who are you?
+        <select id="ebsLoginUsername"></select>
+      </label>
+      <label>Password
+        <input type="password" id="ebsLoginPassword" autocomplete="current-password">
+      </label>
+      <div class="form-error" id="ebsLoginError"></div>
+      <button type="submit" class="btn btn-purple" style="width:100%;justify-content:center">Sign in</button>
+    </form>
+
+    <form id="smbLoginForm" style="display:none">
+      <button type="button" class="back-link" id="backToRoleBtnSmb">← Back</button>
+      <label>Who are you?
+        <select id="smbLoginUsername"></select>
+      </label>
+      <label>Password
+        <input type="password" id="smbLoginPassword" autocomplete="current-password">
+      </label>
+      <div class="form-error" id="smbLoginError"></div>
+      <button type="submit" class="btn btn-teal" style="width:100%;justify-content:center">Sign in</button>
+    </form>
   </div>
 </div>
 
-<div id="appRoot" class="hidden">
-<header class="no-print">
-  <div>
-    <h1>📊 Missed Chat Tracker</h1>
-    <div class="sub">Weekly import → fill in the gaps → auto reports</div>
+<div id="appShell" style="display:none">
+<header>
+  <div class="brand">
+    <div class="brand-mark">🌐</div>
+    <div>
+      <h1>Shift Roster</h1>
+      <p>EC Support — auto-scheduled global handoff</p>
+    </div>
   </div>
-  <div style="display:flex;gap:14px;align-items:center">
-    <select id="monthPicker"></select>
-    <div class="user-badge">
-      <span id="userBadgeName"></span>
-      <span class="role-pill" id="userBadgeRole"></span>
-      <button class="admin-only" id="changePwBtn">Change password</button>
-      <button id="logoutBtn">Log out</button>
+
+  <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+    <div class="datenav">
+      <button id="prevBtn" title="Previous day" aria-label="Previous day">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <div style="position:relative">
+        <div class="date-display" id="dateDisplay" role="button" tabindex="0" title="Click to pick a date">
+          07 Jul 2026
+          <span class="date-sub" id="dateSub">Today</span>
+        </div>
+        <input type="date" id="datePicker">
+      </div>
+      <button id="nextBtn" title="Next day" aria-label="Next day">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+    </div>
+    <button class="btn-today" id="todayBtn">Today</button>
+    <div class="user-chip">
+      <span id="userChipText"></span>
+      <button id="changePwBtn" title="Change password">🔑 Password</button>
+      <button id="logoutBtn">Logout</button>
     </div>
   </div>
 </header>
 
-<!-- CHANGE PASSWORD MODAL (admin only) -->
-<div id="changePwModal" class="hidden no-print" style="position:fixed;inset:0;background:rgba(21,32,64,.5);display:flex;align-items:center;justify-content:center;z-index:150">
-  <div style="background:#fff;border-radius:14px;padding:26px 30px;width:100%;max-width:340px">
-    <h3 style="margin:0 0 4px;font-size:16px">Change password</h3>
-    <div style="font-size:12.5px;color:var(--muted);margin-bottom:16px">Update your Admin login password</div>
-    <label style="display:block;font-size:12px;font-weight:700;color:var(--muted);margin:8px 0 5px">Current password</label>
-    <input type="password" id="cpCurrent" style="width:100%;padding:9px 11px;border:1px solid var(--border);border-radius:7px;font-size:13px">
-    <label style="display:block;font-size:12px;font-weight:700;color:var(--muted);margin:10px 0 5px">New password</label>
-    <input type="password" id="cpNew" style="width:100%;padding:9px 11px;border:1px solid var(--border);border-radius:7px;font-size:13px">
-    <div id="cpError" style="color:var(--danger);font-size:12.5px;margin-top:8px;min-height:15px"></div>
-    <div style="display:flex;gap:8px;margin-top:14px">
-      <button class="btn" id="cpSaveBtn" style="flex:1">Save</button>
-      <button class="btn ghost" id="cpCancelBtn" style="flex:1">Cancel</button>
+<nav class="page-nav" id="pageNav">
+  <button class="page-nav-btn" id="navShiftRosterBtn" data-page="shiftroster">🗓️ Shift Roster</button>
+  <button class="page-nav-btn active" id="navRosterBtn" data-page="roster">📅 ZIA SLOT</button>
+  <button class="page-nav-btn" id="navTrackerBtn" data-page="tracker">📊 SMB Chat Assignment Live Tracker</button>
+  <button class="page-nav-btn" id="navSecurityBtn" data-page="security">🛡️ Security Team Zia Assignment Live Tracker</button>
+  <button class="page-nav-btn" id="navReportsBtn" data-page="reports">📈 Reports</button>
+</nav>
+
+<!-- NEW: Shift Roster — static reference table (Name / Support Role / Mode / Region / Shift) -->
+<main id="shiftRosterMain" style="display:none">
+  <div class="table-card">
+    <div class="table-card-head">
+      <h2>EBS/SMB Support Shift Roster</h2>
+      <span class="tz-note">Reference only — who's EBS, who's SMB, and their base shift start.</span>
+    </div>
+    <div class="table-scroll">
+      <table id="shiftRosterTable">
+        <thead>
+          <tr>
+            <th style="width:44px">#</th>
+            <th>Name</th>
+            <th>Support Role</th>
+            <th>Mode</th>
+            <th>Region</th>
+            <th>Shift</th>
+          </tr>
+        </thead>
+        <tbody id="shiftRosterTbody"></tbody>
+      </table>
+    </div>
+  </div>
+</main>
+
+<main id="rosterMain">
+
+  <div class="timeline-card">
+    <div class="timeline-head">
+      <h2>Follow-the-sun coverage</h2>
+      <span class="tz-note">All times in IST (Asia/Kolkata) · auto-balanced across 24h</span>
+    </div>
+    <div class="timeline-track" id="timelineTrack">
+      <div class="timeline-empty">Nobody in the master roster yet — add your team below.</div>
+    </div>
+    <div class="tl-hours" id="tlHours"></div>
+    <div id="warnBanners"></div>
+    <div class="legend" id="legend"></div>
+  </div>
+
+  <div class="leave-card" id="leaveCard">
+    <div class="leave-card-head">
+      <div class="leave-card-title">
+        <h2>On leave</h2>
+        <span class="leave-count-badge" id="leaveCountBadge">0</span>
+      </div>
+      <span class="tz-note" id="leaveCardDate"></span>
+    </div>
+    <div id="leaveCardBody"></div>
+  </div>
+
+  <div class="toolbar">
+    <div class="toolbar-left">
+      <span class="row-count" id="rowCount">—</span>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn btn-ghost" id="rosterBtn">👥 Master roster</button>
+      <button class="btn btn-amber" id="regenerateBtn">🔁 Regenerate this day</button>
+      <button class="btn btn-green" id="exportDayBtn">⬇ Export leave (day)</button>
+      <button class="btn btn-purple" id="exportMonthBtn">⬇ Export leave (month)</button>
+    </div>
+  </div>
+
+  <div class="table-card">
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th style="text-align:center">S.No</th>
+            <th>Name</th>
+            <th>Region</th>
+            <th style="width:110px">Shift Timing</th>
+            <th style="width:220px">Ticket Time Window</th>
+            <th style="width:100px">Duration</th>
+            <th style="text-align:center">On leave</th>
+            <th style="text-align:center">Reorder</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+</main>
+
+<main id="trackerMain" style="display:none">
+
+<div class="tr-layout">
+  <!-- LEFT: today's shift roster reference + leave status -->
+  <aside class="tr-side tr-side-left">
+    <div class="tr-side-card">
+      <div class="tr-side-head">🗓️ Today's shift</div>
+      <div id="trShiftRef" class="tr-shift-ref"></div>
+    </div>
+  </aside>
+
+  <!-- CENTER: the tracker itself -->
+  <div class="tr-center">
+    <div class="tr-toolbar">
+      <div class="tr-toolbar-left">
+        <div id="trWhoamiWrap"></div>
+        <span class="tr-datebadge" id="trDateBadge"></span>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-ghost" id="trTodayBtn">Today</button>
+        <button class="btn btn-purple" id="trMatrixBtn">🔢 View EBS × SMB matrix</button>
+        <button class="btn btn-amber" id="trUndoBtn">↩ Undo last</button>
+        <button class="btn" id="trResetBtn" style="background:#FCEBEB;color:var(--danger);border:1px solid #F0C4C4">🗑 Reset day</button>
+      </div>
+    </div>
+
+    <div class="tr-summary-row" id="trSummaryRow"></div>
+
+    <div class="tr-section-head">
+      <h2>SMB techs — tap + when you assign a chat</h2>
+      <span class="tz-note">Shown in shift order · card position stays fixed</span>
+    </div>
+    <div class="tr-grid" id="trGrid"></div>
+
+    <div class="tr-section-head" style="margin-top:22px">
+      <h2>EBS techs — chats assigned today</h2>
+      <span class="tz-note">Tap a name to filter Live Activity to just them</span>
+    </div>
+    <div class="tr-ebs-row" id="trEbsRow"></div>
+
+    <div class="tr-feed-card">
+      <div class="tr-section-head" style="margin:0 0 8px">
+        <h2>Live activity</h2>
+        <span class="tz-note" id="trFeedFilterNote"></span>
+      </div>
+      <div id="trFeed" class="tr-feed"></div>
+    </div>
+  </div>
+
+  <!-- RIGHT: EBS support numbers -->
+  <aside class="tr-side tr-side-right">
+    <div class="tr-side-card">
+      <div class="tr-side-head">☎️ EBS support numbers</div>
+      <div class="tr-phone-list">
+        <a class="tr-phone-row" href="tel:+18334110998">
+          <span class="tr-phone-label">🇺🇸 US Toll Free</span>
+          <span class="tr-phone-num">+1 833 411 0998</span>
+        </a>
+        <a class="tr-phone-row" href="tel:+448000268068">
+          <span class="tr-phone-label">🇬🇧 UK Tollfree</span>
+          <span class="tr-phone-num">+44 800 026 8068</span>
+        </a>
+        <a class="tr-phone-row" href="tel:+914469656025">
+          <span class="tr-phone-label">🇮🇳 India Tollfree</span>
+          <span class="tr-phone-num">+91 44 6965 6025</span>
+        </a>
+      </div>
+    </div>
+  </aside>
+</div>
+
+</main>
+
+<main id="securityMain" style="display:none">
+
+<div class="tr-layout">
+  <!-- LEFT: Security team's shift roster reference (top-left corner, as requested) -->
+  <aside class="tr-side tr-side-left">
+    <div class="tr-side-card">
+      <div class="tr-side-head">🗓️ Security team — shift roster</div>
+      <div id="secShiftRef" class="tr-shift-ref"></div>
+    </div>
+  </aside>
+
+  <!-- CENTER: the security tracker itself -->
+  <div class="tr-center">
+    <div class="tr-toolbar">
+      <div class="tr-toolbar-left">
+        <div id="secWhoamiWrap"></div>
+        <span class="tr-datebadge" id="secDateBadge"></span>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        <select id="secAssignerPicker" class="tr-select" style="display:none" title="Log this assignment as…"></select>
+        <button class="btn btn-ghost" id="secTodayBtn">Today</button>
+        <button class="btn btn-amber" id="secUndoBtn">↩ Undo last</button>
+        <button class="btn" id="secResetBtn" style="background:#FCEBEB;color:var(--danger);border:1px solid #F0C4C4">🗑 Reset day</button>
+      </div>
+    </div>
+
+    <div class="tr-summary-row" id="secSummaryRow"></div>
+
+    <div class="tr-section-head">
+      <h2>Security techs — tap + when you assign a ticket</h2>
+      <span class="tz-note">Any EBS/SMB tech or Admin can log this · card position stays fixed</span>
+    </div>
+    <div class="tr-grid" id="secGrid"></div>
+
+    <div class="tr-feed-card">
+      <div class="tr-section-head" style="margin:0 0 8px">
+        <h2>Live activity</h2>
+      </div>
+      <div id="secFeed" class="tr-feed"></div>
     </div>
   </div>
 </div>
 
-<div class="container">
-  <div class="tabs no-print">
-    <button class="tab-btn active" data-tab="import">📥 Import & Edit</button>
-    <button class="tab-btn" data-tab="reports">📈 Reports</button>
-  </div>
+</main>
 
-  <!-- IMPORT & EDIT TAB -->
-  <div id="tab-import">
-    <div class="card admin-only no-print">
-      <div class="toolbar">
-        <input type="file" id="csvFile" accept=".csv">
-        <button class="btn" id="uploadBtn">Upload weekly CSV</button>
-        <span id="uploadStatus" style="font-size:12.5px;color:var(--muted)"></span>
-      </div>
-    </div>
-    <div class="card no-print">
-      <div class="rep-topbar" style="margin-bottom:0">
-        <div class="rep-title" style="font-size:13px">🔎 Filter rows</div>
-        <div class="rep-range-controls">
-          <button class="edit-preset-btn" data-preset="today">Today</button>
-          <button class="edit-preset-btn" data-preset="week">This week</button>
-          <button class="edit-preset-btn" data-preset="lastweek">Last week</button>
-          <button class="edit-preset-btn" data-preset="month">This month</button>
-          <button class="edit-preset-btn" data-preset="lastmonth">Last month</button>
-          <button class="edit-preset-btn" data-preset="quarter">Last 3 months</button>
-          <button class="edit-preset-btn" data-preset="year">This year</button>
-          <select class="rep-more-select" id="editMoreSelect">
-            <option value="">More ▾</option>
-            <option value="lastyear">Previous year</option>
-            <option value="last6months">Last 6 months</option>
-            <option value="last12months">Last 12 months</option>
-            <option value="last12weeks">Last 12 weeks</option>
-          </select>
-          <span class="rep-range-sep">·</span>
-          <label class="rep-range-label">From <input type="date" id="editFromInput"></label>
-          <label class="rep-range-label">To <input type="date" id="editToInput"></label>
-          <button class="btn" id="editClearFilterBtn" style="padding:6px 12px;font-size:12.5px">Clear (use month picker)</button>
-        </div>
-      </div>
-      <div class="rep-range-summary" id="editRangeSummary" style="margin:2px 0 0"></div>
-    </div>
-    <div class="card">
-      <div class="toolbar no-print" style="justify-content:space-between">
-        <div class="admin-only" style="display:flex;gap:8px;align-items:center">
-          <button class="btn danger" id="deleteSelectedBtn" disabled>🗑 Delete selected (<span id="selectedCount">0</span>)</button>
-        </div>
-        <div style="display:flex;gap:8px;align-items:center">
-          <button class="btn" id="editExportCsvBtn">⬇️ Export as CSV</button>
-          <button class="btn" id="editPrintBtn">🖨️ Print as PDF</button>
-          <button class="btn danger admin-only" id="deleteMonthBtn">🗑 Delete this entire month</button>
-        </div>
-      </div>
-      <div id="editTableWrap"><div class="empty">Pick a month above, or upload a CSV to get started.</div></div>
+<!-- NEW: Reports — view-only, whole team. Overview KPIs + today's snapshot,
+     Chat Tracker and Security Tracker as separate sub-tabs. Pulls from the
+     same /api/tracker/:date data the Live Tracker pages already use — no
+     extra backend load, always in sync with live numbers. -->
+<main id="reportsMain" style="display:none">
+  <div class="rep-topbar">
+    <div class="rep-title">📈 Reports — view only, whole team</div>
+    <div class="rep-range-controls">
+      <button class="rep-preset-btn" data-preset="today">Today</button>
+      <button class="rep-preset-btn" data-preset="week">This week</button>
+      <button class="rep-preset-btn active" data-preset="month">This month</button>
+      <span class="rep-range-sep">·</span>
+      <label class="rep-range-label">From <input type="date" id="repFromInput"></label>
+      <label class="rep-range-label">To <input type="date" id="repToInput"></label>
     </div>
   </div>
+  <div class="rep-range-summary" id="repRangeSummary"></div>
 
-  <!-- REPORTS TAB -->
-  <div id="tab-reports" style="display:none">
-    <div class="rep-topbar no-print">
-      <div class="rep-title">📈 Missed Chat Reports</div>
-      <div class="rep-range-controls">
-        <button class="rep-preset-btn" data-preset="today">Today</button>
-        <button class="rep-preset-btn" data-preset="week">This week</button>
-        <button class="rep-preset-btn" data-preset="lastweek">Last week</button>
-        <button class="rep-preset-btn active" data-preset="month">This month</button>
-        <button class="rep-preset-btn" data-preset="lastmonth">Last month</button>
-        <button class="rep-preset-btn" data-preset="quarter">Last 3 months</button>
-        <button class="rep-preset-btn" data-preset="year">This year</button>
-        <select class="rep-more-select" id="repMoreSelect">
-          <option value="">More ▾</option>
-          <option value="lastyear">Previous year</option>
-          <option value="last6months">Last 6 months</option>
-          <option value="last12months">Last 12 months</option>
-          <option value="last12weeks">Last 12 weeks</option>
-        </select>
-        <span class="rep-range-sep">·</span>
-        <label class="rep-range-label">From <input type="date" id="repFromInput"></label>
-        <label class="rep-range-label">To <input type="date" id="repToInput"></label>
-        <span class="rep-range-sep">·</span>
-        <label class="rep-range-label">Team/Vertical
-          <select id="verticalPicker"><option value="All">All verticals</option></select>
-        </label>
-      </div>
-      <div style="display:flex;gap:8px">
-        <button class="btn" id="reportPrintBtn">🖨️ Print / Save as PDF</button>
-        <button class="btn" id="reportJpegBtn">📷 Export as JPEG</button>
-      </div>
-    </div>
-    <div id="reportExportArea">
-    <div class="rep-range-summary" id="repRangeSummary"></div>
+  <div class="rep-subtabs">
+    <button class="rep-subtab-btn active" id="repTabChat" data-reptab="chat">💬 Chat Tracker</button>
+    <button class="rep-subtab-btn" id="repTabSecurity" data-reptab="security">🛡️ Security Tracker</button>
+    <button class="rep-subtab-btn" id="repTabLeave" data-reptab="leave">📋 Leave Report</button>
+  </div>
 
-    <div class="rep-kpi-row" id="repKpis"></div>
-
+  <!-- Chat Tracker report -->
+  <div id="repPanelChat" class="rep-panel">
+    <div class="rep-kpi-row" id="repChatKpis"></div>
     <div class="rep-chart-row">
       <div class="rep-chart-card">
-        <h3>Missed chats — by reason</h3>
-        <div id="repReasonBar" class="rep-chart-body"></div>
+        <h3>Chats assigned — by SMB tech</h3>
+        <div id="repChatBar" class="rep-chart-body"></div>
       </div>
       <div class="rep-chart-card">
-        <h3>Distribution — by vertical</h3>
-        <div id="repVerticalDonut" class="rep-chart-body rep-chart-body-donut"></div>
+        <h3>Distribution by region</h3>
+        <div id="repChatDonut" class="rep-chart-body rep-chart-body-donut"></div>
       </div>
     </div>
-
-    <div class="rep-chart-row" style="margin-top:16px">
-      <div class="rep-chart-card">
-        <h3>Trend — missed chats by week</h3>
-        <div id="repWeekBar" class="rep-chart-body"></div>
-      </div>
-      <div class="rep-chart-card">
-        <h3>Top departments</h3>
-        <div id="repDeptDonut" class="rep-chart-body rep-chart-body-donut"></div>
-      </div>
-    </div>
-
-    <div class="rep-chart-row" style="margin-top:16px">
-      <div class="rep-chart-card" style="grid-column:1/-1">
-        <h3>Missed chats — by tech (Missed By)</h3>
-        <div id="repMissedByBar" class="rep-chart-body"></div>
-      </div>
-    </div>
-
-    <div class="rep-chart-row" style="margin-top:16px">
-      <div class="rep-chart-card" style="grid-column:1/-1">
-        <h3>Missed chats — by time slot (00:00 → 23:00)</h3>
-        <div id="repTimeSlotBar" class="rep-chart-body"></div>
-      </div>
-    </div>
-    </div><!-- /#reportExportArea -->
   </div>
-</div>
+
+  <!-- Security Tracker report -->
+  <div id="repPanelSecurity" class="rep-panel" style="display:none">
+    <div class="rep-kpi-row" id="repSecKpis"></div>
+    <div class="rep-chart-row">
+      <div class="rep-chart-card">
+        <h3>Tickets assigned — by Security tech</h3>
+        <div id="repSecBar" class="rep-chart-body"></div>
+      </div>
+      <div class="rep-chart-card">
+        <h3>Top assigners</h3>
+        <div id="repSecDonut" class="rep-chart-body rep-chart-body-donut"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Leave report -->
+  <div id="repPanelLeave" class="rep-panel" style="display:none">
+    <div class="rep-kpi-row" id="repLeaveKpis"></div>
+    <div class="rep-chart-row">
+      <div class="rep-chart-card">
+        <h3>Leave days — by person, in range</h3>
+        <div id="repLeaveBar" class="rep-chart-body"></div>
+      </div>
+      <div class="rep-chart-card">
+        <h3>Currently on leave today</h3>
+        <div id="repLeaveToday" class="rep-chart-body"></div>
+      </div>
+    </div>
+  </div>
+</main>
 
 <div class="toast" id="toast"></div>
 
-<script>
-let CURRENT_MONTH = null;
-let REASON_OPTIONS = [], TIME_RANGE_OPTIONS = [], VERTICALS = [];
-let CURRENT_EDIT_RECORDS = []; // mirrors whatever renderEditTable() last drew, used by CSV export
-let EDIT_MODE = 'month'; // 'month' (top-right month picker) or 'range' (filter bar below)
-let editFrom = null, editTo = null;
-let repFrom = null, repTo = null;
+<!-- Assign-with-comment modal -->
+<div class="modal-overlay" id="assignModal">
+  <div class="modal" style="max-width:380px">
+    <div class="modal-head">
+      <div>
+        <h2 id="assignModalTitle">Assign chat</h2>
+        <p id="assignModalSub">Confirm this assignment.</p>
+      </div>
+      <button class="modal-close" id="assignModalClose" aria-label="Close">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <form id="assignForm">
+        <label style="display:block;font-size:12px;color:var(--muted);font-weight:600;margin-bottom:6px" id="assignCommentLabel">Comment (optional)</label>
+        <textarea id="assignComment" rows="3" style="width:100%;padding:9px 11px;border:1px solid var(--border);border-radius:8px;font-size:13px;box-sizing:border-box;font-family:var(--sans);resize:vertical" placeholder="Reason, ticket #, context…"></textarea>
+        <div class="form-error" id="assignCommentError" style="margin-top:8px"></div>
+        <button type="submit" class="btn btn-teal" style="width:100%;justify-content:center;margin-top:10px">Confirm assignment</button>
+      </form>
+    </div>
+  </div>
+</div>
 
-function showToast(msg, isErr){
+<!-- Security assign modal -->
+<div class="modal-overlay" id="assignSecModal">
+  <div class="modal" style="max-width:380px">
+    <div class="modal-head">
+      <div>
+        <h2 id="assignSecModalTitle">Assign ticket</h2>
+        <p id="assignSecModalSub">Confirm this assignment.</p>
+      </div>
+      <button class="modal-close" id="assignSecModalClose" aria-label="Close">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <form id="assignSecForm">
+        <label style="display:block;font-size:12px;color:var(--muted);font-weight:600;margin-bottom:6px" id="assignSecCommentLabel">Comment (optional)</label>
+        <textarea id="assignSecComment" rows="3" style="width:100%;padding:9px 11px;border:1px solid var(--border);border-radius:8px;font-size:13px;box-sizing:border-box;font-family:var(--sans);resize:vertical" placeholder="Reason, ticket #, context…"></textarea>
+        <div class="form-error" id="assignSecCommentError" style="margin-top:8px"></div>
+        <button type="submit" class="btn btn-teal" style="width:100%;justify-content:center;margin-top:10px">Confirm assignment</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- EBS x SMB matrix modal -->
+<div class="modal-overlay" id="trMatrixModal">
+  <div class="modal" style="max-width:820px">
+    <div class="modal-head">
+      <div>
+        <h2>EBS × SMB assignment matrix</h2>
+        <p>How many chats each EBS tech has routed to each SMB tech today.</p>
+      </div>
+      <button class="modal-close" id="trMatrixModalClose" aria-label="Close">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="table-card" style="box-shadow:none">
+        <div class="table-scroll">
+          <table id="trMatrixTable"><thead></thead><tbody></tbody></table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Admin: reset an EBS tech's password -->
+<div class="modal-overlay" id="resetPwModal">
+  <div class="modal" style="max-width:340px">
+    <div class="modal-head">
+      <div>
+        <h2>Reset password</h2>
+        <p id="resetPwWho">Set a new password for this EBS account.</p>
+      </div>
+      <button class="modal-close" id="resetPwModalClose" aria-label="Close">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <form id="resetPwForm">
+        <label style="display:block;font-size:12px;color:var(--muted);font-weight:600;margin-bottom:14px">New password
+          <input type="password" id="resetPwNew" autocomplete="new-password" style="width:100%;margin-top:6px;padding:9px 11px;border:1px solid var(--border);border-radius:8px;font-size:13.5px;box-sizing:border-box">
+        </label>
+        <div class="form-error" id="resetPwError"></div>
+        <button type="submit" class="btn btn-purple" style="width:100%;justify-content:center">Set new password</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Master Roster modal -->
+<div class="modal-overlay" id="rosterModal">
+  <div class="modal">
+    <div class="modal-head">
+      <div>
+        <h2>Master roster</h2>
+        <p>Your team pool — every day auto-generates from this list. Edit names, regions, or the daily cycle start time here; swap the order to change priority.</p>
+      </div>
+      <button class="modal-close" id="rosterModalClose" aria-label="Close">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+    <div class="modal-toolbar">
+      <div class="cycle-field">
+        Cycle start time: <input type="time" id="cycleStartInput">
+      </div>
+      <button class="btn btn-ghost" id="rosterImportBtn">⬆ Import Excel/CSV</button>
+    </div>
+    <div class="modal-body">
+      <div class="table-card" style="box-shadow:none">
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th style="text-align:center">S.No</th>
+                <th>Name</th>
+                <th>Region</th>
+                <th style="text-align:center">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="rosterTbody"></tbody>
+          </table>
+        </div>
+        <div class="add-row-bar">
+          <button id="rosterAddRowBtn">+ Add person</button>
+        </div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <span class="row-count" id="rosterCount"></span>
+      <button class="btn btn-save" id="rosterSaveBtn">Save master roster</button>
+    </div>
+  </div>
+</div>
+
+<input type="file" id="rosterImportFile" accept=".xlsx,.xls,.csv" style="display:none">
+
+<!-- Change password modal -->
+<div class="modal-overlay" id="pwModal">
+  <div class="modal" style="max-width:360px">
+    <div class="modal-head">
+      <div>
+        <h2>Change password</h2>
+        <p>Update your own login password.</p>
+      </div>
+      <button class="modal-close" id="pwModalClose" aria-label="Close">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <label style="display:block;font-size:12px;color:var(--muted);font-weight:600;margin-bottom:14px">Current password
+        <input type="password" id="pwCurrent" autocomplete="current-password" style="width:100%;margin-top:6px;padding:9px 11px;border:1px solid var(--border);border-radius:8px;font-size:13.5px;box-sizing:border-box">
+      </label>
+      <label style="display:block;font-size:12px;color:var(--muted);font-weight:600;margin-bottom:4px">New password
+        <input type="password" id="pwNew" autocomplete="new-password" style="width:100%;margin-top:6px;padding:9px 11px;border:1px solid var(--border);border-radius:8px;font-size:13.5px;box-sizing:border-box">
+      </label>
+      <div class="form-error" id="pwError"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-save" id="pwSaveBtn">Update password</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const REGION_PALETTE = {
+  'ANZ/APAC':   '#F2994A',
+  'APAC/India': '#F2C94C',
+  'India/MEA':  '#6FCF97',
+  'MEA/Europe': '#56CCF2',
+  'UK/Europe':  '#2F80ED',
+  'US/LATAM':   '#9B51E0'
+};
+const FALLBACK_COLORS = ['#94A3B8','#EF9F9F','#7FB88E','#C9A0DC','#E0B84D','#5DA5A3'];
+function colorForRegion(region){
+  if (REGION_PALETTE[region]) return REGION_PALETTE[region];
+  let h = 0;
+  for (let i=0;i<region.length;i++) h = (h*31 + region.charCodeAt(i)) >>> 0;
+  return FALLBACK_COLORS[h % FALLBACK_COLORS.length];
+}
+
+let currentDate = toISODate(new Date());
+let rows = []; // this day's computed rows: {id,name,region,onLeave,shiftSlot,ticketTimeWindow}
+
+function toISODate(d){
+  const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), day=String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${day}`;
+}
+function addDays(dateStr, delta){
+  const d = new Date(dateStr + 'T00:00:00');
+  d.setDate(d.getDate() + delta);
+  return toISODate(d);
+}
+function formatDisplayDate(dateStr){
+  const d = new Date(dateStr + 'T00:00:00');
+  return d.toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' });
+}
+function istNowMinutes(){
+  const parts = new Intl.DateTimeFormat('en-GB', { timeZone:'Asia/Kolkata', hour:'2-digit', minute:'2-digit', hour12:false }).formatToParts(new Date());
+  return Number(parts.find(p=>p.type==='hour').value)*60 + Number(parts.find(p=>p.type==='minute').value);
+}
+function istTodayISO(){
+  const parts = new Intl.DateTimeFormat('en-CA', { timeZone:'Asia/Kolkata', year:'numeric', month:'2-digit', day:'2-digit' }).formatToParts(new Date());
+  return `${parts.find(p=>p.type==='year').value}-${parts.find(p=>p.type==='month').value}-${parts.find(p=>p.type==='day').value}`;
+}
+// The SMB Chat Assignment Live Tracker's "day" isn't a calendar day — it
+// runs on the shift cycle (05:00 -> 04:59 the next calendar date, using
+// whatever cycle start time the master roster is set to). Anything
+// logged before the cycle's start time still belongs to the PREVIOUS
+// day's file, so "today" for the tracker needs its own calculation.
+function shiftDayISO(cycleStartHHMM){
+  const startMin = timeToMinutes(cycleStartHHMM) ?? 300; // default 05:00
+  const parts = new Intl.DateTimeFormat('en-CA', { timeZone:'Asia/Kolkata', year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit', hour12:false }).formatToParts(new Date());
+  const dateStr = `${parts.find(p=>p.type==='year').value}-${parts.find(p=>p.type==='month').value}-${parts.find(p=>p.type==='day').value}`;
+  const nowMin = Number(parts.find(p=>p.type==='hour').value)*60 + Number(parts.find(p=>p.type==='minute').value);
+  return nowMin < startMin ? addDays(dateStr, -1) : dateStr;
+}
+function trackerTodayISO(){ return shiftDayISO(masterRoster.cycleStart || '05:00'); }
+function timeToMinutes(t){
+  if(!t || !/^\d{2}:\d{2}$/.test(t)) return null;
+  const [h,m] = t.split(':').map(Number);
+  return h*60+m;
+}
+// "05:00" -> "5:00 AM" — matches the Ticket Time Window column's style
+function fmtTime12(hhmm24){
+  const mins = timeToMinutes(hhmm24);
+  if(mins == null) return '—';
+  let h = Math.floor(mins/60) % 24, m = mins % 60;
+  const ap = h < 12 ? 'AM' : 'PM';
+  let h12 = h % 12; if(h12 === 0) h12 = 12;
+  return `${h12}:${String(m).padStart(2,'0')} ${ap}`;
+}
+function formatDuration(min){
+  if(min == null || isNaN(min)) return '—';
+  const h = Math.floor(min/60), m = min%60;
+  if(h === 0) return `${m} min`;
+  if(m === 0) return `${h}h`;
+  return `${h}h ${m}m`;
+}
+// Is `nowMin` (0–1439) currently inside this row's slot? Handles slots
+// that wrap past midnight (e.g. cycle start 22:00 running into next day).
+function isCurrentSlot(row, nowMin){
+  if(row.onLeave) return false;
+  const start = timeToMinutes(row.shiftSlot);
+  if(start == null || row.durationMin == null) return false;
+  const startMod = start % 1440;
+  const endMod = (start + row.durationMin) % 1440;
+  if(startMod <= endMod) return nowMin >= startMod && nowMin < endMod;
+  return nowMin >= startMod || nowMin < endMod; // wraps midnight
+}
+// Shift Timing column shows each person's fixed, nominal shift time
+// (from the tracker roster's "shift" field — the same reference values
+// used on the Shift Roster tab) rather than the auto-balanced slot,
+// which shifts around whenever someone's on leave or the order changes.
+function fixedShiftFor(id){
+  const p = trackerRoster.people.find(p => p.id === id);
+  return p && p.shift ? p.shift : null;
+}
+// The full set of standard shift start times, deduped + sorted — same
+// list shown on the Shift Roster tab. `ensureVal` guards against a saved
+// value that's no longer in the master list (so the dropdown never
+// silently shows the wrong thing selected).
+function shiftOptionsList(ensureVal){
+  const set = new Set();
+  trackerRoster.people.forEach(p => { if(p.shift) set.add(p.shift); });
+  if(ensureVal) set.add(ensureVal);
+  return Array.from(set).sort((a,b)=> (timeToMinutes(a)??0) - (timeToMinutes(b)??0));
+}
+// Manual, per-day "Shift Timing" override — e.g. reassigning Manoj to the
+// 05:00 slot when Arun is on leave. Purely a display label: it never
+// touches shiftSlot, ticketTimeWindow, or the day's actual order/reorder —
+// those keep working exactly as before, independently of this.
+async function setShiftLabel(rosterId, shiftLabel){
+  try{
+    const res = await fetch(`/api/schedule/${currentDate}/shift-label`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ rosterId, shiftLabel })
+    });
+    const data = await res.json();
+    if(data.success){ rows = data.rows; renderAll(); showToast('Shift timing updated.', 't-success'); }
+    else showToast(data.message || 'Could not update shift timing.', 't-error');
+  }catch(e){ showToast('Could not reach the server.', 't-error'); }
+}
+function escAttr(v){
+  return String(v==null?'':v).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+function showToast(msg, type=''){
   const t = document.getElementById('toast');
   t.textContent = msg;
-  t.className = 'toast show' + (isErr ? ' err' : '');
-  setTimeout(()=> t.className = 'toast', 2200);
-}
-function escAttr(v){ return String(v==null?'':v).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-function formatDate(iso){
-  const d = new Date(iso);
-  return d.toLocaleString('en-GB', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:false, timeZone:'UTC' });
-}
-function todayISO(){ const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
-
-// ── Top-level tabs (Import & Edit / Reports) ──────────
-document.querySelectorAll('.tab-btn[data-tab]').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.tab-btn[data-tab]').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    const tab = btn.dataset.tab;
-    document.getElementById('tab-import').style.display = tab === 'import' ? 'block' : 'none';
-    document.getElementById('tab-reports').style.display = tab === 'reports' ? 'block' : 'none';
-    if(tab === 'reports') loadReports();
-  });
-});
-
-// ── Meta + months ─────────────────────────────────────
-async function loadMeta(){
-  const res = await fetch('/api/meta');
-  const data = await res.json();
-  REASON_OPTIONS = data.reasonOptions; TIME_RANGE_OPTIONS = data.timeRangeOptions; VERTICALS = data.verticals;
-  const vp = document.getElementById('verticalPicker');
-  vp.innerHTML = '<option value="All">All verticals</option>' + VERTICALS.map(v => `<option value="${escAttr(v)}">${escAttr(v)}</option>`).join('');
+  t.className = 'toast show' + (type ? ' '+type : '');
+  clearTimeout(showToast._tm);
+  showToast._tm = setTimeout(()=>{ t.classList.remove('show'); }, 3200);
 }
 
-async function loadMonths(){
-  const res = await fetch('/api/months');
-  const data = await res.json();
-  const now = new Date();
-  const currentYYYYMM = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
-  const months = data.months.includes(currentYYYYMM) ? data.months : [currentYYYYMM, ...data.months];
-
-  const picker = document.getElementById('monthPicker');
-  picker.innerHTML = months.map(m => `<option value="${m}">${monthLabel(m)}</option>`).join('');
-  CURRENT_MONTH = months[0];
-  picker.value = CURRENT_MONTH;
+// ── Header date display ──────────────────────────────────────
+function updateHeaderDate(){
+  document.getElementById('dateDisplay').firstChild.textContent = formatDisplayDate(currentDate) + ' ';
+  const today = istTodayISO();
+  const sub = document.getElementById('dateSub');
+  if(currentDate === today) sub.textContent = "Today";
+  else if(currentDate === addDays(today,-1)) sub.textContent = "Yesterday";
+  else if(currentDate === addDays(today,1)) sub.textContent = "Tomorrow";
+  else sub.textContent = new Date(currentDate+'T00:00:00').toLocaleDateString('en-GB',{weekday:'long'});
+  document.getElementById('datePicker').value = currentDate;
 }
-function monthLabel(yyyymm){
-  const [y,m] = yyyymm.split('-');
-  return new Date(Number(y), Number(m)-1, 1).toLocaleString('en-GB',{month:'long', year:'numeric'});
-}
-document.getElementById('monthPicker').addEventListener('change', (e)=>{
-  CURRENT_MONTH = e.target.value;
-  EDIT_MODE = 'month';
-  document.querySelectorAll('.edit-preset-btn').forEach(b => b.classList.remove('active'));
-  document.getElementById('editMoreSelect').value = '';
-  document.getElementById('editFromInput').value = '';
-  document.getElementById('editToInput').value = '';
-  document.getElementById('editRangeSummary').textContent = '';
-  loadRecords();
-});
-document.getElementById('verticalPicker').addEventListener('change', loadReports);
 
-// ── Upload ────────────────────────────────────────────
-document.getElementById('uploadBtn').addEventListener('click', async ()=>{
-  const fileInput = document.getElementById('csvFile');
-  const statusEl = document.getElementById('uploadStatus');
-  if(!fileInput.files.length){ showToast('Choose a CSV file first.', true); return; }
-  const fd = new FormData();
-  fd.append('file', fileInput.files[0]);
-  statusEl.textContent = 'Uploading…';
+// ── Data loading ─────────────────────────────────────────────
+async function loadDate(dateStr){
+  currentDate = dateStr;
+  updateHeaderDate();
   try{
-    const res = await fetch('/api/upload', { method:'POST', body: fd });
+    const res = await fetch(`/api/schedule/${dateStr}`);
+    if(res.status === 401){ showLogin(); return; }
+    const data = await res.json();
+    rows = data.success ? data.rows : [];
+  }catch(e){
+    rows = [];
+    showToast('Could not reach the server. Is it running?', 't-error');
+  }
+  renderAll();
+}
+
+// ── Table ────────────────────────────────────────────────────
+function renderTable(){
+  const tbody = document.getElementById('tbody');
+  const onLeaveCount = rows.filter(r=>r.onLeave).length;
+  document.getElementById('rowCount').innerHTML = rows.length
+    ? `<b>${rows.length - onLeaveCount}</b> scheduled &nbsp;·&nbsp; <b>${onLeaveCount}</b> on leave &nbsp;·&nbsp; ${rows.length} total`
+    : '—';
+
+  if(rows.length === 0){
+    tbody.innerHTML = `<tr><td colspan="8">
+      <div class="empty-state">
+        <div class="em-icon">👥</div>
+        <h3>No master roster set up yet</h3>
+        <p>Add your team once — every day will auto-generate from it after that.</p>
+        <button class="btn btn-teal" onclick="openRosterModal()">👥 Set up master roster</button>
+      </div>
+    </td></tr>`;
+    return;
+  }
+
+  const showCurrent = currentDate === istTodayISO();
+  const nowMin = showCurrent ? istNowMinutes() : null;
+
+  tbody.innerHTML = rows.map((r,i)=>{
+    const isNow = showCurrent && isCurrentSlot(r, nowMin);
+    const rowClass = [r.onLeave?'row-leave':'', isNow?'row-current':''].filter(Boolean).join(' ');
+    return `
+    <tr class="${rowClass}">
+      <td class="sno-cell">${i+1}</td>
+      <td class="name-cell">${escAttr(r.name)}</td>
+      <td>${escAttr(r.region)}</td>
+      <td class="mono-cell">${r.onLeave ? '<span class="leave-badge">ON LEAVE</span>' : `
+        <select class="shift-select" title="Manually set this person's shift timing for today (doesn't affect Ticket Time Window)" onchange="setShiftLabel('${r.id}', this.value)">
+          ${shiftOptionsList(r.shiftLabel || fixedShiftFor(r.id)).map(t=>`<option value="${t}" ${t===(r.shiftLabel||fixedShiftFor(r.id))?'selected':''}>${t}</option>`).join('')}
+        </select>
+      `}</td>
+      <td class="mono-cell">${r.onLeave ? '—' : escAttr(r.ticketTimeWindow)}${isNow ? '<span class="now-badge">NOW</span>' : ''}</td>
+      <td class="duration-cell">${formatDuration(r.durationMin)}</td>
+      <td style="text-align:center">
+        <label class="switch" title="${r.onLeave?'Mark available':'Mark on leave'}">
+          <input type="checkbox" ${r.onLeave?'checked':''} onchange="toggleLeave('${r.id}', this.checked)">
+          <span class="slider"></span>
+        </label>
+      </td>
+      <td>
+        <div class="row-actions">
+          <button class="icon-btn" onclick="moveRow(${i},-1)" ${i===0?'disabled':''} title="Move up" aria-label="Move up">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 19V5M5 12l7-7 7 7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <button class="icon-btn" onclick="moveRow(${i},1)" ${i===rows.length-1?'disabled':''} title="Move down" aria-label="Move down">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12l7 7 7-7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <select class="tr-select reorder-select" title="Jump straight to a slot" onchange="moveRowToPosition(${i}, Number(this.value))">
+            ${rows.map((row2,j)=>`<option value="${j}" ${j===i?'selected':''}>#${j+1} — ${row2.onLeave ? 'on leave' : fmtTime12(row2.shiftSlot)}</option>`).join('')}
+          </select>
+        </div>
+      </td>
+    </tr>
+  `;
+  }).join('');
+}
+
+// ── Timeline ──────────────────────────────────────────────────
+function renderTimeline(){
+  const track = document.getElementById('timelineTrack');
+  const hoursEl = document.getElementById('tlHours');
+  const legendEl = document.getElementById('legend');
+
+  const valid = rows
+    .map((r,i)=>({ ...r, _min: timeToMinutes(r.shiftSlot), _idx:i }))
+    .filter(r => r.onLeave || r._min !== null)
+    .sort((a,b)=> (a._min ?? 999999) - (b._min ?? 999999));
+
+  const working = valid.filter(r => !r.onLeave);
+  if(working.length === 0){
+    track.innerHTML = `<div class="timeline-empty">${rows.length ? 'Everyone is on leave today.' : 'Nobody in the master roster yet — add your team below.'}</div>`;
+    hoursEl.innerHTML = '';
+    legendEl.innerHTML = '';
+    return;
+  }
+
+  let segHtml = '';
+  for(let i=0;i<working.length;i++){
+    const cur = working[i];
+    const nextMin = (i < working.length-1) ? working[i+1]._min : cur._min + 1440/working.length; // fallback, shouldn't normally trigger
+    const widthPct = Math.max(0, ((nextMin - cur._min + 1440) % 1440 || 1440) / (24*60) * 100);
+    const color = colorForRegion(cur.region || 'Unassigned');
+    segHtml += `<div class="tl-seg" style="width:${widthPct}%;background:${color}">
+      <div class="tl-tip">${escAttr(cur.name||'—')} · ${escAttr(cur.region||'—')}<br>${escAttr(cur.shiftSlot||'')}${cur.ticketTimeWindow?(' · '+escAttr(cur.ticketTimeWindow)):''}</div>
+    </div>`;
+  }
+
+  if(currentDate === istTodayISO()){
+    const nowMin = istNowMinutes();
+    segHtml += `<div class="now-marker" style="left:${(nowMin/1440)*100}%"></div>`;
+  }
+
+  track.innerHTML = segHtml;
+  hoursEl.innerHTML = ['00:00','06:00','12:00','18:00','24:00'].map(h=>`<span>${h}</span>`).join('');
+
+  const seenRegions = [...new Set(working.map(r=>r.region||'Unassigned'))];
+  legendEl.innerHTML = seenRegions.map(r=>`
+    <div class="legend-item"><span class="legend-dot" style="background:${colorForRegion(r)}"></span>${escAttr(r)}</div>
+  `).join('') + (rows.some(r=>r.onLeave) ? `<div class="legend-item"><span class="legend-dot" style="background:repeating-linear-gradient(45deg,#D7DCE5,#D7DCE5 3px,#CBD2DE 3px,#CBD2DE 6px)"></span>On leave</div>` : '');
+}
+
+// ── Gap/overlap sanity-check (should normally show nothing, since the
+// scheduler guarantees contiguous coverage — kept as a safety net) ──
+function parseWindow(str){
+  const m = String(str||'').match(/^\s*(\d{1,2}):(\d{2})\s*(AM|PM)\s*[-–]\s*(\d{1,2}):(\d{2})\s*(AM|PM)\s*$/i);
+  if(!m) return null;
+  function to24(h,ap){ h=parseInt(h,10); ap=ap.toUpperCase(); if(ap==='PM'&&h!==12)h+=12; if(ap==='AM'&&h===12)h=0; return h; }
+  return { start: to24(m[1],m[3])*60 + parseInt(m[2],10), end: to24(m[4],m[6])*60 + parseInt(m[5],10) };
+}
+function fmtMin(totalMin){
+  let h = Math.floor(totalMin/60) % 24, mi = totalMin % 60;
+  const ap = h < 12 ? 'AM' : 'PM';
+  let h12 = h % 12; if(h12 === 0) h12 = 12;
+  return `${String(h12).padStart(2,'0')}:${String(mi).padStart(2,'0')} ${ap}`;
+}
+function renderWarnBanners(){
+  const parsed = rows.filter(r=>!r.onLeave).map(r => ({ ...r, win: parseWindow(r.ticketTimeWindow) })).filter(r => r.win);
+  parsed.sort((a,b) => a.win.start - b.win.start);
+  const gaps = [], overlaps = [];
+  for(let i=0;i<parsed.length-1;i++){
+    const cur = parsed[i], next = parsed[i+1];
+    if(cur.win.end + 1 < next.win.start){
+      gaps.push(`Between ${cur.name} (ends ${fmtMin(cur.win.end)}) and ${next.name} (starts ${fmtMin(next.win.start)})`);
+    } else if(cur.win.end > next.win.start + 1){
+      overlaps.push(`${cur.name} (ends ${fmtMin(cur.win.end)}) overlaps with ${next.name} (starts ${fmtMin(next.win.start)})`);
+    }
+  }
+  let html = '';
+  if(overlaps.length) html += `<div class="warn-banner w-overlap">${overlaps.map(o=>`<div class="warn-row">⚠️ Overlap — ${o}</div>`).join('')}</div>`;
+  if(gaps.length) html += `<div class="warn-banner w-gap">${gaps.map(g=>`<div class="warn-row">⏳ Gap — ${g}</div>`).join('')}</div>`;
+  document.getElementById('warnBanners').innerHTML = html;
+}
+
+// ── On-leave dashboard summary ─────────────────────────────────
+function renderLeaveSummary(){
+  const card = document.getElementById('leaveCard');
+  const badge = document.getElementById('leaveCountBadge');
+  const body = document.getElementById('leaveCardBody');
+  const dateNote = document.getElementById('leaveCardDate');
+
+  dateNote.textContent = formatDisplayDate(currentDate);
+
+  const onLeave = rows.filter(r => r.onLeave);
+  badge.textContent = onLeave.length;
+  badge.classList.toggle('non-zero', onLeave.length > 0);
+  card.classList.toggle('has-leave', onLeave.length > 0);
+
+  if(onLeave.length === 0){
+    body.innerHTML = `<div class="leave-empty">✅ ${rows.length ? 'Full team available — nobody on leave.' : 'No roster set up yet.'}</div>`;
+    return;
+  }
+
+  body.innerHTML = `<div class="leave-chips">${onLeave.map(r => `
+    <div class="leave-chip">
+      <span class="leave-chip-dot" style="background:${colorForRegion(r.region||'Unassigned')}"></span>
+      <span class="leave-chip-name">${escAttr(r.name)}</span>
+      <span class="leave-chip-region">${escAttr(r.region||'—')}</span>
+    </div>
+  `).join('')}</div>`;
+}
+
+function renderAll(){
+  renderTable();
+  renderTimeline();
+  renderWarnBanners();
+  renderLeaveSummary();
+}
+
+// ── Leave toggle / reorder / regenerate — all auto-save immediately ──
+async function toggleLeave(rosterId, onLeave){
+  try{
+    const res = await fetch(`/api/schedule/${currentDate}/leave`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ rosterId, onLeave })
+    });
     const data = await res.json();
     if(data.success){
-      statusEl.textContent = `+${data.added} new · ${data.skippedDuplicate} duplicate(s) skipped · months touched: ${data.monthsTouched.join(', ') || '—'}`;      showToast(`Imported ${data.added} new row(s).`);
-      await loadMonths();
-      if(data.monthsTouched.length){ CURRENT_MONTH = data.monthsTouched[0]; document.getElementById('monthPicker').value = CURRENT_MONTH; }
-      EDIT_MODE = 'month';
-      document.querySelectorAll('.edit-preset-btn').forEach(b => b.classList.remove('active'));
-      document.getElementById('editMoreSelect').value = '';
-      document.getElementById('editFromInput').value = '';
-      document.getElementById('editToInput').value = '';
-      document.getElementById('editRangeSummary').textContent = '';
-      loadRecords();
+      rows = data.rows;
+      renderAll();
+      showToast(onLeave ? 'Marked on leave — everyone else\'s time adjusted automatically.' : 'Marked available — schedule rebalanced.', 't-success');
     } else {
-      statusEl.textContent = '';
-      showToast(data.message || 'Upload failed.', true);
+      showToast(data.message || 'Could not update.', 't-error');
     }
-  }catch(e){ showToast('Could not reach the server.', true); }
-});
-
-// ── Data entry table ──────────────────────────────────
-function editDateRange(preset){ return repDateRange(preset); } // same calendar rules as Reports
-function editSetPreset(preset){
-  const [f, t] = editDateRange(preset);
-  editFrom = f; editTo = t; EDIT_MODE = 'range';
-  document.getElementById('editFromInput').value = editFrom;
-  document.getElementById('editToInput').value = editTo;
-  document.querySelectorAll('.edit-preset-btn').forEach(b => b.classList.toggle('active', b.dataset.preset === preset));
-  const moreSelect = document.getElementById('editMoreSelect');
-  const isMoreOption = [...moreSelect.options].some(o => o.value === preset);
-  moreSelect.value = isMoreOption ? preset : '';
-  moreSelect.classList.toggle('active', isMoreOption);
-  loadRecordsRange();
-}
-document.querySelectorAll('.edit-preset-btn').forEach(btn => btn.addEventListener('click', ()=> editSetPreset(btn.dataset.preset)));
-document.getElementById('editMoreSelect').addEventListener('change', function(){
-  if(this.value) editSetPreset(this.value);
-});
-document.getElementById('editFromInput').addEventListener('change', function(){
-  editFrom = this.value; EDIT_MODE = 'range';
-  document.querySelectorAll('.edit-preset-btn').forEach(b => b.classList.remove('active'));
-  document.getElementById('editMoreSelect').value = '';
-  if(editFrom && editTo) loadRecordsRange();
-});
-document.getElementById('editToInput').addEventListener('change', function(){
-  editTo = this.value; EDIT_MODE = 'range';
-  document.querySelectorAll('.edit-preset-btn').forEach(b => b.classList.remove('active'));
-  document.getElementById('editMoreSelect').value = '';
-  if(editFrom && editTo) loadRecordsRange();
-});
-document.getElementById('editClearFilterBtn').addEventListener('click', ()=>{
-  EDIT_MODE = 'month';
-  editFrom = null; editTo = null;
-  document.querySelectorAll('.edit-preset-btn').forEach(b => b.classList.remove('active'));
-  document.getElementById('editMoreSelect').value = '';
-  document.getElementById('editFromInput').value = '';
-  document.getElementById('editToInput').value = '';
-  document.getElementById('editRangeSummary').textContent = '';
-  loadRecords();
-});
-
-async function loadRecordsRange(){
-  if(!editFrom || !editTo) return;
-  document.getElementById('editRangeSummary').textContent = `${formatDisplayDate(editFrom)} → ${formatDisplayDate(editTo)}`;
-  let data;
-  try{ data = await apiCall(`/api/records/range?from=${editFrom}&to=${editTo}`); }
-  catch(e){ showToast(e.message, true); return; }
-  if(!data.success){ document.getElementById('editTableWrap').innerHTML = `<div class="empty">${escAttr(data.message||'Could not load records.')}</div>`; return; }
-  REASON_OPTIONS = data.reasonOptions; TIME_RANGE_OPTIONS = data.timeRangeOptions;
-  renderEditTable(data.records);
+  }catch(e){ showToast('Could not reach the server.', 't-error'); }
 }
 
-// Refresh whichever view is currently active — used after uploads/edits/deletes.
-function refreshEditView(){
-  if(EDIT_MODE === 'range') loadRecordsRange();
-  else loadRecords();
-}
-
-async function loadRecords(){
-  if(!CURRENT_MONTH) return;
-  const res = await fetch(`/api/records/${CURRENT_MONTH}`);
-  const data = await res.json();
-  if(!data.success){ document.getElementById('editTableWrap').innerHTML = `<div class="empty">${escAttr(data.message||'Could not load records.')}</div>`; return; }
-  REASON_OPTIONS = data.reasonOptions; TIME_RANGE_OPTIONS = data.timeRangeOptions;
-  renderEditTable(data.records);
-}
-
-function renderEditTable(records){
-  CURRENT_EDIT_RECORDS = records;
-  const wrap = document.getElementById('editTableWrap');
-  if(!records.length){ wrap.innerHTML = `<div class="empty">No records for this month yet. Upload a CSV above.</div>`; updateSelectedCount(); return; }
-
-  const groups = {};
-  records.forEach(r => { (groups[r.weekLabel] ||= []).push(r); });
-  const weekLabels = Object.keys(groups).sort((a,b)=> parseInt(a) - parseInt(b));
-
-  let html = `<table><thead><tr>
-    <th class="admin-only" style="width:30px"><input type="checkbox" id="selectAllRows"></th>
-    <th style="width:40px">Sl.No</th><th>Visitor ID</th><th>Department</th><th style="width:180px">Missed By</th>
-    <th>Attender</th><th style="width:150px">Date</th><th style="width:60px">Country</th>
-    <th style="width:130px">Time Range</th><th style="width:170px">Reason for Missed</th><th class="admin-only" style="width:40px"></th>
-  </tr></thead><tbody>`;
-
-  weekLabels.forEach(wk => {
-    html += `<tr class="week-head"><td colspan="11">${escAttr(wk)}</td></tr>`;
-    groups[wk].forEach((r, i) => {
-      html += `<tr data-id="${escAttr(r.id)}" data-yyyymm="${escAttr(r._yyyymm || CURRENT_MONTH || '')}">
-        <td class="admin-only"><input type="checkbox" class="row-checkbox" value="${escAttr(r.id)}"></td>
-        <td>${i+1}</td>
-        <td>${escAttr(r.visitorId)}</td>
-        <td>${escAttr(r.department)}</td>
-        <td><input class="cell-input missed-by" type="text" value="${escAttr(r.missedBy)}" placeholder="Names…"></td>
-        <td>${escAttr(r.attender)}</td>
-        <td>${formatDate(r.dateISO)}</td>
-        <td>${escAttr(r.country)}</td>
-        <td><select class="cell-select time-range">${TIME_RANGE_OPTIONS.map(t=>`<option value="${t}" ${t===r.timeRange?'selected':''}>${t}</option>`).join('')}</select></td>
-        <td><select class="cell-select reason ${r.reasonForMissed?'':'empty'}">
-              <option value="">— pick —</option>
-              ${REASON_OPTIONS.map(rs=>`<option value="${escAttr(rs)}" ${rs===r.reasonForMissed?'selected':''}>${escAttr(rs)}</option>`).join('')}
-            </select></td>
-        <td class="admin-only"><button class="btn danger" style="padding:4px 8px;font-size:11px" onclick="deleteRecord('${escAttr(r.id)}','${escAttr(r._yyyymm || CURRENT_MONTH || '')}')">✕</button></td>
-      </tr>`;
+async function sendReorder(order){
+  try{
+    const res = await fetch(`/api/schedule/${currentDate}/reorder`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ order })
     });
-  });
-  html += `</tbody></table>`;
-  wrap.innerHTML = html;
-
-  document.getElementById('selectAllRows').addEventListener('change', (e)=>{
-    wrap.querySelectorAll('.row-checkbox').forEach(cb => cb.checked = e.target.checked);
-    updateSelectedCount();
-  });
-  wrap.querySelectorAll('.row-checkbox').forEach(cb => cb.addEventListener('change', updateSelectedCount));
-
-  wrap.querySelectorAll('tr[data-id]').forEach(tr => {
-    const id = tr.dataset.id;
-    const yyyymm = tr.dataset.yyyymm;
-    tr.querySelector('.missed-by').addEventListener('change', (e)=> saveField(id, { missedBy: e.target.value }, yyyymm));
-    tr.querySelector('.time-range').addEventListener('change', (e)=> saveField(id, { timeRange: e.target.value }, yyyymm));
-    tr.querySelector('.reason').addEventListener('change', (e)=>{
-      e.target.classList.toggle('empty', !e.target.value);
-      saveField(id, { reasonForMissed: e.target.value }, yyyymm);
-    });
-  });
-  updateSelectedCount();
+    const data = await res.json();
+    if(data.success){ rows = data.rows; renderAll(); }
+    else showToast(data.message || 'Could not reorder.', 't-error');
+  }catch(e){ showToast('Could not reach the server.', 't-error'); }
 }
 
-function updateSelectedCount(){
-  const count = document.querySelectorAll('.row-checkbox:checked').length;
-  document.getElementById('selectedCount').textContent = count;
-  document.getElementById('deleteSelectedBtn').disabled = count === 0;
+async function moveRow(idx, dir){
+  const target = idx + dir;
+  if(target < 0 || target >= rows.length) return;
+  const order = rows.map(r=>r.id);
+  [order[idx], order[target]] = [order[target], order[idx]];
+  await sendReorder(order);
 }
 
-async function saveField(id, body, yyyymm){
-  const month = yyyymm || CURRENT_MONTH;
+// Dropdown-driven reorder: jump a row straight to any slot position
+// (e.g. #1 = 5AM start) instead of clicking up/down one step at a time.
+// The server always recomputes shiftSlot/ticketTimeWindow from the new
+// order, so the dropdown and the ticket window can never fall out of sync.
+async function moveRowToPosition(idx, targetIdx){
+  if(idx === targetIdx) return;
+  const order = rows.map(r=>r.id);
+  const [movedId] = order.splice(idx, 1);
+  order.splice(targetIdx, 0, movedId);
+  await sendReorder(order);
+}
+
+async function regenerateDay(){
+  const ok = confirm("This resets today's order and clears any leave marks, rebuilding fresh from the master roster. Continue?");
+  if(!ok) return;
   try{
-    const data = await apiCall(`/api/records/${month}/${id}`, {
-      method:'PATCH', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)
-    });
-    if(!data.success) showToast(data.message || 'Could not save.', true);
-  }catch(e){ showToast(e.message, true); }
-}
-
-async function deleteRecord(id, yyyymm){
-  const month = yyyymm || CURRENT_MONTH;
-  if(!confirm('Remove this row? This cannot be undone.')) return;
-  try{
-    const data = await apiCall(`/api/records/${month}/${id}`, { method:'DELETE' });
-    if(data.success){ showToast('Row removed.'); refreshEditView(); }
-    else showToast(data.message || 'Could not delete.', true);
-  }catch(e){ showToast(e.message, true); }
-}
-
-// Wraps fetch + JSON parsing so failures are diagnosable instead of a
-// generic "could not reach the server" — e.g. a 404 from an endpoint that
-// doesn't exist yet (usually because the server process wasn't restarted
-// after updating server.js) now says exactly that.
-async function apiCall(url, options){
-  let res;
-  try{ res = await fetch(url, options); }
-  catch(e){ throw new Error('Could not reach the server at all — is it running?'); }
-  const text = await res.text();
-  let data;
-  try{ data = JSON.parse(text); }
-  catch(e){
-    throw new Error(`Server returned ${res.status} (not JSON) for ${url}. If you just updated server.js, make sure you stopped and restarted "node server.js" — Node doesn't auto-reload.`);
-  }
-  return data;
-}
-
-document.getElementById('deleteSelectedBtn').addEventListener('click', async ()=>{
-  const checked = [...document.querySelectorAll('.row-checkbox:checked')];
-  if(!checked.length) return;
-  if(!confirm(`Delete ${checked.length} selected row(s)? This cannot be undone.`)) return;
-  const byMonth = {};
-  checked.forEach(cb => {
-    const tr = cb.closest('tr[data-id]');
-    const month = tr.dataset.yyyymm || CURRENT_MONTH;
-    (byMonth[month] ||= []).push(cb.value);
-  });
-  try{
-    let removed = 0;
-    for(const [month, ids] of Object.entries(byMonth)){
-      const data = await apiCall(`/api/records/${month}/delete-bulk`, {
-        method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ ids })
-      });
-      if(data.success) removed += data.removed;
-      else showToast(data.message || `Could not delete rows for ${month}.`, true);
-    }
-    showToast(`${removed} row(s) removed.`);
-    refreshEditView();
-  }catch(e){ showToast(e.message, true); }
-});
-
-document.getElementById('deleteMonthBtn').addEventListener('click', async ()=>{
-  if(!CURRENT_MONTH) return;
-  if(!confirm(`Delete ALL data for ${monthLabel(CURRENT_MONTH)}? This removes the entire month and cannot be undone.`)) return;
-  try{
-    const data = await apiCall(`/api/months/${CURRENT_MONTH}`, { method:'DELETE' });
+    const res = await fetch(`/api/schedule/${currentDate}/regenerate`, { method:'POST' });
+    const data = await res.json();
     if(data.success){
-      showToast(`${monthLabel(CURRENT_MONTH)} deleted.`);
-      await loadMonths(); await refreshEditView(); if(document.getElementById('tab-reports').style.display !== 'none') loadReports();
-    } else showToast(data.message || 'Could not delete this month.', true);
-  }catch(e){ showToast(e.message, true); }
+      rows = data.rows;
+      renderAll();
+      showToast(`${formatDisplayDate(currentDate)} regenerated from the master roster.`, 't-success');
+    } else {
+      showToast(data.message || 'Could not regenerate.', 't-error');
+    }
+  }catch(e){ showToast('Could not reach the server.', 't-error'); }
+}
+
+// ── Master roster modal ────────────────────────────────────────
+let masterRoster = { cycleStart:'05:00', people:[] };
+
+async function loadMasterRoster(){
+  try{
+    const res = await fetch('/api/master-roster');
+    const data = await res.json();
+    if(data.success) masterRoster = { cycleStart: data.cycleStart, people: data.people };
+  }catch(e){ showToast('Could not load the master roster.', 't-error'); }
+}
+function renderRosterTable(){
+  document.getElementById('cycleStartInput').value = masterRoster.cycleStart || '05:00';
+  document.getElementById('rosterCount').textContent = `${masterRoster.people.length} people`;
+  const tbody = document.getElementById('rosterTbody');
+  if(masterRoster.people.length === 0){
+    tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:24px 12px">No one added yet. Add people below or import from Excel/CSV.</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = masterRoster.people.map((p,i)=>`
+    <tr>
+      <td class="sno-cell">${i+1}</td>
+      <td><input type="text" value="${escAttr(p.name)}" placeholder="Name" oninput="rosterUpdateField(${i},'name',this.value)"></td>
+      <td><input type="text" value="${escAttr(p.region)}" placeholder="Region (e.g. ANZ/APAC)" oninput="rosterUpdateField(${i},'region',this.value)"></td>
+      <td>
+        <div class="row-actions">
+          <button class="icon-btn" onclick="rosterMoveRow(${i},-1)" ${i===0?'disabled':''} title="Move up" aria-label="Move up">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 19V5M5 12l7-7 7 7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <button class="icon-btn" onclick="rosterMoveRow(${i},1)" ${i===masterRoster.people.length-1?'disabled':''} title="Move down" aria-label="Move down">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12l7 7 7-7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <button class="icon-btn danger" onclick="rosterRemoveRow(${i})" title="Remove" aria-label="Remove">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M4 7h16M9 7V5a2 2 0 012-2h2a2 2 0 012 2v2m2 0v13a2 2 0 01-2 2H9a2 2 0 01-2-2V7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+}
+function rosterUpdateField(idx, field, value){ masterRoster.people[idx][field] = value; }
+function rosterAddRow(){ masterRoster.people.push({ id:'', name:'', region:'' }); renderRosterTable(); }
+function rosterRemoveRow(idx){ masterRoster.people.splice(idx,1); renderRosterTable(); }
+function rosterMoveRow(idx, dir){
+  const target = idx + dir;
+  if(target < 0 || target >= masterRoster.people.length) return;
+  [masterRoster.people[idx], masterRoster.people[target]] = [masterRoster.people[target], masterRoster.people[idx]];
+  renderRosterTable();
+}
+async function saveMasterRoster(){
+  const btn = document.getElementById('rosterSaveBtn');
+  btn.disabled = true;
+  try{
+    const res = await fetch('/api/master-roster', {
+      method:'PUT', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ cycleStart: document.getElementById('cycleStartInput').value, people: masterRoster.people })
+    });
+    const data = await res.json();
+    if(data.success){
+      masterRoster = { cycleStart:data.cycleStart, people:data.people };
+      renderRosterTable();
+      showToast('Master roster saved.', 't-success');
+      loadDate(currentDate); // refresh in case the viewed day isn't saved yet
+    } else {
+      showToast(data.message || 'Could not save.', 't-error');
+    }
+  }catch(e){ showToast('Could not reach the server.', 't-error'); }
+  finally{ btn.disabled = false; }
+}
+function openRosterModal(){
+  loadMasterRoster().then(renderRosterTable);
+  document.getElementById('rosterModal').classList.add('open');
+}
+function closeRosterModal(){ document.getElementById('rosterModal').classList.remove('open'); }
+
+async function handleRosterImport(file){
+  if(!file) return;
+  const formData = new FormData();
+  formData.append('file', file);
+  showToast('Importing…');
+  try{
+    const res = await fetch('/api/master-roster/import', { method:'POST', body: formData });
+    const data = await res.json();
+    if(!data.success){ showToast(data.message || 'Import failed.', 't-error'); return; }
+    masterRoster = { cycleStart: data.cycleStart, people: data.people };
+    renderRosterTable();
+    showToast(`Imported ${data.people.length} people.${data.skipped ? ' ('+data.skipped+' row(s) skipped, missing a Name.)' : ''}`, 't-success');
+  }catch(e){ showToast('Could not reach the server.', 't-error'); }
+}
+
+// ── Date navigation ──────────────────────────────────────────
+// The header date nav is shared across pages. It always drives the
+// Shift Roster/ZIA Slot schedule (currentDate/rows), and — if the
+// Tracker tab happens to be the visible page — it drives the tracker's
+// own date too, so picking a date there actually reloads that day's
+// chat-assignment counts instead of leaving yesterday's numbers on
+// screen.
+function navigateDate(dateStr){
+  loadDate(dateStr);
+  if(currentPage === 'tracker') loadTracker(dateStr);
+  else trackerDate = dateStr;
+}
+document.getElementById('prevBtn').addEventListener('click', ()=> navigateDate(addDays(currentDate,-1)));
+document.getElementById('nextBtn').addEventListener('click', ()=> navigateDate(addDays(currentDate,1)));
+document.getElementById('todayBtn').addEventListener('click', ()=> navigateDate(currentPage === 'tracker' ? trackerTodayISO() : istTodayISO()));
+document.getElementById('regenerateBtn').addEventListener('click', regenerateDay);
+document.getElementById('exportDayBtn').addEventListener('click', ()=>{
+  window.location.href = `/api/export/leave/day/${currentDate}`;
+});
+document.getElementById('exportMonthBtn').addEventListener('click', ()=>{
+  const month = currentDate.slice(0,7); // YYYY-MM
+  window.location.href = `/api/export/leave/month/${month}`;
 });
 
-// ── Reports (executive dashboard) ─────────────────────
-const REP_COLORS = ['#2F80ED','#7C4DBE','#1D9A6C','#E8A33D','#D6455A','#0EA5B7','#64748B','#C2410C'];
+const dateDisplay = document.getElementById('dateDisplay');
+const datePicker  = document.getElementById('datePicker');
+dateDisplay.addEventListener('click', ()=> datePicker.showPicker ? datePicker.showPicker() : datePicker.click());
+dateDisplay.addEventListener('keydown', (e)=>{ if(e.key==='Enter' || e.key===' ') { e.preventDefault(); datePicker.showPicker ? datePicker.showPicker() : datePicker.click(); } });
+datePicker.addEventListener('change', ()=>{ if(datePicker.value) navigateDate(datePicker.value); });
 
-// Format a Date using its LOCAL date parts (not toISOString, which converts
-// to UTC first and silently shifts the date back a day in any timezone
-// ahead of UTC — that off-by-one was why "This week" showed 11-17 Jul
-// instead of 12-18 Jul).
-function toISO(date){ return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`; }
+document.getElementById('rosterBtn').addEventListener('click', openRosterModal);
+document.getElementById('rosterModalClose').addEventListener('click', closeRosterModal);
+document.getElementById('rosterModal').addEventListener('click', (e)=>{ if(e.target.id==='rosterModal') closeRosterModal(); });
+document.getElementById('rosterAddRowBtn').addEventListener('click', rosterAddRow);
+document.getElementById('rosterSaveBtn').addEventListener('click', saveMasterRoster);
+document.getElementById('rosterImportBtn').addEventListener('click', ()=> document.getElementById('rosterImportFile').click());
+document.getElementById('rosterImportFile').addEventListener('change', (e)=>{
+  handleRosterImport(e.target.files[0]);
+  e.target.value = '';
+});
 
-function repDateRange(preset){
-  const today = todayISO();
-  const d = new Date(today + 'T00:00:00');
-  const y = d.getFullYear(), m = d.getMonth();
+// refresh the "now" marker / current-slot highlight every minute
+setInterval(()=>{ if(currentDate === istTodayISO()){ renderTimeline(); renderTable(); } }, 60000);
 
-  if(preset === 'today') return [today, today];
+// ── SMB Chat Assignment Live Tracker ───────────────────────────
+let trackerRoster = { people: [] };
+let trackerState = { events: [], countsBySmb: {}, totalsByEbs: {}, matrix: {}, totalToday: 0 };
+let trackerDate = trackerTodayISO();
+let trackerDayRows = []; // today's schedule rows, for the left sidebar + leave flags
+let selectedEbsId = localStorage.getItem('ziashift_ebs_id') || ''; // only meaningful for Admin's override picker
+let currentPage = 'roster';
+let trFeedFilterEbsId = null; // click an EBS tech's card to show only their entries in Live Activity
 
-  if(preset === 'week'){
-    // Sunday-Saturday calendar week containing today (matches how weeks are
-    // grouped everywhere else in the app), not a rolling 7-day lookback.
-    const s = new Date(d); s.setDate(s.getDate() - s.getDay()); // back up to Sunday
-    const e = new Date(s); e.setDate(e.getDate() + 6); // forward to Saturday
-    return [toISO(s), toISO(e)];
-  }
-  if(preset === 'lastweek'){
-    // The Sunday-Saturday week immediately before this week.
-    const s = new Date(d); s.setDate(s.getDate() - s.getDay() - 7);
-    const e = new Date(s); e.setDate(e.getDate() + 6);
-    return [toISO(s), toISO(e)];
-  }
-  if(preset === 'month'){
-    // Full current calendar month: the 1st through its last day.
-    const s = new Date(y, m, 1);
-    const e = new Date(y, m + 1, 0);
-    return [toISO(s), toISO(e)];
-  }
-  if(preset === 'lastmonth'){
-    // Full previous calendar month, e.g. if today is in July: Jun 1 - Jun 30.
-    const s = new Date(y, m - 1, 1);
-    const e = new Date(y, m, 0);
-    return [toISO(s), toISO(e)];
-  }
-  if(preset === 'quarter'){
-    // "Last 3 months" = the 3 full calendar months before this one,
-    // e.g. if today is in July: Apr 1 - Jun 30 (not a rolling 90-day window).
-    const s = new Date(y, m - 3, 1);
-    const e = new Date(y, m, 0);
-    return [toISO(s), toISO(e)];
-  }
-  if(preset === 'last6months'){
-    const s = new Date(y, m - 6, 1);
-    const e = new Date(y, m, 0);
-    return [toISO(s), toISO(e)];
-  }
-  if(preset === 'last12months'){
-    const s = new Date(y, m - 12, 1);
-    const e = new Date(y, m, 0);
-    return [toISO(s), toISO(e)];
-  }
-  if(preset === 'last12weeks'){
-    // 12 full Sunday-Saturday weeks, ending with the current week.
-    const thisSun = new Date(d); thisSun.setDate(thisSun.getDate() - thisSun.getDay());
-    const thisSat = new Date(thisSun); thisSat.setDate(thisSat.getDate() + 6);
-    const s = new Date(thisSun); s.setDate(s.getDate() - 11 * 7);
-    return [toISO(s), toISO(thisSat)];
-  }
-  if(preset === 'year'){
-    const s = new Date(y, 0, 1);
-    const e = new Date(y, 11, 31);
-    return [toISO(s), toISO(e)];
-  }
-  if(preset === 'lastyear'){
-    const s = new Date(y - 1, 0, 1);
-    const e = new Date(y - 1, 11, 31);
-    return [toISO(s), toISO(e)];
-  }
-  return [repFrom, repTo];
+let secTrackerState = { securityEvents: [], countsBySecurity: {}, totalsByAssigner: {}, matrixSecurity: {}, totalSecurityToday: 0 };
+let securityDate = trackerTodayISO();
+let selectedAssignerId = localStorage.getItem('ziashift_assigner_id') || ''; // admin's override picker only
+
+function ebsList(){ return trackerRoster.people.filter(p => p.mode === 'EBS'); }
+function smbList(){ return trackerRoster.people.filter(p => p.mode === 'SMB'); }
+function securityList(){ return trackerRoster.people.filter(p => p.mode === 'SECURITY'); }
+
+function switchPage(page){
+  currentPage = page;
+  document.getElementById('shiftRosterMain').style.display = page === 'shiftroster' ? 'block' : 'none';
+  document.getElementById('rosterMain').style.display = page === 'roster' ? 'block' : 'none';
+  document.getElementById('trackerMain').style.display = page === 'tracker' ? 'block' : 'none';
+  document.getElementById('securityMain').style.display = page === 'security' ? 'block' : 'none';
+  document.getElementById('reportsMain').style.display = page === 'reports' ? 'block' : 'none';
+  document.getElementById('navShiftRosterBtn').classList.toggle('active', page === 'shiftroster');
+  document.getElementById('navRosterBtn').classList.toggle('active', page === 'roster');
+  document.getElementById('navTrackerBtn').classList.toggle('active', page === 'tracker');
+  document.getElementById('navSecurityBtn').classList.toggle('active', page === 'security');
+  document.getElementById('navReportsBtn').classList.toggle('active', page === 'reports');
+  if(page === 'tracker') loadTracker(trackerDate);
+  if(page === 'security') loadSecurityTracker(securityDate);
+  if(page === 'shiftroster') renderShiftRosterTable();
+  if(page === 'reports') loadReports();
 }
+document.getElementById('navShiftRosterBtn').addEventListener('click', ()=> switchPage('shiftroster'));
+document.getElementById('navRosterBtn').addEventListener('click', ()=> switchPage('roster'));
+document.getElementById('navTrackerBtn').addEventListener('click', ()=> switchPage('tracker'));
+document.getElementById('navSecurityBtn').addEventListener('click', ()=> switchPage('security'));
+document.getElementById('navReportsBtn').addEventListener('click', ()=> switchPage('reports'));
+
+// ── Shift Roster (new, static reference table) ──
+function renderShiftRosterTable(){
+  const tbody = document.getElementById('shiftRosterTbody');
+  const modeClass = m => m === 'EBS' ? 'ebs' : m === 'SECURITY' ? 'security' : 'smb';
+  const rowClass = m => m === 'EBS' ? 'row-ebs' : m === 'SECURITY' ? 'row-security' : '';
+  const groupLabel = m => m === 'EBS' ? 'EBS Chat' : m === 'SECURITY' ? 'Security' : 'Chat';
+  tbody.innerHTML = trackerRoster.people.map((p, i) => `
+    <tr class="${rowClass(p.mode)}">
+      <td class="sno-cell">${i+1}</td>
+      <td class="name-cell">${escAttr(p.name)}</td>
+      <td>${groupLabel(p.mode)}</td>
+      <td><span class="mode-pill mode-${modeClass(p.mode)}">${escAttr(p.mode)}</span></td>
+      <td>${escAttr(p.region||'—')}</td>
+      <td class="mono-cell">${escAttr(p.shift||'—')}</td>
+    </tr>
+  `).join('') || `<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:24px">No roster set up yet.</td></tr>`;
+}
+
+// ── Reports module ──────────────────────────────────────────
+// View-only overview for the whole team, over a selectable date range.
+// Aggregates the same /api/tracker/:date and /api/schedule/:date payloads
+// the Live Tracker and Shift Roster pages already use — no new backend
+// endpoints, just summed client-side across every date in the range.
+let reportsState = null;
+let reportsSubtab = 'chat';
+let repFrom = null, repTo = null;
+const REP_COLORS = ['#1671C9','#7C4DBE','#1E9E6D','#E8A33D','#C0392B','#0F5296','#64748B','#2E86AB'];
+const REP_MAX_RANGE_DAYS = 120; // safety cap so a mis-picked range can't fire hundreds of requests
+
+function repDateRange(from, to){
+  const dates = [];
+  let d = new Date(from + 'T00:00:00');
+  const end = new Date(to + 'T00:00:00');
+  if(isNaN(d) || isNaN(end) || d > end) return [];
+  while(d <= end){
+    dates.push(d.toISOString().slice(0,10));
+    d.setDate(d.getDate() + 1);
+  }
+  return dates;
+}
+
 function repSetPreset(preset){
-  const [f, t] = repDateRange(preset);
-  repFrom = f; repTo = t;
+  const today = trackerTodayISO();
+  if(preset === 'today'){ repFrom = today; repTo = today; }
+  else if(preset === 'week'){ const d = new Date(today+'T00:00:00'); d.setDate(d.getDate()-6); repFrom = d.toISOString().slice(0,10); repTo = today; }
+  else if(preset === 'month'){ repFrom = today.slice(0,8) + '01'; repTo = today; }
+  document.querySelectorAll('.rep-preset-btn').forEach(b => b.classList.toggle('active', b.dataset.preset === preset));
   document.getElementById('repFromInput').value = repFrom;
   document.getElementById('repToInput').value = repTo;
-  document.querySelectorAll('.rep-preset-btn').forEach(b => b.classList.toggle('active', b.dataset.preset === preset));
-  const moreSelect = document.getElementById('repMoreSelect');
-  const isMoreOption = [...moreSelect.options].some(o => o.value === preset);
-  moreSelect.value = isMoreOption ? preset : '';
-  moreSelect.classList.toggle('active', isMoreOption);
   loadReports();
 }
 document.querySelectorAll('.rep-preset-btn').forEach(btn => btn.addEventListener('click', ()=> repSetPreset(btn.dataset.preset)));
-document.getElementById('repMoreSelect').addEventListener('change', function(){
-  if(this.value) repSetPreset(this.value);
-});
 document.getElementById('repFromInput').addEventListener('change', function(){
   repFrom = this.value;
   document.querySelectorAll('.rep-preset-btn').forEach(b => b.classList.remove('active'));
-  const moreSelect = document.getElementById('repMoreSelect');
-  moreSelect.value = ''; moreSelect.classList.remove('active');
   loadReports();
 });
 document.getElementById('repToInput').addEventListener('change', function(){
   repTo = this.value;
   document.querySelectorAll('.rep-preset-btn').forEach(b => b.classList.remove('active'));
-  const moreSelect = document.getElementById('repMoreSelect');
-  moreSelect.value = ''; moreSelect.classList.remove('active');
   loadReports();
 });
 
 async function loadReports(){
-  if(!repFrom || !repTo){ repSetPreset('month'); return; } // sets both + calls loadReports() itself
-  const vertical = document.getElementById('verticalPicker').value;
-  document.getElementById('repRangeSummary').textContent = `${formatDisplayDate(repFrom)} → ${formatDisplayDate(repTo)} · ${vertical === 'All' ? 'All verticals' : vertical}`;
+  if(!repFrom || !repTo) repSetPreset('month'); // sets both + calls loadReports() itself
+  let dates = repDateRange(repFrom, repTo);
+  if(!dates.length){ showToast('Invalid date range', 't-error'); return; }
+  if(dates.length > REP_MAX_RANGE_DAYS){
+    dates = dates.slice(dates.length - REP_MAX_RANGE_DAYS);
+    showToast(`Range capped to the most recent ${REP_MAX_RANGE_DAYS} days`, 't-error');
+  }
+  document.getElementById('repRangeSummary').textContent =
+    `Showing ${formatDisplayDate(repFrom)} – ${formatDisplayDate(repTo)} · ${dates.length} day${dates.length===1?'':'s'}`;
 
-  // Immediate feedback so a cold Render instance waking up (free-tier
-  // spin-down after ~15 min idle) doesn't look like the click did nothing —
-  // this shows the moment the tab/filter is clicked, before the fetch below
-  // even resolves.
-  document.getElementById('repKpis').innerHTML = Array.from({length:6}).map(()=>
-    `<div class="rep-kpi-card"><div class="rep-kpi-num" style="color:var(--border)">···</div><div class="rep-kpi-label">Loading…</div></div>`
-  ).join('');
+  let authFailed = false;
+  async function safeFetch(url){
+    try{
+      const res = await fetch(url);
+      if(res.status === 401){ authFailed = true; return null; }
+      return await res.json();
+    }catch(e){ return null; }
+  }
 
-  let data;
-  try{
-    data = await apiCall(`/api/report/range?from=${repFrom}&to=${repTo}&vertical=${encodeURIComponent(vertical)}`);
-  }catch(e){ showToast(e.message, true); return; }
-  if(!data.success){ showToast(data.message || 'Could not load report.', true); return; }
-  renderReports(data);
+  const [trackerResults, scheduleResults, todaySchedule] = await Promise.all([
+    Promise.all(dates.map(d => safeFetch(`/api/tracker/${d}`))),
+    Promise.all(dates.map(d => safeFetch(`/api/schedule/${d}`))),
+    safeFetch(`/api/schedule/${trackerTodayISO()}`)
+  ]);
+
+  if(authFailed){ showLogin(); return; }
+
+  const chatTotalsBySmb = {}, secTotalsBySecurity = {}, assignerTotals = {};
+  let chatGrandTotal = 0, secGrandTotal = 0;
+  trackerResults.forEach(data => {
+    if(!data || !data.success) return;
+    chatGrandTotal += data.totalToday || 0;
+    secGrandTotal += data.totalSecurityToday || 0;
+    Object.entries(data.countsBySmb||{}).forEach(([id,v]) => chatTotalsBySmb[id] = (chatTotalsBySmb[id]||0) + v);
+    Object.entries(data.countsBySecurity||{}).forEach(([id,v]) => secTotalsBySecurity[id] = (secTotalsBySecurity[id]||0) + v);
+    Object.entries(data.totalsByAssigner||{}).forEach(([id,v]) => assignerTotals[id] = (assignerTotals[id]||0) + v);
+  });
+
+  const leaveDaysByPerson = {}; // id -> {name, region, count}
+  let leaveTotalDays = 0;
+  scheduleResults.forEach(data => {
+    if(!data || !data.success) return;
+    (data.rows||[]).forEach(r => {
+      if(!leaveDaysByPerson[r.id]) leaveDaysByPerson[r.id] = { name: r.name, region: r.region, count: 0 };
+      if(r.onLeave){ leaveDaysByPerson[r.id].count++; leaveTotalDays++; }
+    });
+  });
+  const todayOnLeave = (todaySchedule && todaySchedule.success) ? (todaySchedule.rows||[]).filter(r => r.onLeave) : [];
+
+  reportsState = { chatTotalsBySmb, secTotalsBySecurity, assignerTotals, chatGrandTotal, secGrandTotal,
+                    leaveDaysByPerson, leaveTotalDays, todayOnLeave, rangeDays: dates.length };
+  renderReports();
 }
 
-function formatDisplayDate(iso){
-  const d = new Date(iso + 'T00:00:00');
-  return d.toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' });
+document.getElementById('repTabChat').addEventListener('click', ()=> switchReportsSubtab('chat'));
+document.getElementById('repTabSecurity').addEventListener('click', ()=> switchReportsSubtab('security'));
+document.getElementById('repTabLeave').addEventListener('click', ()=> switchReportsSubtab('leave'));
+function switchReportsSubtab(tab){
+  reportsSubtab = tab;
+  document.getElementById('repTabChat').classList.toggle('active', tab === 'chat');
+  document.getElementById('repTabSecurity').classList.toggle('active', tab === 'security');
+  document.getElementById('repTabLeave').classList.toggle('active', tab === 'leave');
+  document.getElementById('repPanelChat').style.display = tab === 'chat' ? 'block' : 'none';
+  document.getElementById('repPanelSecurity').style.display = tab === 'security' ? 'block' : 'none';
+  document.getElementById('repPanelLeave').style.display = tab === 'leave' ? 'block' : 'none';
 }
 
 function repKpiCard(num, label, sub, extraClass){
@@ -786,9 +1655,7 @@ function repKpiCard(num, label, sub, extraClass){
   </div>`;
 }
 
-// Horizontal bar chart — self-contained CSS/HTML, no external library,
-// so it always renders (no CDN dependency, no canvas-sizing edge cases).
-function repBarChart(rows){
+function repBarChart(rows){ // rows: [{name, value}]
   if(!rows.length) return `<div class="rep-empty">No data for this range yet.</div>`;
   const max = Math.max(...rows.map(r=>r.value), 1);
   return rows.map(r => `
@@ -800,8 +1667,7 @@ function repBarChart(rows){
   `).join('');
 }
 
-// Donut chart — pure inline SVG, same reasoning as the bar chart above.
-function repDonutChart(rows){
+function repDonutChart(rows){ // rows: [{name, value}]
   const total = rows.reduce((s,r)=>s+r.value,0);
   if(!total) return `<div class="rep-empty">No data for this range yet.</div>`;
   const cx = 90, cy = 90, r = 70, circumference = 2 * Math.PI * r;
@@ -830,212 +1696,927 @@ function repDonutChart(rows){
   `;
 }
 
-function renderReports(data){
-  const { total, avgPerDay, topReason, topTimeSlot, topMissedBy, reasonFilledPct, missedByFilledPct, byReason, byVertical, byTimeSlot, byDepartment, byWeek, byMissedBy } = data;
+function repLeaveTodayList(rows){
+  if(!rows.length) return `<div class="rep-empty">✅ Nobody on leave today.</div>`;
+  return rows.map(r => `
+    <div class="rep-leave-row">
+      <span>${escAttr(r.name)}</span>
+      <span style="color:var(--muted)">${escAttr(r.region||'—')}</span>
+    </div>
+  `).join('');
+}
 
-  document.getElementById('repKpis').innerHTML = [
-    repKpiCard(total, 'Total missed chats'),
-    repKpiCard(avgPerDay.toFixed(1), 'Avg per day'),
-    topReason ? repKpiCard(topReason.value, 'Top reason', topReason.name, 'rep-kpi-highest') : repKpiCard(0, 'Top reason'),
-    topTimeSlot ? repKpiCard(topTimeSlot.value, 'Busiest time slot', topTimeSlot.name, 'rep-kpi-highest') : repKpiCard(0, 'Busiest time slot'),
-    topMissedBy ? repKpiCard(topMissedBy.value, 'Most missed by', topMissedBy.name, 'rep-kpi-highest') : repKpiCard(0, 'Most missed by', 'No names filled in yet'),
-    repKpiCard(reasonFilledPct + '%', 'Reason filled in', reasonFilledPct < 100 ? 'Some rows still need a reason' : 'All rows done', reasonFilledPct < 60 ? 'rep-kpi-highest' : 'rep-kpi-lowest'),
+function renderReports(){
+  if(!reportsState) return;
+  const roster = trackerRoster.people || [];
+
+  // ── Chat Tracker sub-tab ──
+  const smb = roster.filter(p => p.mode === 'SMB');
+  const counts = reportsState.chatTotalsBySmb || {};
+  const totalChats = reportsState.chatGrandTotal || 0;
+  const activeSmb = smb.filter(p => (counts[p.id]||0) > 0).length;
+  const avg = smb.length ? (totalChats / smb.length) : 0;
+  let busiest = null, quietest = null;
+  smb.forEach(p => {
+    const c = counts[p.id] || 0;
+    if(!busiest || c > (counts[busiest.id]||0)) busiest = p;
+    if(!quietest || c < (counts[quietest.id]||0)) quietest = p;
+  });
+
+  document.getElementById('repChatKpis').innerHTML = [
+    repKpiCard(totalChats, 'Chats assigned'),
+    repKpiCard(avg.toFixed(1), 'Avg per SMB tech'),
+    repKpiCard(activeSmb + ' / ' + smb.length, 'Techs with 1+ chat'),
+    busiest ? repKpiCard(counts[busiest.id]||0, 'Highest load', busiest.name, 'rep-kpi-highest') : '',
+    quietest ? repKpiCard(counts[quietest.id]||0, 'Lowest load', quietest.name, 'rep-kpi-lowest') : '',
   ].join('');
 
-  document.getElementById('repReasonBar').innerHTML = repBarChart(byReason);
-  document.getElementById('repVerticalDonut').innerHTML = repDonutChart(byVertical);
-  document.getElementById('repWeekBar').innerHTML = repBarChart(byWeek);
-  document.getElementById('repDeptDonut').innerHTML = repDonutChart(byDepartment);
-  document.getElementById('repMissedByBar').innerHTML = byMissedBy.length
-    ? repBarChart(byMissedBy)
-    : `<div class="rep-empty">No rows have a name in "Missed By" yet (${missedByFilledPct}% filled in) — fill it in on the Import & Edit tab to see who's missing the most chats.</div>`;
-  document.getElementById('repTimeSlotBar').innerHTML = repBarChart(byTimeSlot);
+  const chatBarRows = smb.map(p => ({ name: p.name, value: counts[p.id]||0 })).sort((a,b)=>b.value-a.value);
+  document.getElementById('repChatBar').innerHTML = repBarChart(chatBarRows);
+
+  const regionTotals = {};
+  smb.forEach(p => { const region = p.region || 'Unassigned'; regionTotals[region] = (regionTotals[region]||0) + (counts[p.id]||0); });
+  const donutRows = Object.entries(regionTotals).map(([name,value])=>({name,value})).sort((a,b)=>b.value-a.value);
+  document.getElementById('repChatDonut').innerHTML = repDonutChart(donutRows);
+
+  // ── Security Tracker sub-tab ──
+  const security = roster.filter(p => p.mode === 'SECURITY');
+  const secCounts = reportsState.secTotalsBySecurity || {};
+  const totalSec = reportsState.secGrandTotal || 0;
+  const activeSec = security.filter(p => (secCounts[p.id]||0) > 0).length;
+  const avgSec = security.length ? (totalSec / security.length) : 0;
+  let busiestSec = null;
+  security.forEach(p => { const c = secCounts[p.id]||0; if(!busiestSec || c > (secCounts[busiestSec.id]||0)) busiestSec = p; });
+
+  // Top assigners: who (EBS/SMB/Admin) sent the most tickets to Security in this range
+  const assignerTotals = reportsState.assignerTotals || {};
+  const assignerRows = Object.entries(assignerTotals)
+    .map(([assignerId, value]) => { const person = roster.find(p => p.id === assignerId); return { name: person ? person.name : assignerId, value }; })
+    .sort((a,b)=>b.value-a.value);
+  const topAssigner = assignerRows[0] || null;
+
+  document.getElementById('repSecKpis').innerHTML = [
+    repKpiCard(totalSec, 'Tickets assigned'),
+    repKpiCard(avgSec.toFixed(1), 'Avg per Security tech'),
+    repKpiCard(activeSec + ' / ' + security.length, 'Techs with 1+ ticket'),
+    busiestSec ? repKpiCard(secCounts[busiestSec.id]||0, 'Highest load', busiestSec.name, 'rep-kpi-highest') : '',
+    topAssigner ? repKpiCard(topAssigner.value, 'Highest ticket assigner', topAssigner.name, 'rep-kpi-highest') : '',
+  ].join('');
+
+  const secBarRows = security.map(p => ({ name: p.name, value: secCounts[p.id]||0 })).sort((a,b)=>b.value-a.value);
+  document.getElementById('repSecBar').innerHTML = repBarChart(secBarRows);
+  document.getElementById('repSecDonut').innerHTML = repDonutChart(assignerRows.slice(0,8));
+
+  // ── Leave Report sub-tab ──
+  const leaveMap = reportsState.leaveDaysByPerson || {};
+  const leaveEntries = Object.values(leaveMap);
+  let mostLeave = null;
+  leaveEntries.forEach(p => { if(!mostLeave || p.count > mostLeave.count) mostLeave = p; });
+
+  document.getElementById('repLeaveKpis').innerHTML = [
+    repKpiCard(reportsState.leaveTotalDays||0, 'Total leave-days in range'),
+    repKpiCard((reportsState.todayOnLeave||[]).length, 'On leave today'),
+    mostLeave && mostLeave.count > 0 ? repKpiCard(mostLeave.count, 'Most leave days', mostLeave.name, 'rep-kpi-highest') : repKpiCard(0, 'Most leave days'),
+    repKpiCard(reportsState.rangeDays||0, 'Days in range'),
+  ].join('');
+
+  const leaveBarRows = leaveEntries.map(p => ({ name: p.name, value: p.count })).sort((a,b)=>b.value-a.value);
+  document.getElementById('repLeaveBar').innerHTML = repBarChart(leaveBarRows);
+  document.getElementById('repLeaveToday').innerHTML = repLeaveTodayList(reportsState.todayOnLeave||[]);
 }
 
-// ── Export / Print (available to Admin and Guest — read-only actions) ──
-function csvEscape(val){
-  const s = String(val ?? '');
-  return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
-}
-function downloadBlob(blob, filename){
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url; a.download = filename;
-  document.body.appendChild(a); a.click(); a.remove();
-  setTimeout(()=>URL.revokeObjectURL(url), 1000);
+function updateTrDateBadge(){
+  const today = trackerTodayISO();
+  document.getElementById('trDateBadge').textContent =
+    formatDisplayDate(trackerDate) + (trackerDate === today ? ' · Today' : '');
 }
 
-document.getElementById('editExportCsvBtn').addEventListener('click', ()=>{
-  if(!CURRENT_EDIT_RECORDS.length){ showToast('No rows to export — pick a month or filter with data first.', true); return; }
-  const headers = ['Sl.No','Visitor ID','Department','Missed By','Attender','Date','Country','Time Range','Reason for Missed'];
-  const lines = [headers.join(',')];
-  CURRENT_EDIT_RECORDS.forEach((r, i) => {
-    lines.push([
-      i+1, r.visitorId, r.department, r.missedBy || '', r.attender,
-      formatDate(r.dateISO),
-      r.country, r.timeRange, r.reasonForMissed || ''
-    ].map(csvEscape).join(','));
-  });
-  const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
-  const stamp = (CURRENT_MONTH || 'custom-range');
-  downloadBlob(blob, `missed-chats-${stamp}.csv`);
-});
-
-document.getElementById('editPrintBtn').addEventListener('click', ()=>{ window.print(); });
-document.getElementById('reportPrintBtn').addEventListener('click', ()=>{ window.print(); });
-
-document.getElementById('reportJpegBtn').addEventListener('click', async ()=>{
-  const area = document.getElementById('reportExportArea');
+async function loadTrackerRoster(){
   try{
-    const canvas = await html2canvas(area, { backgroundColor: '#F4F6FB', scale: 2 });
-    canvas.toBlob(blob => {
-      if(!blob){ showToast('Could not generate the image.', true); return; }
-      downloadBlob(blob, `missed-chat-report-${new Date().toISOString().slice(0,10)}.jpg`);
-    }, 'image/jpeg', 0.95);
-  }catch(e){ showToast('Could not export as JPEG — try Print / Save as PDF instead.', true); }
-});
-
-// ── Boot ──────────────────────────────────────────────
-async function initApp(){
-  await loadMeta();
-  await loadMonths();
-  await loadRecords();
-}
-</script>
-</div><!-- /#appRoot -->
-
-<script>
-// ── Auth gating — runs before initApp(); everything above this stays
-// exactly as it was, just no longer self-invoked at parse time. ──────
-async function checkSession(){
-  const res = await fetch('/api/auth/me');
-  const data = await res.json();
-  return data.user;
-}
-function showApp(user){
-  document.body.classList.remove('role-guest');
-  if(user.role === 'guest') document.body.classList.add('role-guest');
-  document.getElementById('userBadgeName').textContent = user.username;
-  document.getElementById('userBadgeRole').textContent = user.role;
-  document.getElementById('loginScreen').classList.add('hidden');
-  document.getElementById('appRoot').classList.remove('hidden');
+    const res = await fetch('/api/tracker/roster');
+    if(res.status === 401) return;
+    const data = await res.json();
+    if(data.success) trackerRoster = { people: data.people };
+  }catch(e){ /* keep whatever we had */ }
+  renderWhoami();
+  if(currentPage === 'shiftroster') renderShiftRosterTable();
+  if(currentPage === 'roster') renderTable();
 }
 
-// ── Role-card picker ──────────────────────────────────
-document.getElementById('adminCard').addEventListener('click', ()=>{
-  document.getElementById('roleGrid').classList.add('hidden');
-  document.getElementById('adminForm').classList.remove('hidden');
-  document.getElementById('loginUsername').focus();
+// Who's assigning is now identity-based, not a free-pick dropdown:
+//  - EBS role: locked to the account they logged in as (server-verified)
+//  - Admin role: a dropdown, for logging on someone's behalf if needed
+//  - Guest role: no assigning at all — the whole control is hidden
+function renderWhoami(){
+  const wrap = document.getElementById('trWhoamiWrap');
+  if(CURRENT_ROLE === 'ebs'){
+    wrap.innerHTML = `<div class="tr-whoami-label">Assigning as <b style="color:var(--ink)">${escAttr(CURRENT_NAME || CURRENT_USERNAME)}</b></div>`;
+  } else if(CURRENT_ROLE === 'admin'){
+    const ebs = ebsList();
+    if(!ebs.some(p => p.id === selectedEbsId)) selectedEbsId = ebs[0] ? ebs[0].id : '';
+    wrap.innerHTML = `<label class="tr-whoami-label">Assign on behalf of
+      <select id="ebsSelect" class="tr-select">${ebs.map(p=>`<option value="${escAttr(p.id)}"${p.id===selectedEbsId?' selected':''}>${escAttr(p.name)}</option>`).join('')}</select>
+    </label>`;
+    document.getElementById('ebsSelect').addEventListener('change', (e)=>{
+      selectedEbsId = e.target.value;
+      localStorage.setItem('ziashift_ebs_id', selectedEbsId);
+      renderTracker();
+    });
+  } else {
+    wrap.innerHTML = `<div class="tr-whoami-label">👀 View only — sign in as an EBS tech to log assignments</div>`;
+  }
+}
+
+async function loadTracker(dateStr){
+  trackerDate = dateStr;
+  updateTrDateBadge();
+  try{
+    const [trackerRes, scheduleRes] = await Promise.all([
+      fetch(`/api/tracker/${dateStr}`),
+      fetch(`/api/schedule/${dateStr}`)
+    ]);
+    if(trackerRes.status === 401){ showLogin(); return; }
+    const data = await trackerRes.json();
+    if(data.success) trackerState = data;
+    if(scheduleRes.ok){
+      const schedData = await scheduleRes.json();
+      trackerDayRows = schedData.success ? schedData.rows : [];
+    }
+  }catch(e){
+    showToast('Could not reach the server. Is it running?', 't-error');
+  }
+  renderTracker();
+  renderShiftSidebar();
+}
+
+function timeAgo(iso){
+  const diffSec = Math.max(0, Math.round((Date.now() - new Date(iso).getTime())/1000));
+  if(diffSec < 60) return 'just now';
+  const m = Math.floor(diffSec/60);
+  if(m < 60) return `${m}m ago`;
+  const h = Math.floor(m/60);
+  return `${h}h ${m%60}m ago`;
+}
+
+function formatClockTime(iso){
+  try{
+    return new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  }catch(e){ return ''; }
+}
+
+// Left sidebar: today's shift roster reference, with live leave status
+function renderShiftSidebar(){
+  const wrap = document.getElementById('trShiftRef');
+  if(!wrap) return;
+  if(!trackerDayRows.length){
+    wrap.innerHTML = `<div class="tz-note" style="padding:4px 2px">No schedule for this day yet.</div>`;
+    return;
+  }
+  const nowWindow = typeof getCurrentWindowId === 'function' ? getCurrentWindowId() : null;
+  wrap.innerHTML = trackerDayRows.map(r => `
+    <div class="tr-shift-row${r.onLeave ? ' tr-shift-leave' : ''}${nowWindow && r.id === nowWindow ? ' tr-shift-now' : ''}">
+      <span class="tr-shift-name">${escAttr(r.name)}</span>
+      ${r.onLeave ? '<span class="tr-shift-leave-tag">LEAVE</span>' : `<span class="tr-shift-time">${escAttr(r.shiftLabel || fixedShiftFor(r.id) || r.shiftSlot || '')}</span>`}
+    </div>
+  `).join('');
+}
+
+function renderTracker(){
+  const isAdmin = CURRENT_ROLE === 'admin';
+  const canAssign = CURRENT_ROLE === 'admin' || CURRENT_ROLE === 'ebs';
+  const smb = smbList(); // already in stable shift-roster order — never resorted by count
+  const counts = trackerState.countsBySmb || {};
+  const totalToday = trackerState.totalToday || 0;
+  const leaveById = {};
+  trackerDayRows.forEach(r => { leaveById[r.id] = !!r.onLeave; });
+
+  const lowestCount = smb.length ? Math.min(...smb.map(p => counts[p.id] || 0)) : 0;
+
+  // ── Summary stats ──
+  const busiest = smb.reduce((max,p)=> (counts[p.id]||0) > (counts[max?.id]||-1) ? p : max, null);
+  const quietest = smb.reduce((min,p)=> (counts[p.id]||0) < (counts[min?.id]||Infinity) ? p : min, null);
+  const avg = smb.length ? (totalToday / smb.length) : 0;
+  document.getElementById('trSummaryRow').innerHTML = `
+    <div class="tr-stat"><div class="tr-stat-num">${totalToday}</div><div class="tr-stat-label">Chats assigned today</div></div>
+    <div class="tr-stat"><div class="tr-stat-num">${avg.toFixed(1)}</div><div class="tr-stat-label">Avg per SMB tech</div></div>
+    <div class="tr-stat tr-stat-high"><div class="tr-stat-num">${busiest && counts[busiest.id] ? counts[busiest.id] : 0}</div><div class="tr-stat-label">${busiest && counts[busiest.id] ? escAttr(busiest.name) : '—'} · highest load</div></div>
+    <div class="tr-stat tr-stat-low"><div class="tr-stat-num">${lowestCount}</div><div class="tr-stat-label">${quietest ? escAttr(quietest.name) : '—'} · lowest load</div></div>
+  `;
+
+  // ── SMB grid (stable shift-roster order; badge highlights lowest load without moving cards) ──
+  document.getElementById('trGrid').innerHTML = smb.map(p => {
+    const count = counts[p.id] || 0;
+    const isRecommend = count === lowestCount && smb.length > 1;
+    const onLeave = !!leaveById[p.id];
+    const ebsBreakdown = ebsList().map(e => {
+      const c = (trackerState.matrix[e.id] || {})[p.id] || 0;
+      return c ? `<span class="tr-mini-chip">${escAttr(e.name)}: ${c}</span>` : '';
+    }).filter(Boolean).join('');
+    return `
+      <div class="tr-card${isRecommend && !onLeave ? ' tr-recommend' : ''}${onLeave ? ' tr-card-leave' : ''}">
+        <div class="tr-card-head">
+          <div>
+            <div class="tr-card-name">${escAttr(p.name)}</div>
+            <div class="tr-card-region">${escAttr(p.region||'—')}</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px">
+            ${onLeave ? '<span class="tr-recommend-badge" style="background:#FCEBEB;color:var(--danger)">On leave</span>' : (isRecommend ? '<span class="tr-recommend-badge">Lowest load</span>' : '')}
+            ${isAdmin && p.username ? `<button class="tr-ebs-reset" data-username="${escAttr(p.username)}" data-name="${escAttr(p.name)}" title="Reset password">🔑</button>` : ''}
+          </div>
+        </div>
+        <div class="tr-card-body">
+          <div>
+            <div class="tr-count">${count}</div>
+            <div class="tr-count-label">Assigned</div>
+          </div>
+          ${canAssign && !onLeave ? `<div class="tr-btn-group"><button class="tr-minus-btn" data-smb-id="${escAttr(p.id)}" title="Undo my last assignment to this person">−</button><button class="tr-plus-btn" data-smb-id="${escAttr(p.id)}" data-smb-name="${escAttr(p.name)}">+</button></div>` : ''}
+        </div>
+        ${onLeave ? '<div class="tr-onleave-note">Not available today — skip for now</div>' : ''}
+        ${ebsBreakdown ? `<div class="tr-card-breakdown">${ebsBreakdown}</div>` : ''}
+      </div>
+    `;
+  }).join('') || `<div class="empty-state"><div class="em-icon">👥</div><h3>No SMB techs set up</h3><p>Add SMB techs to the tracker roster to get started.</p></div>`;
+
+  document.querySelectorAll('.tr-plus-btn').forEach(btn => {
+    btn.addEventListener('click', () => openAssignModal(btn.getAttribute('data-smb-id'), btn.getAttribute('data-smb-name')));
+  });
+  document.querySelectorAll('.tr-minus-btn').forEach(btn => {
+    btn.addEventListener('click', () => unassignChat(btn.getAttribute('data-smb-id')));
+  });
+
+  // ── EBS row — click a card to filter Live Activity down to just
+  // that tech (click again, or "Clear filter", to go back to everyone) ──
+  document.getElementById('trEbsRow').innerHTML = ebsList().map(p => `
+    <div class="tr-ebs-card${p.id === CURRENT_EBS_ID ? ' tr-ebs-active' : ''}${p.id === trFeedFilterEbsId ? ' tr-ebs-selected' : ''}" data-ebs-id="${escAttr(p.id)}" role="button" tabindex="0" title="Show only ${escAttr(p.name)}'s chat assignments">
+      <div class="tr-ebs-name">${p.id === CURRENT_EBS_ID ? '<span class="tr-active-dot"></span>' : ''}${escAttr(p.name)}</div>
+      <div style="display:flex;align-items:center;gap:6px">
+        <div class="tr-ebs-count">${trackerState.totalsByEbs[p.id] || 0}</div>
+        ${p.username ? `<button class="tr-ebs-reset" data-username="${escAttr(p.username)}" data-name="${escAttr(p.name)}" title="Reset password">🔑</button>` : ''}
+      </div>
+    </div>
+  `).join('') || `<div class="tz-note">No EBS techs set up yet.</div>`;
+  document.querySelectorAll('.tr-ebs-reset').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation(); // don't also trigger the card's filter click
+      openResetPwModal(btn.getAttribute('data-username'), btn.getAttribute('data-name'));
+    });
+  });
+  document.querySelectorAll('.tr-ebs-card').forEach(card => {
+    const toggle = () => {
+      const id = card.getAttribute('data-ebs-id');
+      trFeedFilterEbsId = (trFeedFilterEbsId === id) ? null : id;
+      renderTracker();
+    };
+    card.addEventListener('click', toggle);
+    card.addEventListener('keydown', (e) => { if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); toggle(); } });
+  });
+
+  // ── Live feed — actual clock time + comment, most recent first.
+  // Optionally filtered down to one EBS tech via trFeedFilterEbsId. ──
+  const events = trackerState.events || [];
+  const filteredEvents = trFeedFilterEbsId ? events.filter(ev => ev.ebsId === trFeedFilterEbsId) : events;
+  const recent = filteredEvents.slice(-50).reverse();
+  const filterNoteEl = document.getElementById('trFeedFilterNote');
+  if(trFeedFilterEbsId){
+    const person = trackerRoster.people.find(p => p.id === trFeedFilterEbsId);
+    filterNoteEl.innerHTML = `Showing only <b style="color:var(--ink)">${escAttr(person ? person.name : 'selected tech')}</b> · <a href="#" id="trFeedClearFilter" style="color:var(--purple);font-weight:700;text-decoration:none">Clear filter</a>`;
+    document.getElementById('trFeedClearFilter').addEventListener('click', (e) => { e.preventDefault(); trFeedFilterEbsId = null; renderTracker(); });
+  } else {
+    filterNoteEl.textContent = '';
+  }
+  document.getElementById('trFeed').innerHTML = recent.length
+    ? recent.map(ev => `
+        <div class="tr-feed-row" style="flex-direction:column;align-items:stretch;gap:2px">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+            <span>${escAttr(ev.ebsName)} → <b>${escAttr(ev.smbName)}</b></span>
+            <span class="tr-feed-time">${formatClockTime(ev.ts)} · ${timeAgo(ev.ts)}</span>
+          </div>
+          ${ev.comment ? `<div class="tr-comment-note">💬 ${escAttr(ev.comment)}</div>` : ''}
+        </div>
+      `).join('')
+    : `<div class="tr-feed-empty">${trFeedFilterEbsId ? 'No chats assigned by this tech yet today.' : 'No chats assigned yet today.'}</div>`;
+
+  // ── Admin-only actions ──
+  document.getElementById('trUndoBtn').style.display = isAdmin ? 'inline-flex' : 'none';
+  document.getElementById('trResetBtn').style.display = isAdmin ? 'inline-flex' : 'none';
+}
+
+let assignModalSmbId = null;
+function myEbsIdForAssign(){
+  return CURRENT_ROLE === 'admin' ? selectedEbsId : CURRENT_EBS_ID;
+}
+function openAssignModal(smbId, smbName){
+  assignModalSmbId = smbId;
+  const myId = myEbsIdForAssign();
+  const priorCount = (trackerState.matrix[myId] || {})[smbId] || 0;
+  const required = priorCount >= 2;
+  document.getElementById('assignModalTitle').textContent = `Assign chat to ${smbName}`;
+  document.getElementById('assignModalSub').textContent = required
+    ? `You've already assigned ${priorCount} chats to ${smbName} today — please add a note.`
+    : 'Add a note if useful, or just confirm.';
+  document.getElementById('assignCommentLabel').textContent = required ? 'Comment (required)' : 'Comment (optional)';
+  document.getElementById('assignComment').value = '';
+  document.getElementById('assignComment').dataset.required = required ? '1' : '';
+  document.getElementById('assignCommentError').textContent = '';
+  document.getElementById('assignModal').classList.add('open');
+  document.getElementById('assignComment').focus();
+}
+function closeAssignModal(){ document.getElementById('assignModal').classList.remove('open'); assignModalSmbId = null; }
+document.getElementById('assignModalClose').addEventListener('click', closeAssignModal);
+document.getElementById('assignModal').addEventListener('click', (e)=>{ if(e.target.id==='assignModal') closeAssignModal(); });
+document.getElementById('assignForm').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const commentEl = document.getElementById('assignComment');
+  const comment = commentEl.value.trim();
+  const errEl = document.getElementById('assignCommentError');
+  errEl.textContent = '';
+  if(commentEl.dataset.required === '1' && !comment){
+    errEl.textContent = 'Please add a short note before confirming.';
+    return;
+  }
+  await assignChat(assignModalSmbId, comment);
+  closeAssignModal();
 });
-document.getElementById('backToRoles').addEventListener('click', ()=>{
-  document.getElementById('adminForm').classList.add('hidden');
-  document.getElementById('roleGrid').classList.remove('hidden');
-  document.getElementById('loginError').textContent = '';
+
+async function assignChat(smbId, comment){
+  const body = { smbId, comment: comment || '' };
+  if(CURRENT_ROLE === 'admin') body.ebsId = selectedEbsId; // EBS role: server uses the logged-in identity, client value is ignored
+  try{
+    const res = await fetch(`/api/tracker/${trackerDate}/assign`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify(body)
+    });
+    const data = await res.json();
+    if(data.success){
+      trackerState = data;
+      renderTracker();
+    } else {
+      showToast(data.message || 'Could not log this assignment.', 't-error');
+    }
+  }catch(e){ showToast('Could not reach the server.', 't-error'); }
+}
+
+// Self-service correction: removes only the caller's own most recent
+// click on this specific SMB tech. Safe for any EBS tech to use on
+// themselves — can't touch anyone else's count.
+async function unassignChat(smbId){
+  const body = { smbId };
+  if(CURRENT_ROLE === 'admin') body.ebsId = selectedEbsId;
+  try{
+    const res = await fetch(`/api/tracker/${trackerDate}/unassign`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify(body)
+    });
+    const data = await res.json();
+    if(data.success){
+      trackerState = data;
+      renderTracker();
+      showToast('Undone.', 't-success');
+    } else {
+      showToast(data.message || 'Nothing of yours to undo for this person.', 't-error');
+    }
+  }catch(e){ showToast('Could not reach the server.', 't-error'); }
+}
+
+document.getElementById('trTodayBtn').addEventListener('click', ()=> {
+  const t = trackerTodayISO();
+  loadTracker(t);
+  currentDate = t;
+  updateHeaderDate();
 });
-document.getElementById('guestCard').addEventListener('click', async ()=>{
-  const errEl = document.getElementById('loginError');
+
+document.getElementById('trUndoBtn').addEventListener('click', async ()=>{
+  if(!confirm('Undo the most recent chat assignment for this day?')) return;
+  try{
+    const res = await fetch(`/api/tracker/${trackerDate}/undo`, { method:'POST' });
+    const data = await res.json();
+    if(data.success){ trackerState = data; renderTracker(); showToast('Last assignment undone.', 't-success'); }
+    else showToast(data.message || 'Could not undo.', 't-error');
+  }catch(e){ showToast('Could not reach the server.', 't-error'); }
+});
+
+document.getElementById('trResetBtn').addEventListener('click', async ()=>{
+  if(!confirm(`Reset all chat assignment counts for ${formatDisplayDate(trackerDate)}? This can't be undone.`)) return;
+  try{
+    const res = await fetch(`/api/tracker/${trackerDate}/reset`, { method:'POST' });
+    const data = await res.json();
+    if(data.success){ trackerState = data; renderTracker(); showToast('Counts reset for the day.', 't-success'); }
+    else showToast(data.message || 'Could not reset.', 't-error');
+  }catch(e){ showToast('Could not reach the server.', 't-error'); }
+});
+
+// ── EBS x SMB matrix modal ──
+function renderSecShiftRef(){
+  const wrap = document.getElementById('secShiftRef');
+  if(!wrap) return;
+  const list = securityList();
+  if(!list.length){ wrap.innerHTML = `<div class="tz-note" style="padding:4px 2px">No Security techs set up yet.</div>`; return; }
+  const sorted = [...list].sort((a,b) => (timeToMinutes(a.shift)??9999) - (timeToMinutes(b.shift)??9999));
+  wrap.innerHTML = sorted.map(p => `
+    <div class="tr-shift-row">
+      <span class="tr-shift-name">${escAttr(p.name)}</span>
+      <span class="tr-shift-time">${escAttr(p.shift||'—')}</span>
+    </div>
+  `).join('');
+}
+
+// Who's assigning, for Security: EBS/SMB roles are locked to their own
+// account; Admin gets a dropdown covering everyone (EBS + SMB pool).
+function myAssignerIdForSecurity(){
+  if(CURRENT_ROLE === 'ebs') return CURRENT_EBS_ID;
+  if(CURRENT_ROLE === 'smb') return CURRENT_SMB_ID;
+  if(CURRENT_ROLE === 'admin') return selectedAssignerId;
+  return null;
+}
+function renderSecWhoami(){
+  const wrap = document.getElementById('secWhoamiWrap');
+  if(CURRENT_ROLE === 'ebs' || CURRENT_ROLE === 'smb'){
+    wrap.innerHTML = `<div class="tr-whoami-label">Assigning as <b style="color:var(--ink)">${escAttr(CURRENT_NAME || CURRENT_USERNAME)}</b></div>`;
+    document.getElementById('secAssignerPicker').style.display = 'none';
+  } else if(CURRENT_ROLE === 'admin'){
+    const pool = [...ebsList(), ...smbList()];
+    if(!pool.some(p => p.id === selectedAssignerId)) selectedAssignerId = pool[0] ? pool[0].id : '';
+    const picker = document.getElementById('secAssignerPicker');
+    picker.style.display = 'inline-block';
+    picker.innerHTML = pool.map(p=>`<option value="${escAttr(p.id)}"${p.id===selectedAssignerId?' selected':''}>${escAttr(p.name)} (${p.mode})</option>`).join('');
+    wrap.innerHTML = `<div class="tr-whoami-label">Assign on behalf of \u2192</div>`;
+    picker.onchange = (e)=>{
+      selectedAssignerId = e.target.value;
+      localStorage.setItem('ziashift_assigner_id', selectedAssignerId);
+      renderSecurityTracker();
+    };
+  } else {
+    wrap.innerHTML = `<div class="tr-whoami-label">👀 View only — sign in as an EBS/SMB tech or Admin to log assignments</div>`;
+    document.getElementById('secAssignerPicker').style.display = 'none';
+  }
+}
+
+async function loadSecurityTracker(dateStr){
+  securityDate = dateStr;
+  updateSecDateBadge();
+  try{
+    const res = await fetch(`/api/tracker/${dateStr}`);
+    if(res.status === 401){ showLogin(); return; }
+    const data = await res.json();
+    if(data.success) secTrackerState = data;
+  }catch(e){
+    showToast('Could not reach the server. Is it running?', 't-error');
+  }
+  renderSecurityTracker();
+  renderSecShiftRef();
+}
+
+function updateSecDateBadge(){
+  const badge = document.getElementById('secDateBadge');
+  if(badge) badge.textContent = formatDisplayDate(securityDate) + (securityDate === trackerTodayISO() ? ' · Today' : '');
+}
+
+let secFeedFilterAssignerId = null;
+
+function renderSecurityTracker(){
+  const isAdmin = CURRENT_ROLE === 'admin';
+  const canAssign = ['admin','ebs','smb'].includes(CURRENT_ROLE);
+  const security = securityList();
+  const counts = secTrackerState.countsBySecurity || {};
+  const totalToday = secTrackerState.totalSecurityToday || 0;
+
+  renderSecWhoami();
+
+  const lowestCount = security.length ? Math.min(...security.map(p => counts[p.id] || 0)) : 0;
+  const busiest = security.reduce((max,p)=> (counts[p.id]||0) > (counts[max?.id]||-1) ? p : max, null);
+  const quietest = security.reduce((min,p)=> (counts[p.id]||0) < (counts[min?.id]||Infinity) ? p : min, null);
+  const avg = security.length ? (totalToday / security.length) : 0;
+  document.getElementById('secSummaryRow').innerHTML = `
+    <div class="tr-stat"><div class="tr-stat-num">${totalToday}</div><div class="tr-stat-label">Tickets assigned today</div></div>
+    <div class="tr-stat"><div class="tr-stat-num">${avg.toFixed(1)}</div><div class="tr-stat-label">Avg per Security tech</div></div>
+    <div class="tr-stat tr-stat-high"><div class="tr-stat-num">${busiest && counts[busiest.id] ? counts[busiest.id] : 0}</div><div class="tr-stat-label">${busiest && counts[busiest.id] ? escAttr(busiest.name) : '—'} · highest load</div></div>
+    <div class="tr-stat tr-stat-low"><div class="tr-stat-num">${lowestCount}</div><div class="tr-stat-label">${quietest ? escAttr(quietest.name) : '—'} · lowest load</div></div>
+  `;
+
+  document.getElementById('secGrid').innerHTML = security.map(p => {
+    const count = counts[p.id] || 0;
+    const isRecommend = count === lowestCount && security.length > 1;
+    const assignerBreakdown = [...ebsList(), ...smbList()].map(a => {
+      const c = (secTrackerState.matrixSecurity[a.id] || {})[p.id] || 0;
+      return c ? `<span class="tr-mini-chip">${escAttr(a.name)}: ${c}</span>` : '';
+    }).filter(Boolean).join('');
+    return `
+      <div class="tr-card${isRecommend ? ' tr-recommend' : ''}">
+        <div class="tr-card-head">
+          <div>
+            <div class="tr-card-name">${escAttr(p.name)}</div>
+            <div class="tr-card-region">${escAttr(p.shift||'—')}</div>
+          </div>
+          ${isRecommend ? '<span class="tr-recommend-badge">Lowest load</span>' : ''}
+        </div>
+        <div class="tr-card-body">
+          <div>
+            <div class="tr-count">${count}</div>
+            <div class="tr-count-label">Assigned</div>
+          </div>
+          ${canAssign ? `<div class="tr-btn-group"><button class="tr-minus-btn" data-sec-id="${escAttr(p.id)}" title="Undo my last assignment to this person">−</button><button class="tr-plus-btn" data-sec-id="${escAttr(p.id)}" data-sec-name="${escAttr(p.name)}">+</button></div>` : ''}
+        </div>
+        ${assignerBreakdown ? `<div class="tr-card-breakdown">${assignerBreakdown}</div>` : ''}
+      </div>
+    `;
+  }).join('') || `<div class="empty-state"><div class="em-icon">🛡️</div><h3>No Security techs set up</h3><p>Add Security techs to the tracker roster to get started.</p></div>`;
+
+  document.querySelectorAll('#secGrid .tr-plus-btn').forEach(btn => {
+    btn.addEventListener('click', () => openAssignSecurityModal(btn.getAttribute('data-sec-id'), btn.getAttribute('data-sec-name')));
+  });
+  document.querySelectorAll('#secGrid .tr-minus-btn').forEach(btn => {
+    btn.addEventListener('click', () => unassignSecurityTicket(btn.getAttribute('data-sec-id')));
+  });
+
+  const events = secTrackerState.securityEvents || [];
+  const filteredEvents = secFeedFilterAssignerId ? events.filter(ev => ev.assignerId === secFeedFilterAssignerId) : events;
+  const recent = filteredEvents.slice(-50).reverse();
+  document.getElementById('secFeed').innerHTML = recent.length
+    ? recent.map(ev => `
+        <div class="tr-feed-row" style="flex-direction:column;align-items:stretch;gap:2px">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+            <span>${escAttr(ev.assignerName)} → <b>${escAttr(ev.securityName)}</b></span>
+            <span class="tr-feed-time">${formatClockTime(ev.ts)} · ${timeAgo(ev.ts)}</span>
+          </div>
+          ${ev.comment ? `<div class="tr-comment-note">💬 ${escAttr(ev.comment)}</div>` : ''}
+        </div>
+      `).join('')
+    : `<div class="tr-feed-empty">No tickets assigned yet today.</div>`;
+
+  document.getElementById('secUndoBtn').style.display = isAdmin ? 'inline-flex' : 'none';
+  document.getElementById('secResetBtn').style.display = isAdmin ? 'inline-flex' : 'none';
+}
+
+let assignModalSecurityId = null;
+function openAssignSecurityModal(securityId, securityName){
+  assignModalSecurityId = securityId;
+  const myId = myAssignerIdForSecurity();
+  const priorCount = (secTrackerState.matrixSecurity[myId] || {})[securityId] || 0;
+  const required = priorCount >= 2;
+  document.getElementById('assignSecModalTitle').textContent = `Assign ticket to ${securityName}`;
+  document.getElementById('assignSecModalSub').textContent = required
+    ? `You've already assigned ${priorCount} tickets to ${securityName} today — please add a note.`
+    : 'Add a note if useful, or just confirm.';
+  document.getElementById('assignSecCommentLabel').textContent = required ? 'Comment (required)' : 'Comment (optional)';
+  document.getElementById('assignSecComment').value = '';
+  document.getElementById('assignSecComment').dataset.required = required ? '1' : '';
+  document.getElementById('assignSecCommentError').textContent = '';
+  document.getElementById('assignSecModal').classList.add('open');
+  document.getElementById('assignSecComment').focus();
+}
+function closeAssignSecModal(){ document.getElementById('assignSecModal').classList.remove('open'); assignModalSecurityId = null; }
+document.getElementById('assignSecModalClose').addEventListener('click', closeAssignSecModal);
+document.getElementById('assignSecModal').addEventListener('click', (e)=>{ if(e.target.id==='assignSecModal') closeAssignSecModal(); });
+document.getElementById('assignSecForm').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const commentEl = document.getElementById('assignSecComment');
+  const comment = commentEl.value.trim();
+  const errEl = document.getElementById('assignSecCommentError');
+  errEl.textContent = '';
+  if(commentEl.dataset.required === '1' && !comment){
+    errEl.textContent = 'Please add a short note before confirming.';
+    return;
+  }
+  await assignSecurityTicket(assignModalSecurityId, comment);
+  closeAssignSecModal();
+});
+
+async function assignSecurityTicket(securityId, comment){
+  const body = { securityId, comment: comment || '' };
+  if(CURRENT_ROLE === 'admin') body.assignerId = selectedAssignerId;
+  try{
+    const res = await fetch(`/api/tracker/${securityDate}/assign-security`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify(body)
+    });
+    const data = await res.json();
+    if(data.success){ secTrackerState = data; renderSecurityTracker(); }
+    else showToast(data.message || 'Could not log this assignment.', 't-error');
+  }catch(e){ showToast('Could not reach the server.', 't-error'); }
+}
+
+async function unassignSecurityTicket(securityId){
+  const body = { securityId };
+  if(CURRENT_ROLE === 'admin') body.assignerId = selectedAssignerId;
+  try{
+    const res = await fetch(`/api/tracker/${securityDate}/unassign-security`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify(body)
+    });
+    const data = await res.json();
+    if(data.success){ secTrackerState = data; renderSecurityTracker(); showToast('Undone.', 't-success'); }
+    else showToast(data.message || 'Nothing of yours to undo for this person.', 't-error');
+  }catch(e){ showToast('Could not reach the server.', 't-error'); }
+}
+
+document.getElementById('secTodayBtn').addEventListener('click', ()=> loadSecurityTracker(trackerTodayISO()));
+
+document.getElementById('secUndoBtn').addEventListener('click', async ()=>{
+  if(!confirm('Undo the most recent security ticket assignment for this day?')) return;
+  try{
+    const res = await fetch(`/api/tracker/${securityDate}/undo-security`, { method:'POST' });
+    const data = await res.json();
+    if(data.success){ secTrackerState = data; renderSecurityTracker(); showToast('Last assignment undone.', 't-success'); }
+    else showToast(data.message || 'Could not undo.', 't-error');
+  }catch(e){ showToast('Could not reach the server.', 't-error'); }
+});
+
+document.getElementById('secResetBtn').addEventListener('click', async ()=>{
+  if(!confirm(`Reset all Security ticket counts for ${formatDisplayDate(securityDate)}? This can't be undone.`)) return;
+  try{
+    const res = await fetch(`/api/tracker/${securityDate}/reset-security`, { method:'POST' });
+    const data = await res.json();
+    if(data.success){ secTrackerState = data; renderSecurityTracker(); showToast('Counts reset for the day.', 't-success'); }
+    else showToast(data.message || 'Could not reset.', 't-error');
+  }catch(e){ showToast('Could not reach the server.', 't-error'); }
+});
+
+// ── EBS x SMB matrix modal ──
+function openTrMatrix(){
+  const ebs = ebsList(), smb = smbList();
+  const thead = document.querySelector('#trMatrixTable thead');
+  const tbody = document.querySelector('#trMatrixTable tbody');
+  thead.innerHTML = `<tr><th>EBS \\ SMB</th>${smb.map(s=>`<th style="text-align:center">${escAttr(s.name)}</th>`).join('')}<th style="text-align:center">Total</th></tr>`;
+  tbody.innerHTML = ebs.map(e => {
+    const rowTotal = trackerState.totalsByEbs[e.id] || 0;
+    return `<tr><td class="name-cell">${escAttr(e.name)}</td>${smb.map(s=>{
+      const c = (trackerState.matrix[e.id]||{})[s.id] || 0;
+      return `<td style="text-align:center" class="mono-cell">${c || '·'}</td>`;
+    }).join('')}<td style="text-align:center" class="mono-cell"><b>${rowTotal}</b></td></tr>`;
+  }).join('') || `<tr><td colspan="99" style="text-align:center;color:var(--muted);padding:20px">No EBS techs set up yet.</td></tr>`;
+  document.getElementById('trMatrixModal').classList.add('open');
+}
+document.getElementById('trMatrixBtn').addEventListener('click', openTrMatrix);
+document.getElementById('trMatrixModalClose').addEventListener('click', ()=> document.getElementById('trMatrixModal').classList.remove('open'));
+document.getElementById('trMatrixModal').addEventListener('click', (e)=>{ if(e.target.id==='trMatrixModal') document.getElementById('trMatrixModal').classList.remove('open'); });
+
+// ── Admin: reset an EBS tech's password ──
+let resetPwTargetUsername = null;
+function openResetPwModal(username, name){
+  resetPwTargetUsername = username;
+  document.getElementById('resetPwWho').textContent = `Set a new password for ${name}.`;
+  document.getElementById('resetPwNew').value = '';
+  document.getElementById('resetPwError').textContent = '';
+  document.getElementById('resetPwModal').classList.add('open');
+  document.getElementById('resetPwNew').focus();
+}
+function closeResetPwModal(){ document.getElementById('resetPwModal').classList.remove('open'); }
+document.getElementById('resetPwModalClose').addEventListener('click', closeResetPwModal);
+document.getElementById('resetPwModal').addEventListener('click', (e)=>{ if(e.target.id==='resetPwModal') closeResetPwModal(); });
+document.getElementById('resetPwForm').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const newPassword = document.getElementById('resetPwNew').value;
+  const errEl = document.getElementById('resetPwError');
   errEl.textContent = '';
   try{
-    const res = await fetch('/api/auth/guest-login', { method: 'POST' });
+    const res = await fetch('/api/admin/reset-password', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ username: resetPwTargetUsername, newPassword })
+    });
     const data = await res.json();
-    if(!data.success){ errEl.textContent = 'Could not start guest session.'; return; }
-    showApp(data.user);
-    await initApp();
+    if(data.success){
+      closeResetPwModal();
+      showToast('Password reset. Share the new password with them directly.', 't-success');
+    } else {
+      errEl.textContent = data.message || 'Could not reset password.';
+    }
   }catch(e){ errEl.textContent = 'Could not reach the server.'; }
 });
-document.getElementById('loginBtn').addEventListener('click', doLogin);
-document.getElementById('loginPassword').addEventListener('keydown', e => { if(e.key === 'Enter') doLogin(); });
-async function doLogin(){
-  const username = document.getElementById('loginUsername').value.trim();
+
+// refresh the live tracker every 20s while it's the visible page (light polling
+// so multiple EBS techs on different machines see each other's clicks).
+// Also auto-rolls to the new day at midnight instead of silently staying
+// on yesterday's file until someone manually reloads the page — but only
+// when midnight actually passes, never just because you're browsing a
+// past date on purpose.
+let lastKnownTrackerToday = trackerTodayISO();
+setInterval(()=>{
+  if(currentPage !== 'tracker') return;
+  const today = trackerTodayISO();
+  if(today !== lastKnownTrackerToday){
+    // Real midnight rollover — move forward to the new day.
+    lastKnownTrackerToday = today;
+    trackerDate = today;
+    currentDate = today;
+    loadTracker(today);
+    updateHeaderDate();
+  } else {
+    // Just refresh whatever date is currently being viewed — don't touch
+    // the date itself, so browsing history stays put between polls.
+    loadTracker(trackerDate);
+  }
+}, 20000);
+
+// ── Auth ──────────────────────────────────────────────────────
+let CURRENT_ROLE = null, CURRENT_USERNAME = null, CURRENT_NAME = null, CURRENT_EBS_ID = null, CURRENT_SMB_ID = null;
+
+function showRoleSelect(){
+  document.getElementById('roleSelect').style.display = 'flex';
+  document.getElementById('loginForm').style.display = 'none';
+  document.getElementById('ebsLoginForm').style.display = 'none';
+  document.getElementById('smbLoginForm').style.display = 'none';
+  document.getElementById('loginPassword').value = '';
+  document.getElementById('loginError').textContent = '';
+  document.getElementById('ebsLoginPassword').value = '';
+  document.getElementById('ebsLoginError').textContent = '';
+  document.getElementById('smbLoginPassword').value = '';
+  document.getElementById('smbLoginError').textContent = '';
+}
+function showLogin(){
+  document.getElementById('loginOverlay').style.display = 'flex';
+  document.getElementById('appShell').style.display = 'none';
+  showRoleSelect();
+}
+function enterApp(){
+  document.getElementById('loginOverlay').style.display = 'none';
+  document.getElementById('appShell').style.display = 'block';
+  const roleLabel = CURRENT_ROLE === 'admin' ? 'Admin' : CURRENT_ROLE === 'ebs' ? 'EBS' : CURRENT_ROLE === 'smb' ? 'Security Zia' : 'Guest';
+  const pillClass = CURRENT_ROLE === 'admin' ? ' role-admin' : CURRENT_ROLE === 'ebs' ? ' role-ebs' : CURRENT_ROLE === 'smb' ? ' role-smb' : '';
+  document.getElementById('userChipText').innerHTML =
+    `${escAttr(CURRENT_NAME || CURRENT_USERNAME)} <span class="role-pill${pillClass}">${roleLabel}</span>`;
+  document.body.classList.toggle('guest-mode', CURRENT_ROLE === 'guest');
+  document.body.classList.toggle('ebs-mode', CURRENT_ROLE === 'ebs');
+  document.body.classList.toggle('smb-mode', CURRENT_ROLE === 'smb');
+  loadDate(istTodayISO());
+  loadTrackerRoster();
+}
+async function checkSession(){
+  try{
+    const res = await fetch('/api/me');
+    if(res.ok){
+      const data = await res.json();
+      CURRENT_ROLE = data.role; CURRENT_USERNAME = data.username;
+      CURRENT_NAME = data.name || null; CURRENT_EBS_ID = data.ebsId || null; CURRENT_SMB_ID = data.smbId || null;
+      enterApp();
+    } else {
+      showLogin();
+    }
+  }catch(e){ showLogin(); }
+}
+
+// Guest: one click, no password. View-only.
+document.getElementById('pickGuestBtn').addEventListener('click', async ()=>{
+  try{
+    const res = await fetch('/api/login/guest', { method:'POST' });
+    const data = await res.json();
+    if(data.success){ CURRENT_ROLE = data.role; CURRENT_USERNAME = data.username; CURRENT_NAME = null; CURRENT_EBS_ID = null; CURRENT_SMB_ID = null; enterApp(); }
+    else showToast('Could not start a guest session.', 't-error');
+  }catch(e){ showToast('Could not reach the server.', 't-error'); }
+});
+
+// Admin: reveal the password step.
+document.getElementById('pickAdminBtn').addEventListener('click', ()=>{
+  document.getElementById('roleSelect').style.display = 'none';
+  document.getElementById('loginForm').style.display = 'block';
+  document.getElementById('loginPassword').focus();
+});
+
+// EBS Tech: reveal the name + password step.
+document.getElementById('pickEbsBtn').addEventListener('click', async ()=>{
+  document.getElementById('roleSelect').style.display = 'none';
+  document.getElementById('ebsLoginForm').style.display = 'block';
+  const sel = document.getElementById('ebsLoginUsername');
+  sel.innerHTML = '<option>Loading…</option>';
+  try{
+    const res = await fetch('/api/login/ebs-list');
+    const data = await res.json();
+    if(data.success && data.people.length){
+      sel.innerHTML = data.people.map(p => `<option value="${escAttr(p.username)}">${escAttr(p.name)}</option>`).join('');
+    } else {
+      sel.innerHTML = '<option value="">No EBS accounts set up yet</option>';
+    }
+  }catch(e){ sel.innerHTML = '<option value="">Could not load list</option>'; }
+  document.getElementById('ebsLoginPassword').focus();
+});
+
+// SMB Tech: reveal the name + password step.
+document.getElementById('pickSmbBtn').addEventListener('click', async ()=>{
+  document.getElementById('roleSelect').style.display = 'none';
+  document.getElementById('smbLoginForm').style.display = 'block';
+  const sel = document.getElementById('smbLoginUsername');
+  sel.innerHTML = '<option>Loading…</option>';
+  try{
+    const res = await fetch('/api/login/smb-list');
+    const data = await res.json();
+    if(data.success && data.people.length){
+      sel.innerHTML = data.people.map(p => `<option value="${escAttr(p.username)}">${escAttr(p.name)}</option>`).join('');
+    } else {
+      sel.innerHTML = '<option value="">No SMB accounts set up yet</option>';
+    }
+  }catch(e){ sel.innerHTML = '<option value="">Could not load list</option>'; }
+  document.getElementById('smbLoginPassword').focus();
+});
+
+document.getElementById('backToRoleBtn').addEventListener('click', showRoleSelect);
+document.getElementById('backToRoleBtnEbs').addEventListener('click', showRoleSelect);
+document.getElementById('backToRoleBtnSmb').addEventListener('click', showRoleSelect);
+
+document.getElementById('loginForm').addEventListener('submit', async (e)=>{
+  e.preventDefault();
   const password = document.getElementById('loginPassword').value;
   const errEl = document.getElementById('loginError');
   errEl.textContent = '';
-  if(!username || !password){ errEl.textContent = 'Enter both username and password.'; return; }
   try{
-    const res = await fetch('/api/auth/login', {
-      method: 'POST', headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({ username, password })
+    const res = await fetch('/api/login/admin', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ password })
     });
     const data = await res.json();
-    if(!data.success){ errEl.textContent = data.message || 'Login failed.'; return; }
-    showApp(data.user);
-    await initApp();
-  }catch(e){ errEl.textContent = 'Could not reach the server.'; }
-}
-document.getElementById('showForgot').addEventListener('click', ()=>{
-  document.getElementById('adminForm').classList.add('hidden');
-  document.getElementById('forgotForm').classList.remove('hidden');
-  document.getElementById('loginError').textContent = '';
-});
-document.getElementById('backToLoginFromForgot').addEventListener('click', ()=>{
-  document.getElementById('forgotForm').classList.add('hidden');
-  document.getElementById('adminForm').classList.remove('hidden');
-  document.getElementById('loginError').textContent = '';
-});
-document.getElementById('forgotBtn').addEventListener('click', async ()=>{
-  const username = document.getElementById('forgotUsername').value.trim() || 'Admin';
-  const resetKey = document.getElementById('forgotResetKey').value;
-  const newPassword = document.getElementById('forgotNewPassword').value;
-  const errEl = document.getElementById('loginError');
-  errEl.textContent = '';
-  if(!resetKey || !newPassword){ errEl.textContent = 'Reset key and new password are required.'; return; }
-  try{
-    const res = await fetch('/api/auth/forgot-password', {
-      method: 'POST', headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({ username, resetKey, newPassword })
-    });
-    const data = await res.json();
-    if(!data.success){ errEl.textContent = data.message || 'Could not reset password.'; return; }
-    errEl.style.color = 'var(--green)';
-    errEl.textContent = 'Password reset — you can log in now.';
-    document.getElementById('forgotResetKey').value = '';
-    document.getElementById('forgotNewPassword').value = '';
-    setTimeout(()=>{
-      errEl.style.color = '';
-      document.getElementById('forgotForm').classList.add('hidden');
-      document.getElementById('adminForm').classList.remove('hidden');
-    }, 1500);
+    if(data.success){
+      CURRENT_ROLE = data.role; CURRENT_USERNAME = data.username; CURRENT_NAME = null; CURRENT_EBS_ID = null; CURRENT_SMB_ID = null;
+      enterApp();
+    } else {
+      errEl.textContent = data.message || 'Incorrect admin password.';
+    }
   }catch(e){ errEl.textContent = 'Could not reach the server.'; }
 });
 
-// ── Change password (admin, logged in) ────────────────
-document.getElementById('changePwBtn').addEventListener('click', ()=>{
-  document.getElementById('cpCurrent').value = '';
-  document.getElementById('cpNew').value = '';
-  document.getElementById('cpError').textContent = '';
-  document.getElementById('changePwModal').classList.remove('hidden');
-});
-document.getElementById('cpCancelBtn').addEventListener('click', ()=>{
-  document.getElementById('changePwModal').classList.add('hidden');
-});
-document.getElementById('cpSaveBtn').addEventListener('click', async ()=>{
-  const currentPassword = document.getElementById('cpCurrent').value;
-  const newPassword = document.getElementById('cpNew').value;
-  const errEl = document.getElementById('cpError');
+document.getElementById('ebsLoginForm').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const username = document.getElementById('ebsLoginUsername').value;
+  const password = document.getElementById('ebsLoginPassword').value;
+  const errEl = document.getElementById('ebsLoginError');
   errEl.textContent = '';
-  if(!currentPassword || !newPassword){ errEl.textContent = 'Both fields are required.'; return; }
+  if(!username){ errEl.textContent = 'No EBS account selected.'; return; }
   try{
-    const res = await fetch('/api/auth/change-password', {
-      method: 'POST', headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({ currentPassword, newPassword })
+    const res = await fetch('/api/login/ebs', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ username, password })
     });
     const data = await res.json();
-    if(!data.success){ errEl.textContent = data.message || 'Could not change password.'; return; }
-    errEl.style.color = 'var(--green)';
-    errEl.textContent = 'Password updated!';
-    setTimeout(()=>{ document.getElementById('changePwModal').classList.add('hidden'); errEl.style.color=''; }, 1200);
+    if(data.success){
+      CURRENT_ROLE = data.role; CURRENT_USERNAME = data.username;
+      CURRENT_NAME = data.name; CURRENT_EBS_ID = data.ebsId; CURRENT_SMB_ID = null;
+      enterApp();
+    } else {
+      errEl.textContent = data.message || 'Incorrect username or password.';
+    }
+  }catch(e){ errEl.textContent = 'Could not reach the server.'; }
+});
+
+document.getElementById('smbLoginForm').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const username = document.getElementById('smbLoginUsername').value;
+  const password = document.getElementById('smbLoginPassword').value;
+  const errEl = document.getElementById('smbLoginError');
+  errEl.textContent = '';
+  if(!username){ errEl.textContent = 'No SMB account selected.'; return; }
+  try{
+    const res = await fetch('/api/login/smb', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ username, password })
+    });
+    const data = await res.json();
+    if(data.success){
+      CURRENT_ROLE = data.role; CURRENT_USERNAME = data.username;
+      CURRENT_NAME = data.name; CURRENT_SMB_ID = data.smbId; CURRENT_EBS_ID = null;
+      enterApp();
+    } else {
+      errEl.textContent = data.message || 'Incorrect username or password.';
+    }
   }catch(e){ errEl.textContent = 'Could not reach the server.'; }
 });
 
 document.getElementById('logoutBtn').addEventListener('click', async ()=>{
-  await fetch('/api/auth/logout', { method: 'POST' });
-  location.reload();
+  try{ await fetch('/api/logout', { method:'POST' }); }catch(e){}
+  CURRENT_ROLE = null; CURRENT_USERNAME = null; CURRENT_NAME = null; CURRENT_EBS_ID = null; CURRENT_SMB_ID = null;
+  showLogin();
 });
-(async function boot(){
-  const user = await checkSession();
-  if(user){ showApp(user); await initApp(); }
-  // else: login screen stays visible (it's the default state)
-})();
+
+// ── Change password modal ───────────────────────────────────
+function openPwModal(){
+  document.getElementById('pwCurrent').value = '';
+  document.getElementById('pwNew').value = '';
+  document.getElementById('pwError').textContent = '';
+  document.getElementById('pwModal').classList.add('open');
+}
+function closePwModal(){ document.getElementById('pwModal').classList.remove('open'); }
+document.getElementById('changePwBtn').addEventListener('click', openPwModal);
+document.getElementById('pwModalClose').addEventListener('click', closePwModal);
+document.getElementById('pwModal').addEventListener('click', (e)=>{ if(e.target.id==='pwModal') closePwModal(); });
+document.getElementById('pwSaveBtn').addEventListener('click', async ()=>{
+  const currentPassword = document.getElementById('pwCurrent').value;
+  const newPassword = document.getElementById('pwNew').value;
+  const errEl = document.getElementById('pwError');
+  errEl.textContent = '';
+  if(!newPassword || newPassword.length < 4){ errEl.textContent = 'New password must be at least 4 characters.'; return; }
+  try{
+    const res = await fetch('/api/change-password', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ currentPassword, newPassword })
+    });
+    const data = await res.json();
+    if(data.success){
+      closePwModal();
+      showToast('Password updated.', 't-success');
+    } else {
+      errEl.textContent = data.message || 'Could not update password.';
+    }
+  }catch(e){ errEl.textContent = 'Could not reach the server.'; }
+});
+
+// ── Init ──────────────────────────────────────────────────
+checkSession();
 </script>
 </body>
 </html>

@@ -2407,6 +2407,15 @@ setInterval(()=>{
   }
 }, 20000);
 
+// Reports had no auto-refresh at all — numbers went stale the moment you
+// left it fetch-and-forget while chats kept getting assigned elsewhere.
+// Same 20s light-poll pattern as the Tracker page, keeping whatever
+// date-range/preset is currently selected (never resets your filter).
+setInterval(()=>{
+  if(currentPage !== 'reports') return;
+  loadReports();
+}, 20000);
+
 // ── Auth ──────────────────────────────────────────────────────
 let CURRENT_ROLE = null, CURRENT_USERNAME = null, CURRENT_NAME = null, CURRENT_EBS_ID = null, CURRENT_SMB_ID = null;
 

@@ -33,7 +33,13 @@ app.use('/api', (req, res, next) => {
   res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
   next();
 });
-app.use(express.static(path.join(__dirname, 'public')));
+// Never cache the page itself. Every fix so far has been undone in testing
+// by the browser quietly running an OLD cached copy of this HTML/JS file —
+// the API data was fresh, but the code making the requests wasn't. This
+// guarantees every visit loads the current code, no hard-refresh required.
+app.use(express.static(path.join(__dirname, 'public'), {
+  setHeaders: (res) => res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate')
+}));
 
 // ── Seed the master roster from your screenshot on first run ─
 const SEED_ROSTER = {

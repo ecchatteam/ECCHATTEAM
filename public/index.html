@@ -1543,6 +1543,8 @@ function renderShiftRosterTable(){
 let reportsState = null;
 let reportsSubtab = 'chat';
 let repFrom = null, repTo = null;
+let repRequestSeq = 0; // guards against a slower, earlier request finishing
+                        // AFTER a newer one and silently overwriting the screen
 const REP_COLORS = ['#1671C9','#7C4DBE','#1E9E6D','#E8A33D','#C0392B','#0F5296','#64748B','#2E86AB'];
 const REP_MAX_RANGE_DAYS = 120; // safety cap so a mis-picked range can't fire hundreds of requests
 
@@ -1582,7 +1584,19 @@ document.getElementById('repToInput').addEventListener('change', function(){
 });
 
 async function loadReports(){
-  if(!repFrom || !repTo) repSetPreset('month'); // sets both + calls loadReports() itself
+  if(!repFrom || !repTo){
+    // Set the default range directly — no recursive call back into
+    // loadReports() here, which is what caused two overlapping fetches
+    // (and whichever one finished last silently won, even if it was stale).
+    const today = trackerTodayISO();
+    repFrom = today.slice(0,8) + '01';
+    repTo = today;
+    document.querySelectorAll('.rep-preset-btn').forEach(b => b.classList.toggle('active', b.dataset.preset === 'month'));
+    document.getElementById('repFromInput').value = repFrom;
+    document.getElementById('repToInput').value = repTo;
+  }
+  const mySeq = ++repRequestSeq; // this call's ticket — see check before we apply results below
+
   let dates = repDateRange(repFrom, repTo);
   if(!dates.length){ showToast('Invalid date range', 't-error'); return; }
   if(dates.length > REP_MAX_RANGE_DAYS){
@@ -1610,6 +1624,12 @@ async function loadReports(){
     Promise.all(dates.map(d => safeFetch(`/api/schedule/${d}`))),
     safeFetch(`/api/schedule/${trackerTodayISO()}`)
   ]);
+
+  // If a NEWER loadReports() call has started since this one began (e.g.
+  // the user clicked a different preset while this slower fetch was still
+  // in flight), this response is stale — discard it instead of letting it
+  // overwrite whatever the newer, correct request already rendered.
+  if(mySeq !== repRequestSeq) return;
 
   if(authFailed){ showLogin(); return; }
 

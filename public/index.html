@@ -717,6 +717,7 @@
     <div class="rep-title">📈 Reports — view only, whole team</div>
     <div class="rep-range-controls">
       <button class="rep-preset-btn" data-preset="today">Today</button>
+      <button class="rep-preset-btn" data-preset="yesterday">Yesterday</button>
       <button class="rep-preset-btn" data-preset="week">This week</button>
       <button class="rep-preset-btn active" data-preset="month">This month</button>
       <span class="rep-range-sep">·</span>
@@ -1560,6 +1561,7 @@ function repDateRange(from, to){
 function repSetPreset(preset){
   const today = trackerTodayISO();
   if(preset === 'today'){ repFrom = today; repTo = today; }
+  else if(preset === 'yesterday'){ const d = new Date(today+'T00:00:00'); d.setDate(d.getDate()-1); const y = d.toISOString().slice(0,10); repFrom = y; repTo = y; }
   else if(preset === 'week'){ const d = new Date(today+'T00:00:00'); d.setDate(d.getDate()-6); repFrom = d.toISOString().slice(0,10); repTo = today; }
   else if(preset === 'month'){ repFrom = today.slice(0,8) + '01'; repTo = today; }
   document.querySelectorAll('.rep-preset-btn').forEach(b => b.classList.toggle('active', b.dataset.preset === preset));
@@ -1593,7 +1595,11 @@ async function loadReports(){
   let authFailed = false;
   async function safeFetch(url){
     try{
-      const res = await fetch(url);
+      // Cache-busting query param — guarantees a unique URL on every call so
+      // no browser, proxy, or CDN cache can ever hand back a stale response,
+      // regardless of whether Cache-Control headers are honored upstream.
+      const bustedUrl = url + (url.includes('?') ? '&' : '?') + '_ts=' + Date.now();
+      const res = await fetch(bustedUrl, { cache: 'no-store' });
       if(res.status === 401){ authFailed = true; return null; }
       return await res.json();
     }catch(e){ return null; }

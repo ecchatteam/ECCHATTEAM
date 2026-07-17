@@ -393,18 +393,24 @@
   .rep-leave-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px}
   .rep-leave-row:last-child{border-bottom:none}  /* ── Team Announcement (left-gutter card) ──────────────────── */
   .announcement-card{
-    position:fixed; top:120px; left:24px; width:250px; max-height:calc(100vh - 160px);
-    overflow-y:auto; background:var(--card); border:1px solid var(--border); border-radius:12px;
-    padding:16px; box-shadow:0 2px 10px rgba(0,0,0,.05); z-index:5; display:none;
+    position:fixed; top:120px; left:24px; width:280px; max-height:calc(100vh - 160px);
+    overflow-y:auto; background:linear-gradient(180deg,#FFF8E1,#FFF3CD);
+    border:2px solid #F5C518; border-radius:14px;
+    padding:20px; box-shadow:0 6px 20px rgba(245,197,24,.35); z-index:5; display:none;
+    animation: annPulse 2.4s ease-in-out infinite;
+  }
+  @keyframes annPulse{
+    0%,100%{ box-shadow:0 6px 20px rgba(245,197,24,.35); }
+    50%{ box-shadow:0 6px 28px rgba(245,197,24,.6); }
   }
   @media (min-width:1600px){ .announcement-card{ display:block; } }
-  .announcement-head{font-size:13px;font-weight:800;color:var(--ink);margin-bottom:10px}
-  .announcement-body{font-size:13px;color:var(--text);line-height:1.5;white-space:pre-wrap;word-break:break-word}
-  .announcement-body .ann-empty{color:var(--muted);font-style:italic}
-  .announcement-body .ann-meta{display:block;margin-top:10px;font-size:11px;color:var(--muted)}
-  .announcement-admin{margin-top:12px;border-top:1px solid var(--border);padding-top:12px}
-  .announcement-admin textarea{width:100%;box-sizing:border-box;padding:8px 10px;border:1px solid var(--border);
-    border-radius:8px;font-size:12.5px;font-family:var(--sans);resize:vertical}
+  .announcement-head{font-size:18px;font-weight:900;color:#7A5B00;margin-bottom:12px;letter-spacing:.2px}
+  .announcement-body{font-size:16px;font-weight:700;color:#4A3800;line-height:1.55;white-space:pre-wrap;word-break:break-word}
+  .announcement-body .ann-empty{color:var(--muted);font-style:italic;font-weight:400;font-size:14px}
+  .announcement-body .ann-meta{display:block;margin-top:12px;font-size:12px;font-weight:600;color:#8A6D00}
+  .announcement-admin{margin-top:14px;border-top:2px solid rgba(245,197,24,.5);padding-top:14px}
+  .announcement-admin textarea{width:100%;box-sizing:border-box;padding:9px 11px;border:1px solid #E8C34A;
+    border-radius:8px;font-size:13px;font-family:var(--sans);resize:vertical;background:#fff}
   .announcement-actions{display:flex;gap:8px;margin-top:8px}
   .announcement-actions .btn{padding:7px 12px;font-size:12.5px}
 </style>

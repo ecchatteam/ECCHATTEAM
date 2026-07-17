@@ -693,7 +693,46 @@ app.post('/api/schedule/:date/reorder', requireAuth, requireAdmin, (req, res) =>
   res.json({ success: true, date, rows: computed });
 });
 
-// ── Regenerate a day fresh from the master roster ─────────────
+// ── Shift Swap: swap two people's Shift Timing label AND their position
+// in the day's rotation order in one atomic action. Swapping position is
+// what makes computeSchedule() naturally swap their Ticket Time Window too
+// — same mechanism the up/down reorder arrows already use, just applied to
+// two named people directly instead of dragging them together by hand.
+app.post('/api/schedule/:date/swap', requireAuth, requireAdmin, (req, res) => {
+  const { date } = req.params;
+  const { idA, idB } = req.body || {};
+  if (!isValidDate(date)) return res.status(400).json({ success: false, message: 'Invalid date format' });
+  if (!idA || !idB || idA === idB) return res.status(400).json({ success: false, message: 'Two different people are required to swap' });
+
+  const current = getOrBuildDayRows(date);
+  const idxA = current.findIndex(r => r.id === idA);
+  const idxB = current.findIndex(r => r.id === idB);
+  if (idxA === -1 || idxB === -1) return res.status(404).json({ success: false, message: 'Person not found in this day\'s schedule' });
+
+  // Effective Shift Timing label BEFORE the swap — same fallback the
+  // frontend uses (manual override if set, else the roster's nominal shift)
+  const trackerRosterNow = readTrackerRoster();
+  const nominalShiftFor = (id) => { const p = (trackerRosterNow.people || []).find(p => p.id === id); return p ? p.shift : ''; };
+  const labelA = current[idxA].shiftLabel || nominalShiftFor(idA) || '';
+  const labelB = current[idxB].shiftLabel || nominalShiftFor(idB) || '';
+
+  const byId = {};
+  current.forEach(r => { byId[r.id] = { id: r.id, name: r.name, region: r.region, onLeave: !!r.onLeave, shiftLabel: r.shiftLabel }; });
+  // Swap their two positions in the order (drives the Ticket Time Window swap)
+  const order = current.map(r => r.id);
+  [order[idxA], order[idxB]] = [order[idxB], order[idxA]];
+  // Swap their Shift Timing labels too, so that column visibly swaps even
+  // for two people who never had a manual override set before.
+  byId[idA].shiftLabel = labelB;
+  byId[idB].shiftLabel = labelA;
+
+  const reordered = order.map(id => byId[id]).filter(Boolean);
+  const roster = readRoster();
+  const computed = computeSchedule(roster.cycleStart, reordered);
+  writeSchedule(date, computed);
+  console.log(`[swap] ${date} — swapped ${current[idxA].name} \u2194 ${current[idxB].name}`);
+  res.json({ success: true, date, rows: computed });
+});
 app.post('/api/schedule/:date/regenerate', requireAuth, requireAdmin, (req, res) => {
   const { date } = req.params;
   if (!isValidDate(date)) return res.status(400).json({ success: false, message: 'Invalid date format' });

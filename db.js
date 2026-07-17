@@ -48,6 +48,7 @@ function keyToFilePath(key) {
   if (key === 'roster')        return path.join(DATA_DIR, 'master-roster.json');
   if (key === 'users')         return path.join(DATA_DIR, 'users.json');
   if (key === 'trackerRoster') return path.join(DATA_DIR, 'tracker-roster.json');
+  if (key === 'announcement')  return path.join(DATA_DIR, 'announcement.json');
   if (key.startsWith('schedule:')) return path.join(DATA_DIR, 'schedules', `${key.slice(9)}.json`);
   if (key.startsWith('tracker:'))  return path.join(DATA_DIR, 'tracker', `${key.slice(8)}.json`);
   throw new Error(`[db] Unknown key: ${key}`);

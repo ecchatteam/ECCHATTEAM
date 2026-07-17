@@ -248,11 +248,11 @@ function ensureSmbAccounts() {
 }
 
 // ── Auth: sessions (in-memory, cookie-based — no extra npm deps) ─
-const sessions = new Map(); // token -> { username, role, expiresAt }
+const sessions = new Map(); // token -> { username, role, name, loginAt, expiresAt }
 const SESSION_TTL_MS = 12 * 60 * 60 * 1000; // 12 hours
-function createSession(username, role) {
+function createSession(username, role, name) {
   const token = crypto.randomBytes(24).toString('hex');
-  sessions.set(token, { username, role, expiresAt: Date.now() + SESSION_TTL_MS });
+  sessions.set(token, { username, role, name: name || username, loginAt: Date.now(), expiresAt: Date.now() + SESSION_TTL_MS });
   return token;
 }
 function parseCookies(req) {
@@ -497,14 +497,14 @@ app.post('/api/login/admin', (req, res) => {
   if (!record || !verifyPassword(String(password || ''), record.salt, record.hash)) {
     return res.status(401).json({ success: false, message: 'Incorrect admin password.' });
   }
-  const token = createSession(record.username, record.role);
+  const token = createSession(record.username, record.role, 'Admin');
   res.setHeader('Set-Cookie', `sid=${token}; HttpOnly; Path=/; Max-Age=${SESSION_TTL_MS / 1000}; SameSite=Lax`);
   console.log(`[auth] admin logged in`);
   res.json({ success: true, username: record.username, role: record.role });
 });
 
 app.post('/api/login/guest', (req, res) => {
-  const token = createSession('guest', 'guest');
+  const token = createSession('guest', 'guest', 'Guest');
   res.setHeader('Set-Cookie', `sid=${token}; HttpOnly; Path=/; Max-Age=${SESSION_TTL_MS / 1000}; SameSite=Lax`);
   console.log(`[auth] guest logged in`);
   res.json({ success: true, username: 'guest', role: 'guest' });
@@ -528,7 +528,7 @@ app.post('/api/login/ebs', (req, res) => {
   if (!record || record.role !== 'ebs' || !verifyPassword(String(password || ''), record.salt, record.hash)) {
     return res.status(401).json({ success: false, message: 'Incorrect username or password.' });
   }
-  const token = createSession(record.username, record.role);
+  const token = createSession(record.username, record.role, record.displayName || record.username);
   res.setHeader('Set-Cookie', `sid=${token}; HttpOnly; Path=/; Max-Age=${SESSION_TTL_MS / 1000}; SameSite=Lax`);
   console.log(`[auth] ${record.displayName || record.username} (EBS) logged in`);
   res.json({ success: true, username: record.username, role: record.role, ebsId: record.ebsId, name: record.displayName || record.username });
@@ -551,7 +551,7 @@ app.post('/api/login/smb', (req, res) => {
   if (!record || record.role !== 'smb' || !verifyPassword(String(password || ''), record.salt, record.hash)) {
     return res.status(401).json({ success: false, message: 'Incorrect username or password.' });
   }
-  const token = createSession(record.username, record.role);
+  const token = createSession(record.username, record.role, record.displayName || record.username);
   res.setHeader('Set-Cookie', `sid=${token}; HttpOnly; Path=/; Max-Age=${SESSION_TTL_MS / 1000}; SameSite=Lax`);
   console.log(`[auth] ${record.displayName || record.username} (SMB) logged in`);
   res.json({ success: true, username: record.username, role: record.role, smbId: record.smbId, name: record.displayName || record.username });
@@ -577,6 +577,45 @@ app.get('/api/me', (req, res) => {
     smbId: record && record.smbId ? record.smbId : null,
     name: record && record.displayName ? record.displayName : session.username
   });
+});
+
+// ── Active sessions — admin-only view of who's currently logged in ─
+app.get('/api/admin/active-sessions', requireAuth, requireAdmin, (req, res) => {
+  const now = Date.now();
+  const list = [];
+  for (const [token, sess] of sessions) {
+    if (now > sess.expiresAt) continue;
+    list.push({
+      isYou: token === parseCookies(req).sid,
+      username: sess.username,
+      name: sess.name || sess.username,
+      role: sess.role,
+      loginAt: sess.loginAt,
+      expiresAt: sess.expiresAt
+    });
+  }
+  list.sort((a, b) => b.loginAt - a.loginAt);
+  res.json({ success: true, count: list.length, sessions: list });
+});
+
+// ── Team Announcement — single, persistent banner (not per-day), admin
+// can post/update/clear; everyone logged in can view it. Reuses the same
+// db.js storage layer as everything else (one more key, no new tables).
+app.get('/api/announcement', requireAuth, (req, res) => {
+  const note = db.get('announcement', null);
+  res.json({ success: true, announcement: note });
+});
+app.post('/api/announcement', requireAuth, requireAdmin, (req, res) => {
+  const text = String((req.body && req.body.text) || '').slice(0, 2000);
+  if (!text.trim()) {
+    db.del('announcement');
+    console.log('[announcement] Cleared by admin');
+    return res.json({ success: true, announcement: null });
+  }
+  const note = { text: text.trim(), postedBy: req.session.name || req.session.username, postedAt: Date.now() };
+  db.set('announcement', note);
+  console.log(`[announcement] Updated by ${note.postedBy}`);
+  res.json({ success: true, announcement: note });
 });
 
 // Any logged-in user with a real password (admin or ebs — not guest,

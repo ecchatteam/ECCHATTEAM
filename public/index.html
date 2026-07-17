@@ -1151,10 +1151,12 @@ function renderTable(){
         </label>
       </td>
       <td style="text-align:center">
-        <select class="tr-select swap-select" title="Swap this person's Shift Timing and Ticket Time Window with someone else" onchange="if(this.value){ swapShift('${r.id}', this.value); this.value=''; }">
+        ${r.onLeave
+          ? `<span class="mono-cell" style="color:var(--text-muted,#94a3b8);font-size:12px" title="On leave — nothing to swap">—</span>`
+          : `<select class="tr-select swap-select" title="Swap this person's Shift Timing and Ticket Time Window with someone else" onchange="if(this.value){ swapShift('${r.id}', this.value); this.value=''; }">
           <option value="">🔄 Swap with…</option>
-          ${rows.filter(row2 => row2.id !== r.id).map(row2 => `<option value="${row2.id}">${escAttr(row2.name)}</option>`).join('')}
-        </select>
+          ${rows.filter(row2 => row2.id !== r.id && !row2.onLeave).map(row2 => `<option value="${row2.id}">${escAttr(row2.name)}</option>`).join('')}
+        </select>`}
       </td>
       <td>
         <div class="row-actions">

@@ -708,6 +708,9 @@ app.post('/api/schedule/:date/swap', requireAuth, requireAdmin, (req, res) => {
   const idxA = current.findIndex(r => r.id === idA);
   const idxB = current.findIndex(r => r.id === idB);
   if (idxA === -1 || idxB === -1) return res.status(404).json({ success: false, message: 'Person not found in this day\'s schedule' });
+  if (current[idxA].onLeave || current[idxB].onLeave) {
+    return res.status(400).json({ success: false, message: 'Can\'t swap with someone who\'s on leave today — they have no shift to trade.' });
+  }
 
   // Effective Shift Timing label BEFORE the swap — same fallback the
   // frontend uses (manual override if set, else the roster's nominal shift)

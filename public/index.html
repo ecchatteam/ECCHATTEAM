@@ -391,7 +391,22 @@
   .rep-range-label input[type=date]{border:1px solid var(--border);border-radius:8px;padding:5px 8px;font-size:12px;font-family:inherit;color:var(--ink);background:var(--card)}
   .rep-range-summary{font-size:12px;color:var(--muted);margin:-6px 0 16px;font-family:var(--mono)}
   .rep-leave-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px}
-  .rep-leave-row:last-child{border-bottom:none}
+  .rep-leave-row:last-child{border-bottom:none}  /* ── Team Announcement (left-gutter card) ──────────────────── */
+  .announcement-card{
+    position:fixed; top:120px; left:24px; width:250px; max-height:calc(100vh - 160px);
+    overflow-y:auto; background:var(--card); border:1px solid var(--border); border-radius:12px;
+    padding:16px; box-shadow:0 2px 10px rgba(0,0,0,.05); z-index:5; display:none;
+  }
+  @media (min-width:1600px){ .announcement-card{ display:block; } }
+  .announcement-head{font-size:13px;font-weight:800;color:var(--ink);margin-bottom:10px}
+  .announcement-body{font-size:13px;color:var(--text);line-height:1.5;white-space:pre-wrap;word-break:break-word}
+  .announcement-body .ann-empty{color:var(--muted);font-style:italic}
+  .announcement-body .ann-meta{display:block;margin-top:10px;font-size:11px;color:var(--muted)}
+  .announcement-admin{margin-top:12px;border-top:1px solid var(--border);padding-top:12px}
+  .announcement-admin textarea{width:100%;box-sizing:border-box;padding:8px 10px;border:1px solid var(--border);
+    border-radius:8px;font-size:12.5px;font-family:var(--sans);resize:vertical}
+  .announcement-actions{display:flex;gap:8px;margin-top:8px}
+  .announcement-actions .btn{padding:7px 12px;font-size:12.5px}
 </style>
 </head>
 <body>
@@ -491,6 +506,7 @@
     <button class="btn-today" id="todayBtn">Today</button>
     <div class="user-chip">
       <span id="userChipText"></span>
+      <button id="activeSessionsBtn" title="See who's currently logged in" style="display:none">👥 Active Sessions</button>
       <button id="changePwBtn" title="Change password">🔑 Password</button>
       <button id="logoutBtn">Logout</button>
     </div>
@@ -531,6 +547,22 @@
 </main>
 
 <main id="rosterMain">
+
+  <!-- Team Announcement — floats in the unused left margin on wide screens
+       only (media query below), so it never overlaps or reflows the main
+       content on any screen size. Admin can post/edit/clear; everyone
+       else sees it read-only. -->
+  <aside id="announcementCard" class="announcement-card">
+    <div class="announcement-head">📣 Team Announcement</div>
+    <div id="announcementBody" class="announcement-body"></div>
+    <div id="announcementAdminControls" class="announcement-admin" style="display:none">
+      <textarea id="announcementInput" rows="5" placeholder="Type or paste an announcement for the whole team…"></textarea>
+      <div class="announcement-actions">
+        <button id="announcementSaveBtn" class="btn btn-teal" type="button">Save</button>
+        <button id="announcementClearBtn" class="btn" type="button">Clear</button>
+      </div>
+    </div>
+  </aside>
 
   <div class="timeline-card">
     <div class="timeline-head">
@@ -801,6 +833,24 @@
         <div class="form-error" id="assignCommentError" style="margin-top:8px"></div>
         <button type="submit" class="btn btn-teal" style="width:100%;justify-content:center;margin-top:10px">Confirm assignment</button>
       </form>
+    </div>
+  </div>
+</div>
+
+<!-- Active Sessions modal (admin-only) -->
+<div class="modal-overlay" id="sessionsModal">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-head">
+      <div>
+        <h2>👥 Active Sessions</h2>
+        <p id="sessionsModalSub">Everyone currently logged in.</p>
+      </div>
+      <button class="modal-close" id="sessionsModalClose" aria-label="Close">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div id="sessionsList" style="max-height:400px;overflow-y:auto"></div>
     </div>
   </div>
 </div>
@@ -2505,9 +2555,79 @@ function enterApp(){
   document.body.classList.toggle('guest-mode', CURRENT_ROLE === 'guest');
   document.body.classList.toggle('ebs-mode', CURRENT_ROLE === 'ebs');
   document.body.classList.toggle('smb-mode', CURRENT_ROLE === 'smb');
+  document.getElementById('activeSessionsBtn').style.display = CURRENT_ROLE === 'admin' ? 'inline-flex' : 'none';
+  document.getElementById('announcementAdminControls').style.display = CURRENT_ROLE === 'admin' ? 'block' : 'none';
   loadDate(istTodayISO());
   loadTrackerRoster();
+  loadAnnouncement();
 }
+
+// ── Team Announcement ──────────────────────────────────────────
+async function loadAnnouncement(){
+  try{
+    const res = await fetch('/api/announcement');
+    if(!res.ok) return;
+    const data = await res.json();
+    renderAnnouncement(data.announcement);
+  }catch(e){ /* non-critical — fail quietly */ }
+}
+function renderAnnouncement(note){
+  const body = document.getElementById('announcementBody');
+  if(note && note.text){
+    const when = new Date(note.postedAt).toLocaleString('en-GB', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' });
+    body.innerHTML = `${escAttr(note.text)}<span class="ann-meta">— ${escAttr(note.postedBy)}, ${when}</span>`;
+  } else {
+    body.innerHTML = `<span class="ann-empty">No announcements right now.</span>`;
+  }
+  if(CURRENT_ROLE === 'admin'){
+    document.getElementById('announcementInput').value = note ? note.text : '';
+  }
+}
+document.getElementById('announcementSaveBtn').addEventListener('click', async ()=>{
+  const text = document.getElementById('announcementInput').value;
+  try{
+    const res = await fetch('/api/announcement', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ text }) });
+    const data = await res.json();
+    if(data.success){ renderAnnouncement(data.announcement); showToast('Announcement saved.', 't-success'); }
+    else showToast(data.message || 'Could not save announcement.', 't-error');
+  }catch(e){ showToast('Could not reach the server.', 't-error'); }
+});
+document.getElementById('announcementClearBtn').addEventListener('click', async ()=>{
+  document.getElementById('announcementInput').value = '';
+  try{
+    const res = await fetch('/api/announcement', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ text: '' }) });
+    const data = await res.json();
+    if(data.success){ renderAnnouncement(null); showToast('Announcement cleared.', 't-success'); }
+  }catch(e){ showToast('Could not reach the server.', 't-error'); }
+});
+
+// ── Active Sessions (admin-only) ───────────────────────────────
+document.getElementById('activeSessionsBtn').addEventListener('click', async ()=>{
+  const list = document.getElementById('sessionsList');
+  list.innerHTML = '<div style="padding:20px;text-align:center;color:var(--muted)">Loading…</div>';
+  document.getElementById('sessionsModal').classList.add('open');
+  try{
+    const res = await fetch('/api/admin/active-sessions');
+    const data = await res.json();
+    if(!data.success){ list.innerHTML = '<div style="padding:20px;color:var(--danger)">Could not load sessions.</div>'; return; }
+    document.getElementById('sessionsModalSub').textContent =
+      `${data.count} active session${data.count===1?'':'s'} right now`;
+    const roleLabel = r => r==='admin'?'Admin':r==='ebs'?'EBS':r==='smb'?'Security Zia':'Guest';
+    list.innerHTML = data.sessions.map(s => {
+      const loginTime = new Date(s.loginAt).toLocaleString('en-GB', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' });
+      return `
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border)">
+          <div>
+            <div style="font-weight:700;font-size:13.5px">${escAttr(s.name)}${s.isYou ? ' <span style="color:var(--muted);font-weight:400">(you)</span>' : ''}</div>
+            <div style="font-size:11.5px;color:var(--muted)">Logged in ${loginTime}</div>
+          </div>
+          <span class="role-pill${s.role==='admin'?' role-admin':s.role==='ebs'?' role-ebs':s.role==='smb'?' role-smb':''}">${roleLabel(s.role)}</span>
+        </div>`;
+    }).join('') || '<div style="padding:20px;text-align:center;color:var(--muted)">No active sessions.</div>';
+  }catch(e){ list.innerHTML = '<div style="padding:20px;color:var(--danger)">Could not reach the server.</div>'; }
+});
+document.getElementById('sessionsModalClose').addEventListener('click', ()=> document.getElementById('sessionsModal').classList.remove('open'));
+document.getElementById('sessionsModal').addEventListener('click', (e)=>{ if(e.target.id==='sessionsModal') e.currentTarget.classList.remove('open'); });
 async function checkSession(){
   try{
     const res = await fetch('/api/me');

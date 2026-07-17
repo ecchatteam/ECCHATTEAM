@@ -580,6 +580,7 @@
             <th style="width:220px">Ticket Time Window</th>
             <th style="width:100px">Duration</th>
             <th style="text-align:center">On leave</th>
+            <th style="text-align:center;width:150px">Swap</th>
             <th style="text-align:center">Reorder</th>
           </tr>
         </thead>
@@ -1114,7 +1115,7 @@ function renderTable(){
     : '—';
 
   if(rows.length === 0){
-    tbody.innerHTML = `<tr><td colspan="8">
+    tbody.innerHTML = `<tr><td colspan="9">
       <div class="empty-state">
         <div class="em-icon">👥</div>
         <h3>No master roster set up yet</h3>
@@ -1148,6 +1149,12 @@ function renderTable(){
           <input type="checkbox" ${r.onLeave?'checked':''} onchange="toggleLeave('${r.id}', this.checked)">
           <span class="slider"></span>
         </label>
+      </td>
+      <td style="text-align:center">
+        <select class="tr-select swap-select" title="Swap this person's Shift Timing and Ticket Time Window with someone else" onchange="if(this.value){ swapShift('${r.id}', this.value); this.value=''; }">
+          <option value="">🔄 Swap with…</option>
+          ${rows.filter(row2 => row2.id !== r.id).map(row2 => `<option value="${row2.id}">${escAttr(row2.name)}</option>`).join('')}
+        </select>
       </td>
       <td>
         <div class="row-actions">
@@ -1292,6 +1299,29 @@ async function toggleLeave(rosterId, onLeave){
       showToast(onLeave ? 'Marked on leave — everyone else\'s time adjusted automatically.' : 'Marked available — schedule rebalanced.', 't-success');
     } else {
       showToast(data.message || 'Could not update.', 't-error');
+    }
+  }catch(e){ showToast('Could not reach the server.', 't-error'); }
+}
+
+// One-click Shift Swap: exchange two people's Shift Timing label AND
+// Ticket Time Window in a single atomic call — same underlying reorder
+// mechanism as the up/down arrows, just targeting two named people
+// directly instead of dragging them together by hand.
+async function swapShift(idA, idB){
+  const nameA = (rows.find(r=>r.id===idA)||{}).name || 'this person';
+  const nameB = (rows.find(r=>r.id===idB)||{}).name || 'the selected person';
+  try{
+    const res = await fetch(`/api/schedule/${currentDate}/swap`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ idA, idB })
+    });
+    const data = await res.json();
+    if(data.success){
+      rows = data.rows;
+      renderAll();
+      showToast(`Swapped ${nameA} \u2194 ${nameB} — Shift Timing and Ticket Time Window updated for both.`, 't-success');
+    } else {
+      showToast(data.message || 'Could not swap shifts.', 't-error');
     }
   }catch(e){ showToast('Could not reach the server.', 't-error'); }
 }

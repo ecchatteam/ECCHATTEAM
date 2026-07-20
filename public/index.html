@@ -126,9 +126,13 @@
   .tr-ebs-count{font-family:var(--mono);font-weight:800;color:var(--purple);font-size:16px}
   .tr-ebs-reset{background:transparent;border:none;color:var(--muted);font-size:13px;cursor:pointer;padding:3px;border-radius:6px;line-height:1}
   .tr-ebs-reset:hover{color:var(--purple);background:#F3EEFB}
-  .guest-mode .tr-ebs-reset,
-  .ebs-mode .tr-ebs-reset,
-  .smb-mode .tr-ebs-reset{display:none}
+  .tr-ebs-remove{background:transparent;border:none;color:var(--muted);font-size:13px;cursor:pointer;padding:3px;border-radius:6px;line-height:1}
+  .tr-ebs-remove:hover{color:var(--danger);background:#FCEBEB}
+  .tr-ebs-editshift{background:transparent;border:none;color:var(--muted);font-size:13px;cursor:pointer;padding:3px;border-radius:6px;line-height:1}
+  .tr-ebs-editshift:hover{color:var(--teal);background:#E6F7F5}
+  .guest-mode .tr-ebs-reset, .guest-mode .tr-ebs-remove, .guest-mode .tr-ebs-editshift,
+  .ebs-mode .tr-ebs-reset, .ebs-mode .tr-ebs-remove, .ebs-mode .tr-ebs-editshift,
+  .smb-mode .tr-ebs-reset, .smb-mode .tr-ebs-remove, .smb-mode .tr-ebs-editshift{display:none}
 
   .tr-feed-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px 16px;margin-top:20px;box-shadow:0 2px 10px rgba(16,35,63,0.06)}
   .tr-feed{max-height:220px;overflow-y:auto;display:flex;flex-direction:column;gap:0}
@@ -1393,6 +1397,52 @@ async function toggleLeave(rosterId, onLeave){
 // Ticket Time Window in a single atomic call — same underlying reorder
 // mechanism as the up/down arrows, just targeting two named people
 // directly instead of dragging them together by hand.
+// Fully remove someone from the team — deletes their tracker roster entry
+// (so they disappear from EBS/SMB/Security cards) AND their login account
+// together, in one confirmed action. Does not touch the master roster —
+// that's a separate list, edited via the Master Roster button.
+// Change someone's permanent nominal Shift Timing — this is the default
+// every future day falls back to (different from the per-day dropdown
+// override on the Shift Roster page, which only affects one date).
+async function editShift(id, name, currentShift){
+  const input = prompt(`New permanent shift time for ${name} (24-hour HH:MM, e.g. 11:00 or 17:00):`, currentShift || '');
+  if(input === null) return; // cancelled
+  const shift = input.trim();
+  if(!/^\d{2}:\d{2}$/.test(shift)){ showToast('Enter a time like 11:00 or 17:00 (24-hour format).', 't-error'); return; }
+  try{
+    const res = await fetch('/api/tracker/roster/set-shift', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ id, shift })
+    });
+    const data = await res.json();
+    if(data.success){
+      showToast(`${data.name}'s shift is now ${data.shift} going forward.`, 't-success');
+      await loadTrackerRoster();
+      renderTracker();
+    } else {
+      showToast(data.message || 'Could not update shift.', 't-error');
+    }
+  }catch(e){ showToast('Could not reach the server.', 't-error'); }
+}
+
+async function removeFromTeam(id, name){
+  if(!confirm(`Remove ${name} from the team?\n\nThis deletes their tracker profile and their login account. This can't be undone — you'd need to re-add them from scratch.`)) return;
+  try{
+    const res = await fetch('/api/tracker/roster/remove', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ id })
+    });
+    const data = await res.json();
+    if(data.success){
+      showToast(`${data.name} removed from the team${data.removedLogin ? ' — login account deleted too.' : '.'}`, 't-success');
+      await loadTrackerRoster();
+      renderTracker();
+    } else {
+      showToast(data.message || 'Could not remove this person.', 't-error');
+    }
+  }catch(e){ showToast('Could not reach the server.', 't-error'); }
+}
+
 async function swapShift(idA, idB){
   const nameA = (rows.find(r=>r.id===idA)||{}).name || 'this person';
   const nameB = (rows.find(r=>r.id===idB)||{}).name || 'the selected person';
@@ -2065,6 +2115,8 @@ function renderTracker(){
           <div style="display:flex;align-items:center;gap:6px">
             ${onLeave ? '<span class="tr-recommend-badge" style="background:#FCEBEB;color:var(--danger)">On leave</span>' : (isRecommend ? '<span class="tr-recommend-badge">Lowest load</span>' : '')}
             ${isAdmin && p.username ? `<button class="tr-ebs-reset" data-username="${escAttr(p.username)}" data-name="${escAttr(p.name)}" title="Reset password">🔑</button>` : ''}
+            ${isAdmin ? `<button class="tr-ebs-editshift" data-id="${escAttr(p.id)}" data-name="${escAttr(p.name)}" data-shift="${escAttr(p.shift||'')}" title="Change permanent shift time">✏️</button>` : ''}
+            ${isAdmin ? `<button class="tr-ebs-remove" data-id="${escAttr(p.id)}" data-name="${escAttr(p.name)}" title="Remove from team (deletes their login too)">🗑</button>` : ''}
           </div>
         </div>
         <div class="tr-card-body">
@@ -2095,6 +2147,8 @@ function renderTracker(){
       <div style="display:flex;align-items:center;gap:6px">
         <div class="tr-ebs-count">${trackerState.totalsByEbs[p.id] || 0}</div>
         ${p.username ? `<button class="tr-ebs-reset" data-username="${escAttr(p.username)}" data-name="${escAttr(p.name)}" title="Reset password">🔑</button>` : ''}
+        ${isAdmin ? `<button class="tr-ebs-editshift" data-id="${escAttr(p.id)}" data-name="${escAttr(p.name)}" data-shift="${escAttr(p.shift||'')}" title="Change permanent shift time">✏️</button>` : ''}
+        ${isAdmin ? `<button class="tr-ebs-remove" data-id="${escAttr(p.id)}" data-name="${escAttr(p.name)}" title="Remove from team (deletes their login too)">🗑</button>` : ''}
       </div>
     </div>
   `).join('') || `<div class="tz-note">No EBS techs set up yet.</div>`;
@@ -2102,6 +2156,18 @@ function renderTracker(){
     btn.addEventListener('click', (e) => {
       e.stopPropagation(); // don't also trigger the card's filter click
       openResetPwModal(btn.getAttribute('data-username'), btn.getAttribute('data-name'));
+    });
+  });
+  document.querySelectorAll('.tr-ebs-remove').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      removeFromTeam(btn.getAttribute('data-id'), btn.getAttribute('data-name'));
+    });
+  });
+  document.querySelectorAll('.tr-ebs-editshift').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      editShift(btn.getAttribute('data-id'), btn.getAttribute('data-name'), btn.getAttribute('data-shift'));
     });
   });
   document.querySelectorAll('.tr-ebs-card').forEach(card => {

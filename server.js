@@ -889,6 +889,56 @@ app.put('/api/tracker/roster', requireAuth, requireAdmin, (req, res) => {
   res.json({ success: true, people: cleanPeople });
 });
 
+// Remove a person from the team entirely — their tracker roster entry
+// (so they stop appearing as an EBS/SMB/Security option) AND their login
+// account (so they can no longer sign in), in one atomic action. Does NOT
+// touch the master roster — that's edited separately via Master Roster.
+app.post('/api/tracker/roster/remove', requireAuth, requireAdmin, (req, res) => {
+  const { id } = req.body || {};
+  if (!id) return res.status(400).json({ success: false, message: 'Person id is required' });
+
+  const roster = readTrackerRoster();
+  const person = (roster.people || []).find(p => p.id === id);
+  if (!person) return res.status(404).json({ success: false, message: 'Person not found in tracker roster' });
+
+  roster.people = roster.people.filter(p => p.id !== id);
+  writeTrackerRoster(roster);
+
+  let removedLogin = null;
+  const users = readUsers();
+  for (const [username, record] of Object.entries(users)) {
+    if ((record.ebsId === id) || (record.smbId === id)) {
+      removedLogin = username;
+      delete users[username];
+      break;
+    }
+  }
+  if (removedLogin) writeUsers(users);
+
+  console.log(`[tracker] Removed ${person.name} from tracker roster${removedLogin ? ` and deleted login "${removedLogin}"` : ' (no login account found)'}`);
+  res.json({ success: true, name: person.name, removedLogin });
+});
+
+// Change someone's nominal "Shift Timing" going forward — e.g. Lokesh
+// permanently moving to the 11:00 slot. This is the DEFAULT that every
+// future day falls back to; it's separate from the per-day override
+// (the dropdown on the Shift Roster page), which only affects one date.
+app.post('/api/tracker/roster/set-shift', requireAuth, requireAdmin, (req, res) => {
+  const { id, shift } = req.body || {};
+  if (!id) return res.status(400).json({ success: false, message: 'Person id is required' });
+  if (!/^\d{2}:\d{2}$/.test(String(shift || ''))) return res.status(400).json({ success: false, message: 'Shift must be in HH:MM format, e.g. 11:00 or 17:00' });
+
+  const roster = readTrackerRoster();
+  const person = (roster.people || []).find(p => p.id === id);
+  if (!person) return res.status(404).json({ success: false, message: 'Person not found in tracker roster' });
+
+  const oldShift = person.shift;
+  person.shift = shift;
+  writeTrackerRoster(roster);
+  console.log(`[tracker] ${person.name}'s nominal shift changed: ${oldShift || '(none)'} → ${shift}`);
+  res.json({ success: true, name: person.name, shift });
+});
+
 // Get a day's assignment events + computed counts (live tracker view)
 app.get('/api/tracker/:date', requireAuth, (req, res) => {
   const { date } = req.params;

@@ -956,7 +956,7 @@ app.post('/api/tracker/roster/remove', requireAuth, requireAdmin, (req, res) => 
 // future day falls back to; it's separate from the per-day override
 // (the dropdown on the Shift Roster page), which only affects one date.
 app.post('/api/tracker/roster/set-shift', requireAuth, requireAdmin, (req, res) => {
-  const { id, shift } = req.body || {};
+  const { id, shift, region } = req.body || {};
   if (!id) return res.status(400).json({ success: false, message: 'Person id is required' });
   if (!/^\d{2}:\d{2}$/.test(String(shift || ''))) return res.status(400).json({ success: false, message: 'Shift must be in HH:MM format, e.g. 11:00 or 17:00' });
 
@@ -964,11 +964,12 @@ app.post('/api/tracker/roster/set-shift', requireAuth, requireAdmin, (req, res) 
   const person = (roster.people || []).find(p => p.id === id);
   if (!person) return res.status(404).json({ success: false, message: 'Person not found in tracker roster' });
 
-  const oldShift = person.shift;
+  const oldShift = person.shift, oldRegion = person.region;
   person.shift = shift;
+  if (region && region.trim()) person.region = region.trim();
   writeTrackerRoster(roster);
-  console.log(`[tracker] ${person.name}'s nominal shift changed: ${oldShift || '(none)'} → ${shift}`);
-  res.json({ success: true, name: person.name, shift });
+  console.log(`[tracker] ${person.name} updated: shift ${oldShift || '(none)'} \u2192 ${shift}${region && region.trim() ? `, region ${oldRegion || '(none)'} \u2192 ${person.region}` : ''}`);
+  res.json({ success: true, name: person.name, shift, region: person.region });
 });
 
 // Get a day's assignment events + computed counts (live tracker view)

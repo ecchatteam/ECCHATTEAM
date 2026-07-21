@@ -712,7 +712,39 @@ app.post('/api/schedule/:date/shift-label', requireAuth, requireAdmin, (req, res
   res.json({ success: true, date, rows: current });
 });
 
-// ── Reorder a day's sequence (ad-hoc swap, doesn't touch the roster) ──
+// ── Set someone's Shift Timing across a DATE RANGE in one action — e.g.
+// "Guna is 11:00 from Jul 21 through Aug 20." Applies the same per-day
+// shiftLabel override used above, just looped across every date in the
+// range, so it doesn't need to be set day-by-day. Leave toDate off (or
+// equal to fromDate + a far future date) for an open-ended change.
+app.post('/api/schedule/range-shift', requireAuth, requireAdmin, (req, res) => {
+  const { rosterId, shift, fromDate, toDate } = req.body || {};
+  if (!rosterId) return res.status(400).json({ success: false, message: 'rosterId required' });
+  if (!/^\d{2}:\d{2}$/.test(String(shift || ''))) return res.status(400).json({ success: false, message: 'Shift must be HH:MM, e.g. 11:00' });
+  if (!isValidDate(fromDate) || !isValidDate(toDate)) return res.status(400).json({ success: false, message: 'Invalid date range' });
+
+  const dates = [];
+  let d = new Date(fromDate + 'T00:00:00');
+  const end = new Date(toDate + 'T00:00:00');
+  if (d > end) return res.status(400).json({ success: false, message: '"From" date must be before "To" date' });
+  const fmtLocal = (dt) => `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`;
+  while (d <= end) { dates.push(fmtLocal(d)); d.setDate(d.getDate() + 1); }
+  if (dates.length > 120) return res.status(400).json({ success: false, message: 'Range too large — please use 120 days or fewer' });
+
+  let updated = 0, personName = null;
+  dates.forEach(date => {
+    const current = getOrBuildDayRows(date);
+    const idx = current.findIndex(r => r.id === rosterId);
+    if (idx === -1) return;
+    personName = current[idx].name;
+    current[idx] = { ...current[idx], shiftLabel: shift };
+    writeSchedule(date, current);
+    updated++;
+  });
+
+  console.log(`[shift-label] Range update — ${personName || rosterId} set to ${shift} across ${updated} day(s), ${fromDate} to ${toDate}`);
+  res.json({ success: true, name: personName, shift, daysUpdated: updated });
+});
 app.post('/api/schedule/:date/reorder', requireAuth, requireAdmin, (req, res) => {
   const { date } = req.params;
   const { order } = req.body; // array of rosterIds in the new order

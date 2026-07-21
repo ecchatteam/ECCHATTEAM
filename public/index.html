@@ -1442,19 +1442,22 @@ async function toggleLeave(rosterId, onLeave){
 // Change someone's permanent nominal Shift Timing — this is the default
 // every future day falls back to (different from the per-day dropdown
 // override on the Shift Roster page, which only affects one date).
-async function editShift(id, name, currentShift){
+async function editShift(id, name, currentShift, currentRegion){
   const input = prompt(`New permanent shift time for ${name} (24-hour HH:MM, e.g. 11:00 or 17:00):`, currentShift || '');
   if(input === null) return; // cancelled
   const shift = input.trim();
   if(!/^\d{2}:\d{2}$/.test(shift)){ showToast('Enter a time like 11:00 or 17:00 (24-hour format).', 't-error'); return; }
+  const regionInput = prompt(`Region for ${name} (leave as-is and press OK to keep unchanged):`, currentRegion || '');
+  if(regionInput === null) return; // cancelled
+  const region = regionInput.trim();
   try{
     const res = await fetch('/api/tracker/roster/set-shift', {
       method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ id, shift })
+      body: JSON.stringify({ id, shift, region })
     });
     const data = await res.json();
     if(data.success){
-      showToast(`${data.name}'s shift is now ${data.shift} going forward.`, 't-success');
+      showToast(`${data.name} is now ${data.shift}${data.region ? ', ' + data.region : ''} going forward.`, 't-success');
       await loadTrackerRoster();
       renderTracker();
     } else {
@@ -2153,7 +2156,7 @@ function renderTracker(){
           <div style="display:flex;align-items:center;gap:6px">
             ${onLeave ? '<span class="tr-recommend-badge" style="background:#FCEBEB;color:var(--danger)">On leave</span>' : (isRecommend ? '<span class="tr-recommend-badge">Lowest load</span>' : '')}
             ${isAdmin && p.username ? `<button class="tr-ebs-reset" data-username="${escAttr(p.username)}" data-name="${escAttr(p.name)}" title="Reset password">🔑</button>` : ''}
-            ${isAdmin ? `<button class="tr-ebs-editshift" data-id="${escAttr(p.id)}" data-name="${escAttr(p.name)}" data-shift="${escAttr(p.shift||'')}" title="Change permanent shift time">✏️</button>` : ''}
+            ${isAdmin ? `<button class="tr-ebs-editshift" data-id="${escAttr(p.id)}" data-name="${escAttr(p.name)}" data-shift="${escAttr(p.shift||'')}" data-region="${escAttr(p.region||'')}" title="Change permanent shift time and region">✏️</button>` : ''}
             ${isAdmin ? `<button class="tr-ebs-remove" data-id="${escAttr(p.id)}" data-name="${escAttr(p.name)}" title="Remove from team (deletes their login too)">🗑</button>` : ''}
           </div>
         </div>
@@ -2185,7 +2188,7 @@ function renderTracker(){
       <div style="display:flex;align-items:center;gap:6px">
         <div class="tr-ebs-count">${trackerState.totalsByEbs[p.id] || 0}</div>
         ${p.username ? `<button class="tr-ebs-reset" data-username="${escAttr(p.username)}" data-name="${escAttr(p.name)}" title="Reset password">🔑</button>` : ''}
-        ${isAdmin ? `<button class="tr-ebs-editshift" data-id="${escAttr(p.id)}" data-name="${escAttr(p.name)}" data-shift="${escAttr(p.shift||'')}" title="Change permanent shift time">✏️</button>` : ''}
+        ${isAdmin ? `<button class="tr-ebs-editshift" data-id="${escAttr(p.id)}" data-name="${escAttr(p.name)}" data-shift="${escAttr(p.shift||'')}" data-region="${escAttr(p.region||'')}" title="Change permanent shift time and region">✏️</button>` : ''}
         ${isAdmin ? `<button class="tr-ebs-remove" data-id="${escAttr(p.id)}" data-name="${escAttr(p.name)}" title="Remove from team (deletes their login too)">🗑</button>` : ''}
       </div>
     </div>
@@ -2205,7 +2208,7 @@ function renderTracker(){
   document.querySelectorAll('.tr-ebs-editshift').forEach(btn => {
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
-      editShift(btn.getAttribute('data-id'), btn.getAttribute('data-name'), btn.getAttribute('data-shift'));
+      editShift(btn.getAttribute('data-id'), btn.getAttribute('data-name'), btn.getAttribute('data-shift'), btn.getAttribute('data-region'));
     });
   });
   document.querySelectorAll('.tr-ebs-card').forEach(card => {

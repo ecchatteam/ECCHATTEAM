@@ -417,17 +417,17 @@
   .announcement-head{font-size:18px;font-weight:900;color:#7A5B00;margin-bottom:12px;letter-spacing:.2px}
   .ann-icon{
     display:inline-block; transform-origin:50% 85%;
-    animation: giftOpen 1.3s cubic-bezier(.36,.07,.19,.97) .3s both;
+    animation: annShake 1.8s ease-in-out infinite;
   }
-  @keyframes giftOpen{
-    0%{ transform:scale(1) rotate(0deg); }
-    12%{ transform:scale(1.1) rotate(-14deg); }
-    24%{ transform:scale(1.1) rotate(11deg); }
-    36%{ transform:scale(1.15) rotate(-9deg); }
-    48%{ transform:scale(1.2) rotate(7deg); }
-    62%{ transform:scale(1.4) rotate(-4deg); }
-    78%{ transform:scale(1.5) rotate(0deg); }
-    100%{ transform:scale(1) rotate(0deg); }
+  @keyframes annShake{
+    0%,100%{ transform:rotate(0deg); }
+    10%{ transform:rotate(-14deg); }
+    20%{ transform:rotate(11deg); }
+    30%{ transform:rotate(-9deg); }
+    40%{ transform:rotate(7deg); }
+    50%{ transform:rotate(-4deg); }
+    60%{ transform:rotate(2deg); }
+    70%,100%{ transform:rotate(0deg); }
   }
   .announcement-body{
     font-size:16px;font-weight:700;color:#4A3800;line-height:1.55;white-space:pre-wrap;word-break:break-word;
@@ -545,6 +545,7 @@
     <div class="user-chip">
       <span id="userChipText"></span>
       <button id="activeSessionsBtn" title="See who's currently logged in" style="display:none">👥 Active Sessions</button>
+      <button id="rangeShiftBtn" title="Set someone's Shift Timing across a date range" style="display:none">🗓️ Set Shift (range)</button>
       <button id="changePwBtn" title="Change password">🔑 Password</button>
       <button id="logoutBtn">Logout</button>
     </div>
@@ -591,7 +592,7 @@
        content on any screen size. Admin can post/edit/clear; everyone
        else sees it read-only. -->
   <aside id="announcementCard" class="announcement-card">
-    <div class="announcement-head"><span class="ann-icon">🎁</span> Team Announcement</div>
+    <div class="announcement-head"><span class="ann-icon">📣</span> Team Announcement</div>
     <div id="announcementBody" class="announcement-body"></div>
     <div id="announcementAdminControls" class="announcement-admin" style="display:none">
       <textarea id="announcementInput" rows="5" placeholder="Type or paste an announcement for the whole team…"></textarea>
@@ -870,6 +871,43 @@
         <textarea id="assignComment" rows="3" style="width:100%;padding:9px 11px;border:1px solid var(--border);border-radius:8px;font-size:13px;box-sizing:border-box;font-family:var(--sans);resize:vertical" placeholder="Reason, ticket #, context…"></textarea>
         <div class="form-error" id="assignCommentError" style="margin-top:8px"></div>
         <button type="submit" class="btn btn-teal" style="width:100%;justify-content:center;margin-top:10px">Confirm assignment</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Date-range Shift Timing override -->
+<div class="modal-overlay" id="rangeShiftModal">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-head">
+      <div>
+        <h2>🗓️ Set Shift Timing for a date range</h2>
+        <p>Applies to every day in the range, until you change it again.</p>
+      </div>
+      <button class="modal-close" id="rangeShiftModalClose" aria-label="Close">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <form id="rangeShiftForm">
+        <label style="display:block;font-size:12px;color:var(--muted);font-weight:600;margin-bottom:6px">Person</label>
+        <select id="rangeShiftPerson" required style="width:100%;padding:9px 11px;border:1px solid var(--border);border-radius:8px;font-size:13px;box-sizing:border-box;margin-bottom:12px"></select>
+
+        <label style="display:block;font-size:12px;color:var(--muted);font-weight:600;margin-bottom:6px">New Shift Timing (24-hour)</label>
+        <input type="time" id="rangeShiftTime" required style="width:100%;padding:9px 11px;border:1px solid var(--border);border-radius:8px;font-size:13px;box-sizing:border-box;margin-bottom:12px">
+
+        <div style="display:flex;gap:10px;margin-bottom:12px">
+          <div style="flex:1">
+            <label style="display:block;font-size:12px;color:var(--muted);font-weight:600;margin-bottom:6px">From date</label>
+            <input type="date" id="rangeShiftFrom" required style="width:100%;padding:9px 11px;border:1px solid var(--border);border-radius:8px;font-size:13px;box-sizing:border-box">
+          </div>
+          <div style="flex:1">
+            <label style="display:block;font-size:12px;color:var(--muted);font-weight:600;margin-bottom:6px">To date</label>
+            <input type="date" id="rangeShiftTo" required style="width:100%;padding:9px 11px;border:1px solid var(--border);border-radius:8px;font-size:13px;box-sizing:border-box">
+          </div>
+        </div>
+        <div class="form-error" id="rangeShiftError"></div>
+        <button type="submit" class="btn btn-teal" style="width:100%;justify-content:center;margin-top:6px">Apply across this range</button>
       </form>
     </div>
   </div>
@@ -2656,6 +2694,7 @@ function enterApp(){
   document.body.classList.toggle('ebs-mode', CURRENT_ROLE === 'ebs');
   document.body.classList.toggle('smb-mode', CURRENT_ROLE === 'smb');
   document.getElementById('activeSessionsBtn').style.display = CURRENT_ROLE === 'admin' ? 'inline-flex' : 'none';
+  document.getElementById('rangeShiftBtn').style.display = CURRENT_ROLE === 'admin' ? 'inline-flex' : 'none';
   document.getElementById('announcementAdminControls').style.display = CURRENT_ROLE === 'admin' ? 'block' : 'none';
   loadDate(istTodayISO());
   loadTrackerRoster();
@@ -2736,6 +2775,44 @@ document.getElementById('activeSessionsBtn').addEventListener('click', async ()=
 });
 document.getElementById('sessionsModalClose').addEventListener('click', ()=> document.getElementById('sessionsModal').classList.remove('open'));
 document.getElementById('sessionsModal').addEventListener('click', (e)=>{ if(e.target.id==='sessionsModal') e.currentTarget.classList.remove('open'); });
+
+// ── Set Shift Timing across a date range (admin-only) ───────────
+document.getElementById('rangeShiftBtn').addEventListener('click', ()=>{
+  const sel = document.getElementById('rangeShiftPerson');
+  const people = (trackerRoster.people || []).filter(p => p.mode === 'EBS' || p.mode === 'SMB').sort((a,b)=> a.name.localeCompare(b.name));
+  sel.innerHTML = people.map(p => `<option value="${escAttr(p.id)}">${escAttr(p.name)} (${p.mode})</option>`).join('');
+  document.getElementById('rangeShiftTime').value = '';
+  const today = istTodayISO();
+  document.getElementById('rangeShiftFrom').value = today;
+  document.getElementById('rangeShiftTo').value = today;
+  document.getElementById('rangeShiftError').textContent = '';
+  document.getElementById('rangeShiftModal').classList.add('open');
+});
+document.getElementById('rangeShiftModalClose').addEventListener('click', ()=> document.getElementById('rangeShiftModal').classList.remove('open'));
+document.getElementById('rangeShiftModal').addEventListener('click', (e)=>{ if(e.target.id==='rangeShiftModal') e.currentTarget.classList.remove('open'); });
+document.getElementById('rangeShiftForm').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const rosterId = document.getElementById('rangeShiftPerson').value;
+  const shift = document.getElementById('rangeShiftTime').value;
+  const fromDate = document.getElementById('rangeShiftFrom').value;
+  const toDate = document.getElementById('rangeShiftTo').value;
+  const errEl = document.getElementById('rangeShiftError');
+  errEl.textContent = '';
+  try{
+    const res = await fetch('/api/schedule/range-shift', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ rosterId, shift, fromDate, toDate })
+    });
+    const data = await res.json();
+    if(data.success){
+      document.getElementById('rangeShiftModal').classList.remove('open');
+      showToast(`${data.name}'s Shift Timing set to ${data.shift} across ${data.daysUpdated} day${data.daysUpdated===1?'':'s'} (${fromDate} \u2192 ${toDate}).`, 't-success');
+      if(rows.some(r => r.id === rosterId)) loadDate(currentDate); // refresh the visible table if it's showing an affected day
+    } else {
+      errEl.textContent = data.message || 'Could not apply this change.';
+    }
+  }catch(e){ errEl.textContent = 'Could not reach the server.'; }
+});
 async function checkSession(){
   try{
     const res = await fetch('/api/me');

@@ -877,6 +877,34 @@
 </div>
 
 <!-- Date-range Shift Timing override -->
+<!-- Edit person: permanent Shift Timing + Region, both fields together -->
+<div class="modal-overlay" id="editPersonModal">
+  <div class="modal" style="max-width:380px">
+    <div class="modal-head">
+      <div>
+        <h2 id="editPersonTitle">Edit shift &amp; region</h2>
+        <p>Changes apply going forward, everywhere.</p>
+      </div>
+      <button class="modal-close" id="editPersonModalClose" aria-label="Close">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <form id="editPersonForm">
+        <input type="hidden" id="editPersonId">
+        <label style="display:block;font-size:12px;color:var(--muted);font-weight:600;margin-bottom:6px">Shift Timing (24-hour)</label>
+        <input type="time" id="editPersonShift" required style="width:100%;padding:9px 11px;border:1px solid var(--border);border-radius:8px;font-size:13px;box-sizing:border-box;margin-bottom:12px">
+
+        <label style="display:block;font-size:12px;color:var(--muted);font-weight:600;margin-bottom:6px">Region</label>
+        <input type="text" id="editPersonRegion" placeholder="e.g. India/MEA" style="width:100%;padding:9px 11px;border:1px solid var(--border);border-radius:8px;font-size:13px;box-sizing:border-box;margin-bottom:12px">
+
+        <div class="form-error" id="editPersonError"></div>
+        <button type="submit" class="btn btn-teal" style="width:100%;justify-content:center;margin-top:6px">Save</button>
+      </form>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="rangeShiftModal">
   <div class="modal" style="max-width:420px">
     <div class="modal-head">
@@ -1442,14 +1470,23 @@ async function toggleLeave(rosterId, onLeave){
 // Change someone's permanent nominal Shift Timing — this is the default
 // every future day falls back to (different from the per-day dropdown
 // override on the Shift Roster page, which only affects one date).
-async function editShift(id, name, currentShift, currentRegion){
-  const input = prompt(`New permanent shift time for ${name} (24-hour HH:MM, e.g. 11:00 or 17:00):`, currentShift || '');
-  if(input === null) return; // cancelled
-  const shift = input.trim();
-  if(!/^\d{2}:\d{2}$/.test(shift)){ showToast('Enter a time like 11:00 or 17:00 (24-hour format).', 't-error'); return; }
-  const regionInput = prompt(`Region for ${name} (leave as-is and press OK to keep unchanged):`, currentRegion || '');
-  if(regionInput === null) return; // cancelled
-  const region = regionInput.trim();
+function editShift(id, name, currentShift, currentRegion){
+  document.getElementById('editPersonId').value = id;
+  document.getElementById('editPersonTitle').textContent = `Edit ${name}`;
+  document.getElementById('editPersonShift').value = currentShift || '';
+  document.getElementById('editPersonRegion').value = currentRegion || '';
+  document.getElementById('editPersonError').textContent = '';
+  document.getElementById('editPersonModal').classList.add('open');
+}
+document.getElementById('editPersonModalClose').addEventListener('click', ()=> document.getElementById('editPersonModal').classList.remove('open'));
+document.getElementById('editPersonModal').addEventListener('click', (e)=>{ if(e.target.id==='editPersonModal') e.currentTarget.classList.remove('open'); });
+document.getElementById('editPersonForm').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const id = document.getElementById('editPersonId').value;
+  const shift = document.getElementById('editPersonShift').value;
+  const region = document.getElementById('editPersonRegion').value;
+  const errEl = document.getElementById('editPersonError');
+  errEl.textContent = '';
   try{
     const res = await fetch('/api/tracker/roster/set-shift', {
       method:'POST', headers:{'Content-Type':'application/json'},
@@ -1457,14 +1494,15 @@ async function editShift(id, name, currentShift, currentRegion){
     });
     const data = await res.json();
     if(data.success){
+      document.getElementById('editPersonModal').classList.remove('open');
       showToast(`${data.name} is now ${data.shift}${data.region ? ', ' + data.region : ''} going forward.`, 't-success');
       await loadTrackerRoster();
       renderTracker();
     } else {
-      showToast(data.message || 'Could not update shift.', 't-error');
+      errEl.textContent = data.message || 'Could not update shift.';
     }
-  }catch(e){ showToast('Could not reach the server.', 't-error'); }
-}
+  }catch(e){ errEl.textContent = 'Could not reach the server.'; }
+});
 
 async function removeFromTeam(id, name){
   if(!confirm(`Remove ${name} from the team?\n\nThis deletes their tracker profile and their login account. This can't be undone — you'd need to re-add them from scratch.`)) return;

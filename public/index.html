@@ -546,6 +546,7 @@
       <span id="userChipText"></span>
       <button id="activeSessionsBtn" title="See who's currently logged in" style="display:none">👥 Active Sessions</button>
       <button id="rangeShiftBtn" title="Set someone's Shift Timing across a date range" style="display:none">🗓️ Set Shift (range)</button>
+      <button id="rangeLeaveBtn" title="Set someone on leave across a date range" style="display:none">🏖️ Set Leave (range)</button>
       <button id="changePwBtn" title="Change password">🔑 Password</button>
       <button id="logoutBtn">Logout</button>
     </div>
@@ -924,6 +925,9 @@
         <label style="display:block;font-size:12px;color:var(--muted);font-weight:600;margin-bottom:6px">New Shift Timing (24-hour)</label>
         <input type="time" id="rangeShiftTime" required style="width:100%;padding:9px 11px;border:1px solid var(--border);border-radius:8px;font-size:13px;box-sizing:border-box;margin-bottom:12px">
 
+        <label style="display:block;font-size:12px;color:var(--muted);font-weight:600;margin-bottom:6px">Region (optional — leave blank to keep unchanged)</label>
+        <input type="text" id="rangeShiftRegion" placeholder="e.g. India/MEA" style="width:100%;padding:9px 11px;border:1px solid var(--border);border-radius:8px;font-size:13px;box-sizing:border-box;margin-bottom:12px">
+
         <div style="display:flex;gap:10px;margin-bottom:12px">
           <div style="flex:1">
             <label style="display:block;font-size:12px;color:var(--muted);font-weight:600;margin-bottom:6px">From date</label>
@@ -935,6 +939,46 @@
           </div>
         </div>
         <div class="form-error" id="rangeShiftError"></div>
+        <button type="submit" class="btn btn-teal" style="width:100%;justify-content:center;margin-top:6px">Apply across this range</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Date-range Leave override -->
+<div class="modal-overlay" id="rangeLeaveModal">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-head">
+      <div>
+        <h2>🏖️ Set Leave for a date range</h2>
+        <p>Marks every day in the range on leave (or available) in one go.</p>
+      </div>
+      <button class="modal-close" id="rangeLeaveModalClose" aria-label="Close">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <form id="rangeLeaveForm">
+        <label style="display:block;font-size:12px;color:var(--muted);font-weight:600;margin-bottom:6px">Person</label>
+        <select id="rangeLeavePerson" required style="width:100%;padding:9px 11px;border:1px solid var(--border);border-radius:8px;font-size:13px;box-sizing:border-box;margin-bottom:12px"></select>
+
+        <label style="display:block;font-size:12px;color:var(--muted);font-weight:600;margin-bottom:6px">Status</label>
+        <select id="rangeLeaveStatus" required style="width:100%;padding:9px 11px;border:1px solid var(--border);border-radius:8px;font-size:13px;box-sizing:border-box;margin-bottom:12px">
+          <option value="true">On leave</option>
+          <option value="false">Available (clear leave)</option>
+        </select>
+
+        <div style="display:flex;gap:10px;margin-bottom:12px">
+          <div style="flex:1">
+            <label style="display:block;font-size:12px;color:var(--muted);font-weight:600;margin-bottom:6px">From date</label>
+            <input type="date" id="rangeLeaveFrom" required style="width:100%;padding:9px 11px;border:1px solid var(--border);border-radius:8px;font-size:13px;box-sizing:border-box">
+          </div>
+          <div style="flex:1">
+            <label style="display:block;font-size:12px;color:var(--muted);font-weight:600;margin-bottom:6px">To date</label>
+            <input type="date" id="rangeLeaveTo" required style="width:100%;padding:9px 11px;border:1px solid var(--border);border-radius:8px;font-size:13px;box-sizing:border-box">
+          </div>
+        </div>
+        <div class="form-error" id="rangeLeaveError"></div>
         <button type="submit" class="btn btn-teal" style="width:100%;justify-content:center;margin-top:6px">Apply across this range</button>
       </form>
     </div>
@@ -2736,6 +2780,7 @@ function enterApp(){
   document.body.classList.toggle('smb-mode', CURRENT_ROLE === 'smb');
   document.getElementById('activeSessionsBtn').style.display = CURRENT_ROLE === 'admin' ? 'inline-flex' : 'none';
   document.getElementById('rangeShiftBtn').style.display = CURRENT_ROLE === 'admin' ? 'inline-flex' : 'none';
+  document.getElementById('rangeLeaveBtn').style.display = CURRENT_ROLE === 'admin' ? 'inline-flex' : 'none';
   document.getElementById('announcementAdminControls').style.display = CURRENT_ROLE === 'admin' ? 'block' : 'none';
   loadDate(istTodayISO());
   loadTrackerRoster();
@@ -2835,6 +2880,7 @@ document.getElementById('rangeShiftForm').addEventListener('submit', async (e)=>
   e.preventDefault();
   const rosterId = document.getElementById('rangeShiftPerson').value;
   const shift = document.getElementById('rangeShiftTime').value;
+  const region = document.getElementById('rangeShiftRegion').value;
   const fromDate = document.getElementById('rangeShiftFrom').value;
   const toDate = document.getElementById('rangeShiftTo').value;
   const errEl = document.getElementById('rangeShiftError');
@@ -2842,18 +2888,57 @@ document.getElementById('rangeShiftForm').addEventListener('submit', async (e)=>
   try{
     const res = await fetch('/api/schedule/range-shift', {
       method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ rosterId, shift, fromDate, toDate })
+      body: JSON.stringify({ rosterId, shift, region, fromDate, toDate })
     });
     const data = await res.json();
     if(data.success){
       document.getElementById('rangeShiftModal').classList.remove('open');
-      showToast(`${data.name}'s Shift Timing set to ${data.shift} across ${data.daysUpdated} day${data.daysUpdated===1?'':'s'} (${fromDate} \u2192 ${toDate}).`, 't-success');
+      showToast(`${data.name}'s Shift Timing set to ${data.shift}${data.region ? ', ' + data.region : ''} across ${data.daysUpdated} day${data.daysUpdated===1?'':'s'} (${fromDate} \u2192 ${toDate}).`, 't-success');
       if(rows.some(r => r.id === rosterId)) loadDate(currentDate); // refresh the visible table if it's showing an affected day
     } else {
       errEl.textContent = data.message || 'Could not apply this change.';
     }
   }catch(e){ errEl.textContent = 'Could not reach the server.'; }
 });
+
+// ── Set Leave across a date range (admin-only) ───────────────────
+document.getElementById('rangeLeaveBtn').addEventListener('click', ()=>{
+  const sel = document.getElementById('rangeLeavePerson');
+  const people = (trackerRoster.people || []).filter(p => p.mode === 'EBS' || p.mode === 'SMB').sort((a,b)=> a.name.localeCompare(b.name));
+  sel.innerHTML = people.map(p => `<option value="${escAttr(p.id)}">${escAttr(p.name)} (${p.mode})</option>`).join('');
+  document.getElementById('rangeLeaveStatus').value = 'true';
+  const today = istTodayISO();
+  document.getElementById('rangeLeaveFrom').value = today;
+  document.getElementById('rangeLeaveTo').value = today;
+  document.getElementById('rangeLeaveError').textContent = '';
+  document.getElementById('rangeLeaveModal').classList.add('open');
+});
+document.getElementById('rangeLeaveModalClose').addEventListener('click', ()=> document.getElementById('rangeLeaveModal').classList.remove('open'));
+document.getElementById('rangeLeaveModal').addEventListener('click', (e)=>{ if(e.target.id==='rangeLeaveModal') e.currentTarget.classList.remove('open'); });
+document.getElementById('rangeLeaveForm').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const rosterId = document.getElementById('rangeLeavePerson').value;
+  const onLeave = document.getElementById('rangeLeaveStatus').value === 'true';
+  const fromDate = document.getElementById('rangeLeaveFrom').value;
+  const toDate = document.getElementById('rangeLeaveTo').value;
+  const errEl = document.getElementById('rangeLeaveError');
+  errEl.textContent = '';
+  try{
+    const res = await fetch('/api/schedule/range-leave', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ rosterId, onLeave, fromDate, toDate })
+    });
+    const data = await res.json();
+    if(data.success){
+      document.getElementById('rangeLeaveModal').classList.remove('open');
+      showToast(`${data.name} marked ${data.onLeave ? 'on leave' : 'available'} across ${data.daysUpdated} day${data.daysUpdated===1?'':'s'} (${fromDate} \u2192 ${toDate}).`, 't-success');
+      if(rows.some(r => r.id === rosterId)) loadDate(currentDate);
+    } else {
+      errEl.textContent = data.message || 'Could not apply this change.';
+    }
+  }catch(e){ errEl.textContent = 'Could not reach the server.'; }
+});
+
 async function checkSession(){
   try{
     const res = await fetch('/api/me');

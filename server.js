@@ -718,7 +718,7 @@ app.post('/api/schedule/:date/shift-label', requireAuth, requireAdmin, (req, res
 // range, so it doesn't need to be set day-by-day. Leave toDate off (or
 // equal to fromDate + a far future date) for an open-ended change.
 app.post('/api/schedule/range-shift', requireAuth, requireAdmin, (req, res) => {
-  const { rosterId, shift, fromDate, toDate } = req.body || {};
+  const { rosterId, shift, region, fromDate, toDate } = req.body || {};
   if (!rosterId) return res.status(400).json({ success: false, message: 'rosterId required' });
   if (!/^\d{2}:\d{2}$/.test(String(shift || ''))) return res.status(400).json({ success: false, message: 'Shift must be HH:MM, e.g. 11:00' });
   if (!isValidDate(fromDate) || !isValidDate(toDate)) return res.status(400).json({ success: false, message: 'Invalid date range' });
@@ -737,13 +737,50 @@ app.post('/api/schedule/range-shift', requireAuth, requireAdmin, (req, res) => {
     const idx = current.findIndex(r => r.id === rosterId);
     if (idx === -1) return;
     personName = current[idx].name;
-    current[idx] = { ...current[idx], shiftLabel: shift };
+    // Region is baked into each saved day at generation time (unlike
+    // Shift Timing, which falls back dynamically) — so an already-saved
+    // day needs its region explicitly patched here too, not just the
+    // roster's default, or it stays frozen on the old value.
+    current[idx] = { ...current[idx], shiftLabel: shift, ...(region && region.trim() ? { region: region.trim() } : {}) };
     writeSchedule(date, current);
     updated++;
   });
 
-  console.log(`[shift-label] Range update — ${personName || rosterId} set to ${shift} across ${updated} day(s), ${fromDate} to ${toDate}`);
-  res.json({ success: true, name: personName, shift, daysUpdated: updated });
+  console.log(`[shift-label] Range update — ${personName || rosterId} set to ${shift}${region && region.trim() ? `, region ${region.trim()}` : ''} across ${updated} day(s), ${fromDate} to ${toDate}`);
+  res.json({ success: true, name: personName, shift, region: region && region.trim() ? region.trim() : null, daysUpdated: updated });
+});
+
+// ── Set someone ON/OFF leave across a DATE RANGE in one action, instead
+// of toggling the switch day-by-day. Reuses the same per-day leave logic
+// as the single-day toggle, just looped across the range.
+app.post('/api/schedule/range-leave', requireAuth, requireAdmin, (req, res) => {
+  const { rosterId, onLeave, fromDate, toDate } = req.body || {};
+  if (!rosterId) return res.status(400).json({ success: false, message: 'rosterId required' });
+  if (!isValidDate(fromDate) || !isValidDate(toDate)) return res.status(400).json({ success: false, message: 'Invalid date range' });
+
+  const dates = [];
+  let d = new Date(fromDate + 'T00:00:00');
+  const end = new Date(toDate + 'T00:00:00');
+  if (d > end) return res.status(400).json({ success: false, message: '"From" date must be before "To" date' });
+  const fmtLocal = (dt) => `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`;
+  while (d <= end) { dates.push(fmtLocal(d)); d.setDate(d.getDate() + 1); }
+  if (dates.length > 120) return res.status(400).json({ success: false, message: 'Range too large — please use 120 days or fewer' });
+
+  let updated = 0, personName = null;
+  const roster = readRoster();
+  dates.forEach(date => {
+    let dayRows = getOrBuildDayRows(date).map(r => ({ id: r.id, name: r.name, region: r.region, onLeave: !!r.onLeave, shiftLabel: r.shiftLabel }));
+    const idx = dayRows.findIndex(r => r.id === rosterId);
+    if (idx === -1) return;
+    personName = dayRows[idx].name;
+    dayRows[idx].onLeave = !!onLeave;
+    const computed = computeSchedule(roster.cycleStart, dayRows);
+    writeSchedule(date, computed);
+    updated++;
+  });
+
+  console.log(`[leave] Range update — ${personName || rosterId} marked ${onLeave ? 'ON LEAVE' : 'available'} across ${updated} day(s), ${fromDate} to ${toDate}`);
+  res.json({ success: true, name: personName, onLeave: !!onLeave, daysUpdated: updated });
 });
 app.post('/api/schedule/:date/reorder', requireAuth, requireAdmin, (req, res) => {
   const { date } = req.params;

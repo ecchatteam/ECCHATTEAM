@@ -1812,7 +1812,9 @@ function renderShiftRosterTable(){
   const modeClass = m => m === 'EBS' ? 'ebs' : m === 'SECURITY' ? 'security' : 'smb';
   const rowClass = m => m === 'EBS' ? 'row-ebs' : m === 'SECURITY' ? 'row-security' : '';
   const groupLabel = m => m === 'EBS' ? 'EBS Chat' : m === 'SECURITY' ? 'Security' : 'Chat';
-  tbody.innerHTML = trackerRoster.people.map((p, i) => `
+  // Scoped to EBS/SMB chat coverage only — Security team has its own tracker page.
+  const people = trackerRoster.people.filter(p => p.mode !== 'SECURITY');
+  tbody.innerHTML = people.map((p, i) => `
     <tr class="${rowClass(p.mode)}">
       <td class="sno-cell">${i+1}</td>
       <td class="name-cell">${escAttr(p.name)}</td>

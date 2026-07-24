@@ -53,7 +53,6 @@ const SEED_ROSTER = {
     { id: 'r6',  name: 'Manoj Kumar',        region: 'India/MEA'  },
     { id: 'r7',  name: 'Prasanth Ganesan',   region: 'India/MEA'  },
     { id: 'r8',  name: 'Anto',               region: 'India/MEA'  },
-    { id: 'r9',  name: 'Kewin',              region: 'MEA/Europe' },
     { id: 'r10', name: 'Santhoshraj V',      region: 'MEA/Europe' },
     { id: 'r11', name: 'Sabrishwaran',       region: 'UK/Europe'  },
     { id: 'r12', name: 'Vinoth Kumar',       region: 'UK/Europe'  },
@@ -62,7 +61,6 @@ const SEED_ROSTER = {
     { id: 'r15', name: 'Lokesh',             region: 'US/LATAM'   },
     { id: 'r16', name: 'Rahul Muthiah V',    region: 'US/LATAM'   },
     { id: 'r17', name: 'Abinaya K',          region: 'US/LATAM'   },
-    { id: 'r18', name: 'Guna',               region: 'US/LATAM'   },
     { id: 'r19', name: 'Santhosh L',         region: 'US/LATAM'   },
     { id: 'r20', name: 'Ranjith Kumar R',    region: 'US/LATAM'   }
   ]
@@ -80,7 +78,6 @@ const SEED_TRACKER_ROSTER = {
     { id: 'r6',  name: 'Manoj Kumar',        region: 'India/MEA',  mode: 'SMB', shift: '10:00' },
     { id: 'r7',  name: 'Prasanth Ganesan',   region: 'India/MEA',  mode: 'SMB', shift: '10:00' },
     { id: 'r8',  name: 'Anto',               region: 'India/MEA',  mode: 'EBS', shift: '11:00' },
-    { id: 'r9',  name: 'Kewin',              region: 'MEA/Europe', mode: 'EBS', shift: '11:00' },
     { id: 'r10', name: 'Santhoshraj V',      region: 'MEA/Europe', mode: 'SMB', shift: '13:00' },
     { id: 'r11', name: 'Sabrishwaran',       region: 'UK/Europe',  mode: 'SMB', shift: '13:00' },
     { id: 'r12', name: 'Vinoth Kumar',       region: 'UK/Europe',  mode: 'EBS', shift: '13:00' },
@@ -89,7 +86,6 @@ const SEED_TRACKER_ROSTER = {
     { id: 'r15', name: 'Lokesh',             region: 'US/LATAM',   mode: 'EBS', shift: '16:00' },
     { id: 'r16', name: 'Rahul Muthiah V',    region: 'US/LATAM',   mode: 'SMB', shift: '17:00' },
     { id: 'r17', name: 'Abinaya K',          region: 'US/LATAM',   mode: 'SMB', shift: '19:00' },
-    { id: 'r18', name: 'Guna',               region: 'US/LATAM',   mode: 'EBS', shift: '19:00' },
     { id: 'r19', name: 'Santhosh L',         region: 'US/LATAM',   mode: 'SMB', shift: '20:00' },
     { id: 'r20', name: 'Ranjith Kumar R',    region: 'US/LATAM',   mode: 'SMB', shift: '21:00' },
     // Security team — card-only, no individual login. Any of the 20
@@ -973,6 +969,39 @@ app.post('/api/tracker/roster/remove', requireAuth, requireAdmin, (req, res) => 
   roster.people = roster.people.filter(p => p.id !== id);
   writeTrackerRoster(roster);
 
+  // Also remove from the MASTER roster — without this, any future
+  // regeneration would still pull them back in, since that's the source
+  // computeSchedule() builds each day from.
+  const masterRoster = readRoster();
+  const wasInMaster = (masterRoster.people || []).some(p => p.id === id);
+  if (wasInMaster) {
+    masterRoster.people = masterRoster.people.filter(p => p.id !== id);
+    writeRoster(masterRoster);
+  }
+
+  // Purge them from every already-generated day from today through the
+  // next 90 days — otherwise a day generated before this removal keeps
+  // their row (and any leave/shift override) frozen in, and they'd keep
+  // showing up on ZIA SLOT even though they're no longer on the team.
+  // Past/historical days are left untouched — that's a record of what
+  // actually happened, not something to rewrite after the fact.
+  let daysPurged = 0;
+  const todayForPurge = istTodayISO();
+  let purgeDate = new Date(todayForPurge + 'T00:00:00');
+  const fmtLocal = (dt) => `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`;
+  for (let i = 0; i < 90; i++) {
+    const dateStr = fmtLocal(purgeDate);
+    if (db.has(`schedule:${dateStr}`)) {
+      const dayRows = db.get(`schedule:${dateStr}`, []);
+      const filtered = dayRows.filter(r => r.id !== id);
+      if (filtered.length !== dayRows.length) {
+        writeSchedule(dateStr, filtered);
+        daysPurged++;
+      }
+    }
+    purgeDate.setDate(purgeDate.getDate() + 1);
+  }
+
   let removedLogin = null;
   const users = readUsers();
   for (const [username, record] of Object.entries(users)) {
@@ -984,8 +1013,8 @@ app.post('/api/tracker/roster/remove', requireAuth, requireAdmin, (req, res) => 
   }
   if (removedLogin) writeUsers(users);
 
-  console.log(`[tracker] Removed ${person.name} from tracker roster${removedLogin ? ` and deleted login "${removedLogin}"` : ' (no login account found)'}`);
-  res.json({ success: true, name: person.name, removedLogin });
+  console.log(`[tracker] Removed ${person.name} — tracker roster${wasInMaster ? ', master roster' : ''}, purged from ${daysPurged} upcoming ZIA SLOT day(s)${removedLogin ? `, deleted login "${removedLogin}"` : ' (no login account found)'}`);
+  res.json({ success: true, name: person.name, removedLogin, daysPurged });
 });
 
 // Change someone's nominal "Shift Timing" going forward — e.g. Lokesh
